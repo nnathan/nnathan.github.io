@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+<title>cr.yp.to blog</title>
+<description>D. J. Bernstein's personal weblog.</description>
+<language>en-us</language>
+<link>http://blog.cr.yp.to</link>
+<ttl>600</ttl>
+<item>
+<title>Why EdDSA held up better than ECDSA against Minerva</title>
+<description>Cryptosystem designers successfully predicting, and protecting against, implementation failures. #ecdsa #eddsa #hnp #lwe #bleichenbacher #bkw</description>
+<link>http://blog.cr.yp.to/20191024-eddsa.html</link>
+<pubDate>01 Nov 2019 15:21:52 -0000</pubDate>
+</item>
+<item>
+<title>An introduction to vectorization</title>
+<description>Understanding one of the most important changes in the high-speed-software ecosystem. #vectorization #sse #avx #avx512 #antivectors</description>
+<link>http://blog.cr.yp.to/20190430-vectorize.html</link>
+<pubDate>30 Apr 2019 14:45:32 -0000</pubDate>
+</item>
+<item>
+<title>Reconstructing ROCA</title>
+<description>A case study of how quickly an attack can be developed from a limited disclosure. #infineon #roca #rsa</description>
+<link>http://blog.cr.yp.to/20171105-infineon.html</link>
+<pubDate>05 Nov 2017 03:49:47 -0000</pubDate>
+</item>
+<item>
+<title>Quantum algorithms to find collisions</title>
+<description>Analysis of several algorithms for the collision problem, and for the related multi-target preimage problem. #collision #preimage #pqcrypto</description>
+<link>http://blog.cr.yp.to/20171017-collisions.html</link>
+<pubDate>17 Oct 2017 11:13:55 -0000</pubDate>
+</item>
+<item>
+<title>Fast-key-erasure random-number generators</title>
+<description>An effort to clean up several messes simultaneously. #rng #forwardsecrecy #urandom #cascade #hmac #rekeying #proofs</description>
+<link>http://blog.cr.yp.to/20170723-random.html</link>
+<pubDate>26 Jul 2017 11:49:44 -0000</pubDate>
+</item>
+<item>
+<title>Benchmarking post-quantum cryptography</title>
+<description>News regarding the SUPERCOP benchmarking system, and more recommendations to NIST. #benchmarking #supercop #nist #pqcrypto</description>
+<link>http://blog.cr.yp.to/20170719-pqbench.html</link>
+<pubDate>19 Jul 2017 18:15:13 -0000</pubDate>
+</item>
+<item>
+<title>Some challenges in post-quantum standardization</title>
+<description>My comments to NIST on the first draft of their call for submissions. #standardization #nist #pqcrypto</description>
+<link>http://blog.cr.yp.to/20161030-pqnist.html</link>
+<pubDate>30 Oct 2016 23:01:57 -0000</pubDate>
+</item>
+<item>
+<title>The death of due process</title>
+<description>A few notes on technology-fueled normalization of lynch mobs targeting both the accuser and the accused. #ethics #crime #punishment</description>
+<link>http://blog.cr.yp.to/20160607-dueprocess.html</link>
+<pubDate>07 Jun 2016 01:00:47 -0000</pubDate>
+</item>
+<item>
+<title>Security fraud in Europe's "Quantum Manifesto"</title>
+<description>How quantum cryptographers are stealing a quarter of a billion Euros from the European Commission. #qkd #quantumcrypto #quantummanifesto</description>
+<link>http://blog.cr.yp.to/20160516-quantum.html</link>
+<pubDate>16 May 2016 22:05:36 -0000</pubDate>
+</item>
+<item>
+<title>Thomas Jefferson and Apple versus the FBI</title>
+<description>Can the government censor how-to books? What if some of the readers are criminals? What if the books can be understood by a computer? An introduction to freedom of speech for software publishers. #censorship #firstamendment #instructions #software #encryption</description>
+<link>http://blog.cr.yp.to/20160315-jefferson.html</link>
+<pubDate>15 Mar 2016 19:41:48 -0000</pubDate>
+</item>
+<item>
+<title>Break a dozen secret keys, get a million more for free</title>
+<description>Batch attacks are often much more cost-effective than single-target attacks. #batching #economics #keysizes #aes #ecc #rsa #dh #logjam</description>
+<link>http://blog.cr.yp.to/20151120-batchattacks.html</link>
+<pubDate>20 Nov 2015 17:50:07 -0000</pubDate>
+</item>
+<item>
+<title>The death of optimizing compilers</title>
+<description>Abstract of my tutorial at ETAPS 2015. #etaps #compilers #cpuevolution #hotspots #optimization #domainspecific #returnofthejedi</description>
+<link>http://blog.cr.yp.to/20150314-optimizing.html</link>
+<pubDate>14 Mar 2015 14:00:40 -0000</pubDate>
+</item>
+<item>
+<title>Follow-You Printing</title>
+<description>How Equitrac's marketing department misrepresents and interferes with your work. #equitrac #followyouprinting #dilbert #officespaceprinter</description>
+<link>http://blog.cr.yp.to/20150218-printing.html</link>
+<pubDate>18 Feb 2015 18:29:50 -0000</pubDate>
+</item>
+<item>
+<title>The Saber cluster</title>
+<description>How we built a cluster capable of computing 3000000000000000000000 multiplications per year for just 50000 EUR. #nvidia #linux #howto</description>
+<link>http://blog.cr.yp.to/20140602-saber.html</link>
+<pubDate>02 Jun 2014 23:23:06 -0000</pubDate>
+</item>
+<item>
+<title>Some small suggestions for the Intel instruction set</title>
+<description>Low-cost changes to CPU architecture would make cryptography much safer and much faster. #constanttimecommitment #vmul53 #vcarry #pipelinedocumentation</description>
+<link>http://blog.cr.yp.to/20140517-insns.html</link>
+<pubDate>18 May 2014 01:04:10 -0000</pubDate>
+</item>
+<item>
+<title>NIST's cryptographic standardization process</title>
+<description>The first step towards improvement is to admit previous failures. #standardization #nist #des #dsa #dualec #nsa</description>
+<link>http://blog.cr.yp.to/20140411-nist.html</link>
+<pubDate>11 Apr 2014 22:09:57 -0000</pubDate>
+</item>
+<item>
+<title>How to design an elliptic-curve signature system</title>
+<description>There are many choices of elliptic-curve signature systems. The standard choice, ECDSA, is reasonable if you don't care about simplicity, speed, and security. #signatures #ecc #elgamal #schnorr #ecdsa #eddsa #ed25519</description>
+<link>http://blog.cr.yp.to/20140323-ecdsa.html</link>
+<pubDate>23 Mar 2014 12:39:08 -0000</pubDate>
+</item>
+<item>
+<title>A subfield-logarithm attack against ideal lattices</title>
+<description>Computational algebraic number theory tackles lattice-based cryptography.</description>
+<link>http://blog.cr.yp.to/20140213-ideal.html</link>
+<pubDate>13 Feb 2014 18:31:57 -0000</pubDate>
+</item>
+<item>
+<title>Entropy Attacks!</title>
+<description>The conventional wisdom says that hash outputs can't be controlled; the conventional wisdom is simply wrong.</description>
+<link>http://blog.cr.yp.to/20140205-entropy.html</link>
+<pubDate>05 Feb 2014 13:57:44 -0000</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,150 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2015.03.14: The death of optimizing compilers
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html accesskey=k><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><b>2015.03.14: The death of optimizing compilers</b> Abstract of my tutorial at ETAPS 2015. #etaps #compilers #cpuevolution #hotspots #optimization #domainspecific #returnofthejedi</td></tr>
+<tr><td><a href=20150218-printing.html accesskey=j><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2015.03.14: The death of optimizing compilers</h2>
+<p>
+"ETAPS"
+<a href="http://www.etaps.org">[home page]</a>
+<a href="https://en.wikipedia.org/wiki/European%5FJoint%5FConferences%5Fon%5FTheory%5Fand%5FPractice%5Fof%5FSoftware">[Wikipedia page]</a>
+is a conference federation,
+the "European Joint Conferences on Theory and Practice of Software".
+<a href="http://www.etaps.org/index.php/2015">ETAPS 2015</a>,
+which combines
+</p>
+<ul>
+<li>
+  CC 2015 (24th International Conference on Compiler Construction),
+</li>
+<li>
+  ESOP 2015 (24th European Symposium on Programming),
+</li>
+<li>
+  FASE 2015 (18th International Conference on Fundamental Approaches to Software Engineering),
+</li>
+<li>
+  FoSSaCS 2015 (18th International Conference on Foundations of Software Science and Computation Structures),
+</li>
+<li>
+  POST 2015 (4th International Conference on Principles of Security and Trust),
+and
+</li>
+<li>
+  TACAS 2015 (21st International Conference on Tools and Algorithms for the Construction and Analysis of Systems),
+</li>
+</ul>
+<p>
+will be held next month in London.
+</p>
+<p>
+I was invited to give one of two 90-minute tutorials at ETAPS 2015.
+I decided to speak on "The death of optimizing compilers",
+which perhaps wasn't exactly what the organizers wanted to hear.
+Coincidentally,
+the ETAPS 2015 web page ran out of space to hold my abstract
+and had to compress the abstract to one paragraph,
+so I'm posting the complete abstract here.
+</p>
+<p>
+<b>Abstract:</b>
+In the ancient days,
+computers were slow,
+and compilers were stupid,
+and the software engineer's solemn duty
+was to manually squeeze every last cycle out of the software.
+Today the situation is quite different,
+but not in the direction one might expect.
+</p>
+<p>
+Have computers become so fast that nobody cares about optimization any more?
+Certainly not:
+most users still spend time waiting for computers.
+As computation has become cheaper,
+users have correspondingly expanded the volume of data that they are handling,
+and optimization remains a critical challenge
+for the occasional "hot spots" in the code.
+</p>
+<p>
+Most programmers today never touch these hot spots.
+The reduced cost of computation
+means that more and more code runs freezingly cold,
+freeing up more and more programmers to ignore performance.
+However, the hot spots still exist.
+This tutorial will focus on
+how these hot spots are handled in the real world.
+</p>
+<p>
+Have compilers become so smart
+that they automatically turn
+clean high-level code for these hot spots into optimized code,
+removing the need for humans to be optimization experts?
+The reality, unfortunately,
+is very much the opposite:
+general-purpose "optimizing" compilers
+are falling farther and farther behind
+the actual capabilities of modern processors.
+</p>
+<p>
+This tutorial is an introduction to
+(1) what current and near-future processors are capable of;
+(2) how modern high-speed software libraries actually work;
+and
+(3) the increasing dominance of domain-specific tools
+to engineer high-speed software.
+This tutorial is designed to be fully comprehensible
+to audience members who are not optimization experts.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2015.03.14 of the 20150314-optimizing.html web page.
+</font></body>
+</html>

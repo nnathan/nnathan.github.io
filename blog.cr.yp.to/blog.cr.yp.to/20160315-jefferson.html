@@ -1,0 +1,509 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2016.03.15: Thomas Jefferson and Apple versus the FBI
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html accesskey=k><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b> Can the government censor how-to books? What if some of the readers are criminals? What if the books can be understood by a computer? An introduction to freedom of speech for software publishers. #censorship #firstamendment #instructions #software #encryption</td></tr>
+<tr><td><a href=20151120-batchattacks.html accesskey=j><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2016.03.15: Thomas Jefferson and Apple versus the FBI</h2>
+<p>
+<a href="http://www.amazon.com/Home-Winemaking-For-Dummies-Patterson/dp/047067895X"><img class=pic30 src="20160315-wine.jpg"></a>
+When Prohibition began,
+<a href="http://www.stlmedia.net/sonderman/november/11-20hist.pdf">anti-alcohol crusaders demanded</a>
+that the St. Louis Public Library burn every book
+that explained "the home production of alcohol for drinks".
+The librarian insisted on keeping the books
+but agreed to hide them from the "general public".
+</p>
+<p>
+Instructions have always been a target of censorship.
+The censors say that it's bad, or that it might be bad,
+if people follow the instructions.
+</p>
+<p>
+Censorship of other types of information almost always follows this pattern:
+the censors say that
+information must be banned because of
+what might happen when people receive and act upon the information.
+However,
+centuries of experience have taught us
+that the benefits of free speech
+are vastly larger than the benefits of censorship.
+This judgment is enshrined in the First Amendment.
+</p>
+<h3>Narrow, carefully defined exceptions</h3>
+<p>
+A few well-established categories of communication
+are so clearly undesirable for society that they don't have First Amendment protection.
+For example,
+the First Amendment doesn't protect
+intentional solicitation of criminal activity:
+"I'll pay you $1000 to steal that car for me."
+</p>
+<p>
+The Supreme Court is careful to define these categories narrowly,
+so that the categories don't threaten free speech.
+For example,
+imagine someone saying
+"To discourage terrorism we should torture suspected terrorists and behead terrorists' families."
+Can the government throw the speaker in jail for advocating violence?
+Answer:
+The speaker is protected if he isn't advocating
+<a href="http://supreme.justia.com/us/395/444/case.html"><i>imminent</i> lawless action</a>.
+Society has time to calmly discuss, and dismiss, the speaker's bad ideas.
+</p>
+<p>
+As another example,
+the First Amendment usually doesn't protect false information.
+Contract law limits your freedom to make false promises.
+Fraud law limits your freedom to deceive people for profit.
+However,
+publishers would be terrified to say anything
+if they were exposed to libel lawsuits for innocent mistakes.
+That's why
+incorrect statements about public figures
+are protected by the First Amendment unless they're made with
+<a href="http://supreme.justia.com/us/376/254/case.html">reckless disregard for the truth</a>.
+</p>
+<h3>Libraries stay open even though they might help criminals</h3>
+<p>
+In Tom Clancy's 1994 novel <i>Debt of Honor</i>,
+a terrorist pilot armed with a knife
+seized control of an airplane loaded with fuel
+and flew the airplane into the United States Capitol.
+<a href="http://www.amazon.com/Oceans-Eleven-George-Clooney/dp/B001EBYM5I"><img class=pic30left src="20160315-eleven.jpg"></a>
+It's easy to respond emotionally to this:
+obviously 9/11 was Clancy's fault;
+all books describing violence or other crime should be banned.
+</p>
+<p>
+Eventually common sense kicks in.
+Burning books isn't going to stop terrorists and other criminals from coming up with their plots.
+On the contrary:
+the bad guys are perfectly capable of spotting security weaknesses on their own.
+<a href="http://www.crypto.com/hobbs.html">Public discussion of security weaknesses</a>
+has always been
+society's most effective tool for getting those weaknesses fixed.
+</p>
+<p>
+Instructions that are specifically <i>intended</i> to aid criminals
+do lose First Amendment protection.
+For example,
+the First Amendment doesn't protect
+a
+<a href="http://www.bc.edu/bc%5Forg/avp/cas/comm/free%5Fspeech/rice.html">murder-manual publisher</a>
+who "intended to provide assistance to murderers and would-be murderers".
+But criminal intent is critical here.
+The government can't censor the Clancy books.
+It can't censor the Bond films.
+It can't censor a
+"<a href="http://www.amazon.com/Build-Your-Secret-Bookcase-Door/dp/1453760814">Build Your Own Secret Bookcase Door</a>" book,
+even though some readers might be criminals hiding from the police.
+It can't censor a "How to Fish" book,
+even though some readers might be terrorists who don't deserve to eat
+and who would be more easily caught if they were starving.
+</p>
+<h3>Demystifying software</h3>
+<p>
+"Divide year by 100 giving result. Add 1 to result giving century."
+These two sentences are the start of a few dozen instructions for
+<a href="https://cr.yp.to/export/1997/0520-bernstein.txt">calculating the date of Easter</a>.
+You can understand these instructions.
+<a href="https://cr.yp.to/export/1997/0520-bernstein.txt"><img class=pic30 src="20160315-easter.jpg"></a>
+These instructions are <i>software</i>;
+this means that a computer can understand them too.
+</p>
+<p>
+Our computers are extensions of our brains.
+They're often faster and more reliable than our brains are.
+That's why we tell our computers to run software,
+rather than following the same instructions by hand.
+That's also why we delegate to these devices our memories,
+the intimate details of our lives.
+</p>
+<p>
+Have you heard the government arguing that it wants new powers to censor software?
+<b>Think about what happens when you remove the computer from the picture.</b>
+Could the government state the same rationale
+for censoring instructions followed by people?
+Does the First Amendment protect publication of the instructions despite this rationale?
+Usually the answer to both questions is yes.
+</p>
+<p>
+Let's try an example.
+Apple is providing software for millions of people to encrypt their private files.
+If this software is doing its job then nobody else can understand the files.
+But a few of the people protected by this are criminals.
+The government claims that it's "going dark".
+Should Apple be allowed to publish this software?
+</p>
+<p>
+<a href="https://www.loc.gov/resource/mjm.03%5F0632%5F0635/?sp=3"><img class=pic30left src="20160315-madison.jpg"></a>
+Let's remove the computer from the picture.
+Fact:
+<a href="https://en.wikipedia.org/wiki/Jefferson%5Fdisk">Thomas Jefferson was a cryptographer.</a>
+He distributed instructions that
+James Madison used, by hand, to encrypt private files
+(such as the
+<a href="https://www.loc.gov/resource/mjm.03%5F0632%5F0635/?sp=3">partly encrypted letter back to Jefferson</a>
+shown on the left).
+</a>
+The effect of the encryption was that nobody else could understand the files.
+</p>
+<p>
+Should a modern-day Jefferson be allowed to publish a "How to Encrypt" book?
+What if the FBI says that Jefferson is helping criminals?
+</p>
+<p>
+Answer:
+The publisher is fully protected by the First Amendment.
+The publisher doesn't intend to help criminals.
+Sure,
+publishing encryption instructions
+might occasionally help criminals,
+but it does 
+<a href="https://www.apple.com/pr/pdf/Electronic%5FPrivacy%5FInformation%5FCenter%5Fand%5Feight%5Fconsumer%5Fprivacy%5Forganizations%5F2.pdf">much more to <i>stop</i> criminals</a>
+and to
+<a href="https://www.apple.com/pr/pdf/Privacy%5FInternational%5Fand%5FHuman%5FRights%5FWatch.pdf">protect human rights</a>.
+</p>
+<h3>Exceptions, revisited</h3>
+<p>
+If I were a lawyer trying to scare courts
+into creating a First Amendment exception for software,
+what would I do?
+</p>
+<p>
+Answer: I would talk about <i>bad</i> software.
+Imagine software for destroying navigational systems on airplanes.
+Imagine a malware app that pretends to be a legitimate app for buying stocks
+but that, when you run it, ends up giving your money to a thief.
+Clearly the government needs to be able to make laws regarding software!
+</p>
+<p>
+To demystify these examples,
+let's eliminate the computer.
+Imagine a book called "How to Destroy Navigational Systems on Airplanes".
+The courts already know how to handle this:
+intentional "aiding and abetting" of criminal activity
+isn't protected by the First Amendment.
+It doesn't matter whether the criminal who destroyed the navigational system
+was following instructions by hand,
+or was having his computer follow instructions on his behalf.
+</p>
+<p>
+Or imagine a book that pretends to be a legitimate how-to book on buying stocks
+but that, when you follow its instructions, ends up giving your money to a thief.
+The courts know how to handle this too:
+fraud isn't protected by the First Amendment.
+The computer is again irrelevant.
+</p>
+<p>
+So there's no real argument <i>for</i>
+creating a First Amendment exception for software.
+There is, meanwhile, a very strong argument <i>against</i>
+creating a First Amendment exception for software:
+namely, this exception would end up swallowing the entire First Amendment
+as computers learn to understand more and more types of communication.
+As
+<a href="https://cr.yp.to/export/1999/0506-order.html">the Ninth Circuit Court of Appeals wrote</a>
+in 1999:
+<blockquote>
+The distinction urged on us by the government would prove
+too much in this era of rapidly evolving computer capabilities.
+The fact that computers will soon be able to respond directly
+to spoken commands, for example, should not confer on the
+government the unfettered power to impose prior restraints on
+speech in an effort to control its "functional" aspects.
+</blockquote>
+</p>
+<h3>The crypto wars: early history</h3>
+<p>
+<a href="https://en.wikipedia.org/wiki/Martin%5FLuther%5FKing,%5FJr."><img class=pic30 src="20160315-king.jpg"></a>
+For decades the FBI and NSA
+have been trying and failing to convince Congress to outlaw strong encryption.
+Their arguments have always been the same:
+terrorism, drug dealers, terrorism, child pornography, terrorism, etc.
+Congress has always paid more attention to the counterarguments:
+most importantly,
+strong encryption will
+<a href="https://www.schneier.com/cryptography/paperfiles/worldwide-survey-of-encryption-products.pdf">still be available for the terrorists</a>,
+while efforts to weaken encryption are a
+<a href="https://www.schneier.com/cryptography/paperfiles/paper-keys-under-doormats-CSAIL.pdf">security disaster for the rest of us</a>.
+The FBI and NSA
+have also undermined their positions
+by establishing a track record of abusing their power:
+<a href="http://www.slate.com/blogs/future%5Ftense/2013/09/27/loveint%5Fhow%5Fnsa%5Fspies%5Fsnooped%5Fon%5Fgirlfriends%5Flovers%5Fand%5Ffirst%5Fdates.html">spying on their own love interests</a>,
+for example,
+and
+<a href="http://www.slate.com/articles/technology/future%5Ftense/2016/01/what%5Fthe%5Ffbi%5Fs%5Fsurveillance%5Fof%5Fmartin%5Fluther%5Fking%5Fsays%5Fabout%5Fmodern%5Fspying.html">spying on civil-rights leaders</a>.
+</p>
+<p>
+What do you do if you're a spy and Congress isn't doing what you want?
+You take matters into your own hands!
+</p>
+<p>
+The NSA convinced the State Department
+to declare that encryption software was a "munition"
+under the "Arms Export Control Act",
+and that disclosing encryption software to a foreigner without a license
+was an illegal "export".
+The government's
+<a href="https://cr.yp.to/export/1995/0814-coppolino.txt">stated goal</a>
+was to
+"control the widespread foreign availability
+of cryptographic devices and software
+which might hinder its foreign intelligence collection efforts".
+</p>
+<p>
+Let's again imagine this without the computer.
+The State Department declares that modern-day Jefferson's how-to book on encryption is a "munition"
+under the Arms Export Control Act,
+and that disclosing Jefferson's instructions to a foreigner without a license
+is an illegal "export".
+The government's goal is to "control the widespread foreign availability"
+of <i>encryption instructions</i>
+"which might hinder its foreign intelligence collection efforts".
+The computer is once again irrelevant.
+</p>
+<p>
+This isn't just a hypothetical analogy.
+For many years the government
+claimed that encryption instructions for humans
+<i>were</i> controlled by the Arms Export Control Act.
+For example,
+in 1977, NSA employee Joseph Meyer
+told the organizers of a cryptographic conference that they would be
+<a href="http://www.nap.edu/read/253/chapter/14">subject to prosecution</a>.
+In 1993 the State Department officially classified
+a piece of cryptographic software <i>and</i> a cryptographic paper as "munitions".
+Two years later,
+after being dragged into court,
+the State Department changed its mind regarding the paper,
+an incident that the judge called
+"<a href="https://cr.yp.to/export/1996/0415-order.txt">disquieting</a>".
+</p>
+<p>
+Fundamentally,
+the FBI and NSA would like to censor books and papers
+for the same reasons that they would like to censor software.
+The only reason that the government gave up on censoring books and papers
+was in an attempt to avoid First Amendment scrutiny:
+everyone can see that books and papers are covered by the First Amendment,
+whereas most people find software to be something mysterious and incomprehensible.
+</p>
+<h3>First Amendment protection for encryption software</h3>
+<p>
+Back to the court case.
+The judge focused on software,
+and found that the government's regulations were an
+"<a href="https://cr.yp.to/export/1996/1206-order.txt">unconstitutional prior restraint in violation of the First Amendment</a>".
+The government had argued that software doesn't qualify for First Amendment protection,
+but the judge found that
+"<a href="https://cr.yp.to/export/1996/0415-order.txt">source code is speech</a>":
+</p>
+<blockquote>
+Contrary to defendants' suggestion,
+the functionality of a language does not make it any less like speech. ...
+Instructions, do-it-yourself manuals, recipes,
+even technical information about hydrogen bomb construction,
+<i>see United States v. The Progressive. Inc.,</i>
+467 F. Supp. 990 (W.D. Wisc. 1979), are often purely functional;
+they are also speech. ...
+<br><br>
+The music inscribed in code
+on the roll of a player piano
+is no less protected for being wholly functional.
+Like source code converted to object code,
+it "communicates" to and directs the instrument itself,
+rather than the musician, to produce the music.
+That does not mean it is not speech.
+Like music and mathematical equations,
+computer language is just that, language,
+and it communicates information either to a computer or to those who can read it.
+<br><br>
+Defendants argue in their reply
+that a description of software in English informs the intellect
+but source code actually allows someone to encrypt data.
+Defendants appear to insist
+that the higher the utility value of speech the less like speech it is.
+An extension of that argument
+assumes that once language allows one to actually do something,
+like play music or make lasagne, the language is no longer speech.
+The logic of this proposition is dubious at best.
+Its support in First Amendment law is nonexistent.
+</blockquote>
+<p>
+In response,
+the NSA convinced the Department of Commerce
+to set up suspiciously similar new regulations
+under the "International Emergency Economic Powers Act".
+The judge found that these new regulations were
+<a href="https://cr.yp.to/export/1997/0825-order.html">also unconstitutional</a>.
+</p>
+<p>
+The government appealed to the Ninth Circuit Court of Appeals,
+which again found that the regulations were
+<a href="https://cr.yp.to/export/1999/0506-order.html">unconstitutional</a>.
+A side comment from the court
+recognized the dawn of a golden age of surveillance:
+</p>
+<blockquote>
+In this increasingly electronic age,
+we are all required in our everyday lives
+to rely on modern technology to communicate with one another.
+This reliance on electronic communication, however,
+has brought with it a dramatic diminution in our ability to communicate privately.
+Cellular phones are subject to monitoring,
+email is easily intercepted,
+and transactions over the internet are often less than secure.
+Something as commonplace as
+furnishing our credit card number, social security number, or bank account number
+puts each of us at risk.
+Moreover, when we employ electronic methods of communication,
+we often leave electronic "fingerprints" behind,
+fingerprints that can be traced back to us.
+Whether we are surveilled by our government, by criminals, or by our neighbors,
+it is fair to say that never has our ability
+to shield our affairs from prying eyes been at such a low ebb.
+</blockquote>
+<p>
+In another case against the same regulations,
+the Sixth Circuit Court of Appeals also found that the regulations were
+<a href="https://en.wikipedia.org/wiki/Junger%5Fv.%5FDaley">unconstitutional</a>.
+</p>
+<h3>The Apple-FBI case</h3>
+<p>
+<a href="https://www.eff.org/secure-messaging-scorecard"><img class=pic30 src="www.eff.org/files/crypto.png"></a>
+Fast forward to 2016.
+The FBI has found another way to apply pressure to software publishers:
+"You provided software that was used to encrypt this data.
+The All Writs Act says that you have to help us decrypt it!"
+</p>
+<p>
+The FBI is, for example,
+trying to use the All Writs Act to conscript Apple into
+</p>
+<ul>
+<li>writing anti-encryption software
+to be run on Syed Rizwan Farook's work-issued iPhone
+and
+</li>
+<li>falsely signing that software as being legitimate.
+</li>
+</ul>
+<p>
+When I say "anti-encryption",
+what I mean is that if this new software works
+then maybe the FBI will be able to understand the encrypted files stored on that iPhone.
+Nobody expects this iPhone to actually have any files of interest
+(Farook also owned, and destroyed, a personal iPhone),
+but other law-enforcement agencies have expressed their eagerness
+to use the same software against drug dealers.
+</p>
+<p>
+Let's imagine the same scenario without computers.
+Jefferson's "How to Encrypt" instructions
+are being used by Madison and many other innocent people,
+but they're also being used by evil Farook.
+As part of a sting operation against Farook,
+the FBI is demanding that Jefferson
+</p>
+<ul>
+<li>
+write new anti-encryption instructions
+and
+</li>
+<li>
+falsely sign those instructions as being legitimate.
+</li>
+</ul>
+<p>
+The FBI hopes that Farook,
+seeing Jefferson's signature and not realizing what's going on,
+will be fooled into following the anti-encryption instructions,
+so maybe the FBI will be able to understand Farook's files.
+Actually, everyone expects that Farook already destroyed all of the interesting files,
+but other law-enforcement agencies are eager to reuse Jefferson's false signature
+against drug dealers.
+</p>
+<p>
+Jefferson, however, doesn't want to write or sign these anti-encryption instructions.
+He considers these instructions
+"<a href="https://www.apple.com/customer-letter/">too dangerous to create</a>".
+Is Jefferson free to say what he wants
+if what he wants to say is nothing at all?
+</p>
+<p>
+The Supreme Court says yes:
+freedom of speech includes
+"<a href="https://www.law.cornell.edu/supremecourt/text/487/781">both what to say and what not to say</a>".
+There are some exceptions,
+but the exceptions are very far from the Jefferson case.
+To summarize,
+Jefferson has a First Amendment right to avoid writing, and to avoid signing,
+the instructions demanded by the government.
+</p>
+<p>
+Apple has the same First Amendment right.
+The distinction between software and other instructions isn't relevant
+to the free-speech analysis.
+</p>
+<p>
+My guess is that courts will say no to the FBI interpretation of the All Writs Act,
+without reaching the First Amendment issues.
+But this obviously won't be the end of
+government efforts to control software publishers.
+Fortunately, just like the publishers of how-to books,
+software publishers are protected by the First Amendment.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2016.03.15 of the 20160315-jefferson.html web page.
+</font></body>
+</html>

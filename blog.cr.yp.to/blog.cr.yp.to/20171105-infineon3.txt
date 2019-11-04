@@ -1,0 +1,126 @@
+Hi Petr, Matúš, and Marek,
+
+Tanja and I took another look at this today.
+
+We checked something on the scale of a million published PGP keys and
+found hundreds of keys that are weak according to the test that you put
+online. We tried the keys modulo all small primes, finding (e.g.) 331 as
+another case where N (along with presumably p and q) is in a very small
+subgroup (1 and 330).
+
+We then followed up on the guess that Tanja mentioned in her previous
+message, namely that Infineon could be (stupidly) using a power
+generator _without_ CRT. This drastically reduces the number of powers
+that are possible---even the best possible choice of generator produces
+a limited set of primes.
+
+We tried the keys modulo various products of small primes that had small
+subgroups, and found that the remainders modulo primes were correlated,
+matching the power-generator-without-CRT theory. When we tried a product
+of several primes, we immediately saw 65537 as a suspiciously small and
+simple generator. Of course 65537 is very easy to multiply by, and maybe
+it's already sitting in memory somewhere as an exponent.
+
+We then compared the list of weak 2048-bit keys to the powers of 65537
+modulo every small prime. For each prime <709, every weak key was a
+power of 65537; but for 709 this was no longer true. 691 and various
+smaller primes have relatively few powers of 65537, and those powers
+show up as weak keys. This data doesn't show whether 701 is included.
+Actually doing some factorizations would show whether 701 is included.
+
+Summary: Presumably Infineon is computing each prime as a power of 65537
+modulo L, where L is the product of primes <=701, or perhaps the product
+of primes <=691. Both of these products are somewhat below 2^1024.
+Infineon is then adding a multiple of L. Looking at the range of keys,
+and assuming that p and q have the same range, suggests that Infineon is
+aiming for [3*2^1022,4*2^1022] or maybe something slightly narrower.
+
+We then wrote the attack script shown below, first generating a public
+key in this way and then taking a subset of L with enough primes to
+apply the "divisors in residue classes" algorithm, specifically primes
+where the order of 65537 divides 2^7*3^3*5^2*7*11*13*17*19*23. The LLL
+step has to be repeated (at most) 2^7*3^3*5^2*7*11*13*17*19*23 times,
+but for testing we skipped this and simply assumed a correct guess of
+the residue class. We also assumed that 701 is included.
+
+This is a little slower than the speeds you announced, but not much.
+Probably 2^7*3^3*5^2*7*11*13*17*19*23 isn't optimal, and there are many
+techniques in the literature that we didn't implement for speeding up
+"divisors in residue classes".
+
+---Dan
+
+
+from sage.doctest.util import Timer
+t = Timer()
+
+L = 27771430913146044712156219115012732149015337058745243774375474371978395728107173008782747458575903820497344261101333156469136833289328084229401057505005215261077328417649807720533310592783171487952296983742789708502518237023426083874832018749447215424764928016413509553872836856095214672430
+L *= 701 # if 701 is included
+g = Mod(65537,L)
+
+pmin = 3*2**1022
+pmax = 4*2**1022
+
+t.start()
+u = lift(g^randrange(L))
+while True:
+  p = u + randrange(ceil(pmin/L),floor(pmax/L)) * L
+  if p.is_prime(): break
+print 'time for first prime',t.stop().cputime
+
+t.start()
+u = lift(g^randrange(L))
+while True:
+  q = u + randrange(ceil(pmin/L),floor(pmax/L)) * L
+  if q.is_prime(): break
+print 'time for second prime',t.stop().cputime
+
+n = p * q
+print 'public key',n
+
+smooth = 2^7*3^3*5^2*7*11*13*17*19*23
+print 'smooth',smooth
+def smoothorder(l):
+  return smooth % Mod(g,l).multiplicative_order() == 0
+
+v = prod(l for l,e in factor(L) if smoothorder(l))
+print v
+u = p % v
+print 'p residue class',(p-u)/v
+
+t.start()
+
+H = 10 + 2**1021 // v
+u += floor((7*2**1021) // v) * v
+
+w = lift(1/Mod(v,n))
+
+R.<x> = QQ[]
+f = (w*u+H*x)/n
+g = H*x
+
+k = 3
+m = 7
+print 'multiplicity',k
+print 'lattice rank',m
+
+basis = [f^j for j in range(0,k)] + [f^k*g^j for j in range(m-k)]
+basis = [b*n^k for b in basis]
+basis = [b.change_ring(ZZ) for b in basis]
+
+M = matrix(m)
+for i in range(m):
+  M[i] = basis[i].coefficients(sparse=False) + [0]*(m-1-i)
+print 'time for creating matrix',t.stop().cputime
+
+t.start()
+M = M.LLL()
+print 'time for basis reduction',t.stop().cputime
+
+Q = sum(z*(x/H)^i for i,z in enumerate(M[0]))
+
+for r,multiplicity in Q.roots():
+  print 'root is',r
+  if u+v*r > 0:
+    g = gcd(n,u+v*r)
+    if g > 1: print 'successful factorization',[g,n/g]

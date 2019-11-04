@@ -1,0 +1,252 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2014.02.05: Entropy Attacks!
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html accesskey=k><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><b>2014.02.05: Entropy Attacks!</b> The conventional wisdom says that hash outputs can't be controlled; the conventional wisdom is simply wrong.</td></tr>
+</table></div><hr>
+<h2>2014.02.05: Entropy Attacks!</h2>
+<p>
+The conventional wisdom is that hashing more entropy sources can't hurt:
+if H is any modern cryptographic hash function then H(x,y,z) is at least
+as good a random number as H(x,y), no matter how awful z is. So we pile
+one source on top of another, hashing them all together and hoping that
+at least one of them is good.
+</p>
+<p>
+But what if z comes from a malicious source that can snoop on x and y?
+For example, imagine a malicious "secure randomness" USB device that's
+actually spying on all your other randomness sources through various
+side channels, or&mdash;worse&mdash;imagine RDRAND microcode that's looking at
+the randomness pool that it's about to be hashed into. I should note
+that none of the attacks described below rely on tampering with x or y,
+or otherwise modifying data outside the malicious entropy source; you
+can't stop these attacks by double-checking the integrity of data.
+</p>
+<p>
+Of course, the malicious device will also be able to see other sensitive
+information, not just x and y. But this doesn't mean that it's cheap for
+the attacker to exfiltrate this information! The attacker needs to find
+a communication channel out of the spying device. Randomness generation
+influenced by the device is a particularly attractive choice of channel,
+as I'll explain below.
+</p>
+<p>
+Here's an interesting example of an attack that can be carried out by
+this malicious source:
+</p>
+<ol>
+<li>Generate a random r.
+<li>Try computing H(x,y,r).
+<li>If H(x,y,r) doesn't start with bits 0000, go back to step 1.
+<li>Output r as z.
+</ol>
+<p>
+This attack forces H(x,y,z) to start 0000, even if x and y were
+perfectly random. It's fast, taking just 16 computations of H on
+average.
+</p>
+<p>
+Maybe the randomness generator doesn't actually output H(x,y,z); it uses
+H(x,y,z) as a seed for some generator G, and outputs G(H(x,y,z)). Okay:
+the attacker changes H to G(H), and again forces the output G(H(x,y,z))
+to start 0000. Similarly, the attack isn't stopped by pre-hashing of the
+entropy source before it's mixed with other entropy sources. Every mix
+from the malicious entropy source lets the attacker produce another
+"random" number that starts 0000.
+</p>
+<p>
+More generally, instead of producing "random" numbers that start with
+0000, 0000, 0000, etc., the malicious entropy source can produce
+"random" numbers that start with successive 4-bit components of
+AES<sub>k</sub>(0),AES<sub>k</sub>(1),... where k is a secret key known only to the
+attacker. Nobody other than the attacker will be able to detect this
+pattern.
+</p>
+<p>
+Recall that DSA and ECDSA require random "nonces" for signatures. It's
+easy to imagine someone grabbing each nonce as a new "random" number
+from the system's randomness generator. However, it's well known
+(see, e.g., 
+<a href="http://www.isg.rhul.ac.uk/~sdg/igor-slides.pdf">http://www.isg.rhul.ac.uk/~sdg/igor-slides.pdf</a>)
+that an attacker
+who can predict the first 4 bits of each nonce can quickly compute the
+user's secret key after a rather small number of signatures. Evidently
+hashing an extra entropy source <i>does</i> hurt&mdash;in the worst possible way;
+the attacker has the user's secret key!&mdash;contrary to the conventional
+wisdom stated above.
+</p>
+<p>
+EdDSA
+(see 
+<a href="http://ed25519.cr.yp.to">http://ed25519.cr.yp.to</a>)
+is different. It uses randomness
+once to generate a secret key and is then completely deterministic in
+its signature generation (following 1997 Barwood, 1997 Wigley, et al.).
+The malicious entropy source can still control 4 bits of the secret key,
+speeding up discrete-log attacks by a factor of 4, but this isn't a
+problem&mdash;we use curves with ample security margins. The source can
+increase the 4 bits by carrying out exponentially more H computations,
+but this has to fit into the time available after inspecting x and y and
+before generating a "random" number.
+</p>
+<p>
+Of course, there are many other uses of randomness in cryptography: for
+example, if you want forward secrecy then you're constantly generating
+new ECDH keys. Controlling 4 bits of each secret key isn't nearly as
+damaging as controlling 4 bits of DSA/ECDSA nonces&mdash;it's the same
+factor of 4 mentioned above&mdash;but, as I mentioned above, the malicious
+entropy source can also use randomness generation as a communication
+channel to the attacker. For example, the source controls the low bit of
+each <i>public</i> key with an average cost of just 2 public-key generations,
+and uses the concatenation of these low bits across public keys to
+communicate an encryption of the user's long-term key. This channel is
+undetectable, reasonably high bandwidth, and reasonably low cost.
+</p>
+<p>
+On the other hand, there's no actual need for this huge pile of random
+numbers. If you've somehow managed to generate one secure 256-bit key
+then from that key you can derive all the "random" numbers you'll ever
+need for every cryptographic protocol&mdash;and you can do this derivation
+in a completely deterministic, auditable, testable way, as illustrated
+by EdDSA. (If you <i>haven't</i> managed to generate one secure 256-bit key
+then you have much bigger problems.)
+</p>
+<p>
+With this as-deterministic-as-possible approach, the entire influence of
+the malicious entropy source is limited to controlling a few "random"
+bits somewhere. There are at least two obvious ways to further reduce
+this control:
+</p>
+<ul>
+<li>Read less-likely-to-be-malicious entropy sources <i>after</i> completing
+     all reading of the more-likely-to-be-malicious entropy sources. Of
+     course, this doesn't help if the last source turns out to be
+     malicious.
+<li>Increase the amount of processing, memory, etc. involved in H&mdash;as
+     in hashcash, proofs of work in general, password hashing, etc. The
+     costs are negligible, since all of this is done only once.
+</ul>
+<p>
+Let me emphasize that what I'm advocating here, for security reasons, is
+a sharp transition between
+</p>
+<ul>
+<li>before crypto: the whole system collecting enough entropy;
+<li>after: the system using purely deterministic cryptography, never
+     adding any more entropy.
+</ul>
+<p>
+This is exactly the opposite of what people tend to do today, namely
+adding new entropy all the time. The reason that new entropy is a
+problem is that each addition of entropy is a new opportunity for a
+malicious entropy source to control "random" outputs&mdash;breaking DSA,
+leaking secret keys, etc. The conventional wisdom says that hash outputs
+can't be controlled; the conventional wisdom is simply wrong.
+</p>
+<p>
+(There are some special entropy sources for which this argument doesn't
+apply. For example, an attacker can't exert any serious control over the
+content of my keystrokes while I'm logged in; I don't see how hashing
+this particular content into my laptop's entropy pool can allow any
+attacks. But I also don't see how it helps.)
+</p>
+<p>
+Is there any serious argument that adding new entropy all the time is a
+good thing? The Linux /dev/urandom manual page claims that without new
+entropy the user is "theoretically vulnerable to a cryptographic
+attack", but (as I've mentioned in various venues) this is a ludicrous
+argument&mdash;how can anyone simultaneously believe that
+</p>
+<ul>
+<li>we can't figure out how to deterministically expand one 256-bit
+       secret into an endless stream of unpredictable keys (this is what
+       we need from urandom), but
+<li>we <i>can</i> figure out how to use a single key to safely encrypt
+       many messages (this is what we need from SSL, PGP, etc.)?
+</ul>
+<p>
+There are also people asserting that it's important for RNGs to provide
+"prediction resistance" against attackers who, once upon a time, saw the
+entire RNG state. But if the attacker sees the RNG state that was used
+to generate your long-term SSL keys, long-term PGP keys, etc., then what
+exactly are we gaining by coming up with unpredictable random numbers in
+the future? I'm reminded of a Mark Twain quote:
+</p>
+<blockquote>
+   Behold, the fool saith, "Put not all thine eggs in the one basket"&mdash;which
+   is but a manner of saying, "Scatter your money and your
+   attention;" but the wise man saith, "Put all your eggs in the one
+   basket and&mdash;WATCH THAT BASKET."
+</blockquote>
+<p>
+We obviously need systems that can maintain confidentiality of our
+long-term keys. If we have such systems, how is the attacker supposed to
+ever see the RNG state in the first place? Maybe "prediction resistance"
+can be given a theoretical definition for an isolated RNG system, but I
+don't see how it makes any sense for a complete cryptographic system.
+</p>
+<p>
+[Advertisement: If you're interested in these topics,
+you might want to join the
+<a href="http://groups.google.com/group/randomness-generation">randomness-generation</a>
+mailing list;
+I sent this there a few days ago.
+To subscribe, send email to
+<a href="mailto:randomness-generation+subscribe@googlegroups.com">randomness-generation+subscribe@googlegroups.com</a>.
+There's also a mailing list cleverly named
+<a href="https://www.ietf.org/mailman/listinfo/dsfjdssdfsd">dsfjdssdfsd</a>
+for discussion of randomness in IETF protocols.
+Randomness is also a frequent topic on more general cryptographic mailing lists.]
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2014.02.05 of the 20140205-entropy.html web page.
+</font></body>
+</html>

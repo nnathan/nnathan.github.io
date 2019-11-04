@@ -1,0 +1,1163 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2017.10.17: Quantum algorithms to find collisions
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html accesskey=k><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><b>2017.10.17: Quantum algorithms to find collisions</b> Analysis of several algorithms for the collision problem, and for the related multi-target preimage problem. #collision #preimage #pqcrypto</td></tr>
+<tr><td><a href=20170723-random.html accesskey=j><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2017.10.17: Quantum algorithms to find collisions</h2>
+<p>
+<a href="https://eprint.iacr.org/2017/847">"An efficient quantum collision search algorithm and implications on symmetric cryptography"</a>
+is a new paper from André Chailloux, Marı́a Naya-Plasencia, and André Schrottenloher.
+I'll write "CNS" for the list of authors.
+The CNS paper was accepted to Asiacrypt 2017;
+Asiacrypt is one of the three yearly flagship conferences
+of the <a href="https://iacr.org">International Association for Cryptologic Research</a>.
+The paper appeared online last month.
+</p>
+<p>
+The title sounds scary, doesn't it?
+Collision-resistance is one of the primary features promised by
+cryptographic hash functions such as SHA-256 and SHA3-256.
+The CNS algorithm is generic: it isn't specific to any particular hash function,
+so it applies to SHA-256 and SHA3-256 and everything else that comes to mind.
+<a href="https://eprint.iacr.org/2011/368">Some</a>
+<a href="https://eprint.iacr.org/2011/484">signature</a>
+<a href="https://eprint.iacr.org/2014/795">systems</a>
+are designed to be "collision-resilient",
+meaning that they aren't broken by collisions in the underlying hash function;
+but collision-finding is a basic subroutine inside many more attack algorithms.
+An efficient generic algorithm for collision search would have huge ramifications.
+</p>
+<p>
+The reality, however,
+is that the CNS algorithm is not an efficient way to find collisions.
+In fact,
+it's so <i>inefficient</i> that it's beaten by
+the standard non-quantum method of finding collisions,
+namely "parallel rho" collision search from
+<a href="http://people.scs.carleton.ca/~paulv/papers/JoC97.pdf">1997 van Oorschot&ndash;Wiener</a>.
+Let's take an in-depth look at what's going on here.
+</p>
+<h3>Hardware cost and time: a preliminary example</h3>
+<p>
+The goal is to find collisions in an n-bit hash function H,
+i.e., a hash function producing n-bit output.
+This means finding two different inputs, say x and y,
+such that H(x) = H(y).
+</p>
+<p>
+The basic strategy for finding collisions,
+if you don't know anything special about H,
+is to write down many hash outputs for different inputs
+and hope that two of the outputs are the same.
+The famous "birthday paradox" says that this becomes likely to occur
+when the number of hash outputs grows to the scale of 2<sup>n/2</sup>.
+(You can also try a smaller computation,
+with far fewer than 2<sup>n/2</sup> hash outputs,
+but then the success chance drops quadratically.
+In this blog post I'll focus on computations with a large success chance.)
+</p>
+<p>
+You can find this collision by storing the output-input pairs in an associative array.
+Here's a Python script that tries 2<sup>21</sup> outputs
+for a 40-bit hash function
+and has a good chance of finding a collision:
+</p>
+<pre>
+     import hashlib
+     def minihash(seed): # 40-bit hash
+       h = hashlib.sha256()
+       h.update(seed)
+       return h.digest()[:5]
+
+     import random
+     def randomhash():
+       r = hex(random.randrange(2**100))
+       return (minihash(r),r)
+
+     d = dict()
+     for i in range(2**21):
+       h,r = randomhash()
+       if h in d:
+         print r,d[h]
+         break
+       d[h] = r
+</pre>
+<p>
+Alternatively, you can sort the output-input pairs:
+</p>
+<pre>
+     h = [randomhash() for i in range(2**21)]
+     h.sort()
+     for i in range(1,len(h)):
+       if h[i][0] == h[i-1][0]:
+         print h[i][1],h[i-1][1]
+</pre>
+<p>
+Either approach uses many megabytes of storage.
+Obviously storing 2<sup>n/2</sup> hash outputs involves
+massive hardware costs when n is reasonably large.
+But let's imagine that this is feasible.
+What's less obvious is how much time the computation takes.
+</p>
+<p>
+A single access to a huge associative array takes a long time.
+Think about a square chip large enough to hold 2<sup>n/2</sup> hash outputs:
+simply communicating from one side of the chip to the other
+takes time proportional to 2<sup>n/4</sup>.
+Packing data more densely into a cube
+reduces the distance from 2<sup>n/4</sup> to 2<sup>n/6</sup>,
+but raises unsolved problems of getting enough energy into a cubical computing device,
+and getting the resulting heat out.
+I'll focus on conventional two-dimensional architectures in this blog post.
+</p>
+<p>
+If one access takes time 2<sup>n/4</sup>, do 2<sup>n/2</sup> accesses take time 2<sup>3n/4</sup>?
+Not necessarily: the accesses can be parallelized.
+There are algorithms that sort 2<sup>n/2</sup> items on a square chip
+in <i>total</i> time proportional to 2<sup>n/4</sup>:
+there are 2<sup>n/2</sup> miniature cores,
+each carrying out (say) 8⋅2<sup>n/4</sup> compare-exchange steps
+with adjacent cores.
+<a href="http://www.iti.fh-flensburg.de/lang/algorithmen/sortieren/twodim/schimm/schimmen.htm">Schimmler's
+4-way merge sort</a>
+is an easy-to-understand algorithm of this type.
+More complicated algorithms reduce the constant 8.
+</p>
+<p>
+Of course the initial 2<sup>n/2</sup> hash computations can also be parallelized:
+simply run 2<sup>n/2</sup> separate hash-computation cores.
+This won't be a bottleneck
+as long as the time for <i>one</i> hash computation
+is below the 2<sup>n/4</sup> scale for memory access.
+</p>
+<p>
+Or run, say, 2<sup>n/2</sup>/64 hash-computation cores,
+each 64 times,
+distributing the 64 hash outputs to 64 nearby memory units.
+This still won't be a bottleneck
+as long as the time for 64 hash computations
+is below the 2<sup>n/4</sup> scale for memory access.
+</p>
+<p>
+To summarize, the hardware costs are on the scale of 2<sup>n/2</sup>,
+or more precisely 2<sup>n/2</sup>/64 hash-computation cores plus 2<sup>n/2</sup> compare-exchange cores.
+The time is on the scale of 2<sup>n/4</sup>,
+or more precisely 64 hash computations plus 8⋅2<sup>n/4</sup> compare-exchange steps.
+The attacker is likely to save a constant factor
+by looking more closely at the details,
+including the hash-function details,
+but in this blog post I'll focus on the exponents:
+exponent n/2 for hardware cost and exponent n/4 for time.
+</p>
+<h3>The parallel rho method</h3>
+<p>
+The parallel rho method takes much less hardware and less time.
+Specifically, it reduces the time to 2<sup>n/6</sup>,
+with hardware costs on the scale of 2<sup>n/3</sup>.
+More generally,
+the parallel rho method offers a huge range of tradeoffs,
+such as time 2<sup>n/4</sup> using 2<sup>n/4</sup> hardware,
+or time 2<sup>n/3</sup> using 2<sup>n/6</sup> hardware.
+</p>
+<p>
+The rho method
+uses a small hashing core that starts from some random input x
+and computes a series of hashes as quickly as possible:
+H(x), H<sup>2</sup>(x), H<sup>3</sup>(x), etc.
+Here H<sup>2</sup>(x) means H(H(x));
+H<sup>3</sup>(x) means H(H(H(x)));
+etc.
+An important feature of the rho method is that most hash outputs aren't saved;
+we'll see later how to retroactively recognize collisions.
+</p>
+<p>
+The core stops when it finds a <b>distinguished point</b>.
+A distinguished point, by definition, is a string that starts with d zero bits.
+A random string has probability 1/2<sup>d</sup> of being distinguished,
+so presumably the core will find a distinguished point
+within about 2<sup>d</sup> hash calls on average.
+</p>
+<p>
+What if the function H avoids, or tends to avoid, distinguished points?
+To avoid bad cases,
+the attacker can replace H(x) with E<sub>k</sub>(H(x)),
+where E is the attacker's favorite block cipher,
+and k is a secret key chosen at the beginning of the attack.
+A collision E<sub>k</sub>(H(x)) = E<sub>k</sub>(H(y)) is equivalent to a collision H(x) = H(y).
+I'll skip E<sub>k</sub> for the rest of my description:
+real hash functions such as SHA-256 are experimentally observed
+to hit distinguished points at the expected rate.
+</p>
+<p>
+What if the core enters a cycle before it reaches a distinguished point?
+For example, what happens if the core sees five different non-distinguished points
+x,H(x),H<sup>2</sup>(x),H<sup>3</sup>(x),H<sup>4</sup>(x) and then H<sup>5</sup>(x)
+turns out to be the same as H<sup>2</sup>(x)?
+Let's put a time limit on the computation,
+say 2<sup>d+1</sup> hash calls,
+so the core won't cycle forever.
+(It's possible, but not worthwhile,
+to go to more effort to find
+the collision between inputs H<sup>4</sup>(x) and H(x) in this example.)
+</p>
+<p>
+Now build p of these small cores running in parallel,
+starting with random inputs x<sub>1</sub>,x<sub>2</sub>,...,x<sub>p</sub>.
+Each core continues for at most 2<sup>d+1</sup> hash calls.
+Most of the cores will find distinguished points.
+The total number of hash outputs
+encountered by all of the cores together is proportional to 2<sup>d</sup>p.
+</p>
+<p>
+As before, I'll assume that the total number of hash outputs is on the scale of 2<sup>n/2</sup>.
+This means that 2<sup>d</sup>p is on the scale of 2<sup>n/2</sup>.
+For example, one can take d as n/6 and p around 2<sup>n/3</sup>;
+or d as n/4 and p around 2<sup>n/4</sup>;
+or d as n/3 and p around 2<sup>n/6</sup>.
+Most cores won't enter cycles
+as long as d is noticeably smaller than n/2.
+</p>
+<p>
+Here's a Python script that simulates this process
+for p = 2<sup>5</sup> cores,
+each running for at most 2<sup>17</sup> steps,
+using the same 40-bit <tt>minihash</tt> shown above:
+</p>
+<pre>
+     start = random.randrange(2**100)
+     h = []
+     for core in range(2**5):
+       # all cores can run in parallel
+       seed = hex(start + core)
+       r,j = seed,0
+       while j &lt; 2**17:
+         r,j = minihash(r),j+1
+         if r[:2] == 'XX':
+           h += [(r,seed,j)]
+           break
+</pre>
+<p>
+This script defines distinguished points differently:
+namely, strings where the first two bytes are <tt>XX</tt>.
+What matters is that
+a random string has a specified probability,
+in this case 1/2<sup>16</sup>, of being distinguished.
+The script also takes sequential inputs x<sub>1</sub>,x<sub>2</sub>,...,x<sub>p</sub>
+rather than independent random inputs.
+</p>
+<p>
+What happens if one non-distinguished point, say
+H<sup>77584</sup>(x<sub>7</sub>),
+is different from another, say H<sup>92797</sup>(x<sub>20</sub>),
+but the next hash value H<sup>77585</sup>(x<sub>7</sub>)
+collides with H<sup>92798</sup>(x<sub>20</sub>)?
+The hash value after that, H<sup>77586</sup>(x<sub>7</sub>),
+will equal H<sup>92799</sup>(x<sub>20</sub>),
+and so on.
+Cores 7 and 20 will end up at the same distinguished point
+H<sup>77584+s</sup>(x<sub>7</sub>) = H<sup>92797+s</sup>(x<sub>20</sub>)
+for some positive integer s,
+assuming that both cores run long enough
+to reach this distinguished point.
+If you see that this happened,
+and if you're also given records of x<sub>7</sub> and x<sub>20</sub>
+and the counters 77584+s,92797+s,
+then you can quickly find the collision
+by computing the difference 15213 of the counters
+and then checking H<sup>0</sup>(x<sub>7</sub>) against H<sup>15213</sup>(x<sub>20</sub>),
+checking H<sup>1</sup>(x<sub>7</sub>) against H<sup>15214</sup>(x<sub>20</sub>),
+etc.
+Here's a Python script that does this,
+starting from the array <tt>h</tt> of distinguished points
+produced earlier:
+</p>
+<pre>
+     import binascii
+     def hexstr(s):
+       return binascii.hexlify(s)
+     
+     h.sort()
+     for i in range(1,len(h)):
+       if h[i][0] == h[i-1][0]:
+         r0,j0 = h[i][1],-h[i][2]
+         r1,j1 = h[i-1][1],-h[i-1][2]
+         for i in range(max(j0,j1),0):
+           while j0 &lt; i:
+             r0,j0 = minihash(r0),j0+1
+           while j1 &lt; i:
+             r1,j1 = minihash(r1),j1+1
+           if minihash(r0) == minihash(r1):
+             print hexstr(r0),hexstr(r1)
+             break
+</pre>
+<p>
+In other words,
+to find collisions of hash values,
+we simply need to find collisions of distinguished points.
+This is useful because there are far fewer distinguished points than hash values.
+</p>
+<p>
+The parallel rho method stores the distinguished points in an associative array,
+or simply sorts them,
+as in this last Python script.
+Parallel sorting takes time proportional to p<sup>1/2</sup> on a square chip.
+This becomes a bottleneck compared to the 2<sup>d+1</sup> hash computations
+as p grows past 2<sup>n/3</sup>,
+but it isn't an issue for smaller values of p.
+</p>
+<h3>Oversimplification: counting operations</h3>
+<p>
+Textbooks on algorithm design
+generally don't teach students to measure hardware cost and time.
+Instead they teach students to count the number of operations.
+(Even worse, the number of operations is typically mislabeled "time".)
+</p>
+<p>
+These metrics aren't completely unrelated:
+a chip of area A running for time T can't carry out more than AT operations.
+But a single operation can involve a huge chip for a significant amount of time.
+Students are taught, for example, that randomly accessing an array of size A
+is a single operation,
+but in fact this operation involves a chip of area A for time A<sup>1/2</sup>.
+</p>
+<p>
+The parallel rho method is vastly more efficient than simply storing 2<sup>n/2</sup> hash outputs.
+It's hard to see this advantage if one merely counts operations.
+</p>
+<p>
+Students often learn to count memory usage as a secondary metric,
+and then they can see that the rho method reduces memory.
+But they still don't learn that counting operations is a poor predictor of time.
+They think, for example,
+that sorting an array is extremely efficient;
+they don't learn
+that sorting many hash outputs is much more expensive
+than computing those hash outputs,
+with the cost ratio growing as a positive power of the array size.
+</p>
+<p>
+People who focus on minimizing the number of operations
+often end up with computations that are unnecessarily large <i>and</i> unnecessarily slow.
+Consider, for example,
+the problem of enumerating all primes up to 2<sup>100</sup>.
+Textbook sieving makes an array of size 2<sup>100</sup>,
+crosses off every second number,
+crosses off every third number,
+etc.
+This uses very few operations,
+but better-optimized algorithms run faster using much less hardware.
+</p>
+<p>
+Counting operations is simple,
+and there is value in simplicity.
+When I'm analyzing and optimizing algorithms,
+I usually start by counting operations and making an effort to understand
+the minimum possible number of operations.
+But I know that some operations are actually much more expensive than others.
+</p>
+<h3>Quantum computation</h3>
+<p>
+The remaining algorithms that I'll discuss here are quantum algorithms.
+These algorithms are built from the basic operations
+that serious quantum-computer engineers are trying to build,
+specifically "Hadamard gates" and "Toffoli gates" applied to large numbers of "qubits".
+</p>
+<p>
+The quantum-computer engineers haven't given us these operations yet.
+There's a company named D-Wave selling "quantum computers";
+but my understanding of the scientific consensus
+is that the current D-Wave computers can be
+much more cost-effectively simulated by traditional computers
+and are therefore useless.
+On the other hand,
+D-Wave is
+</p>
+<ul>
+<li>collecting venture capital,</li>
+<li>successfully selling some of its current useless
+machines,</li>
+<li>collecting engineering expertise that could be relevant
+to useful machines someday,
+and</li>
+<li>not getting into any trouble for deceiving people.</li>
+</ul>
+<p>
+Doesn't look like the worst investment!
+</p>
+<p>
+Google says that it is building a 49-qubit "quantum computer"
+that, if it works, will provide
+<a href="https://www.scientificamerican.com/article/quantum-computers-compete-for-supremacy/">"quantum supremacy"</a>.
+What this means is that we <i>don't</i> know
+any way for a traditional computer
+to accurately simulate the output of the device
+as cost-effectively as running the device.
+But, except for the marketing buzzwords,
+there's nothing new about devices meeting this notion of "quantum supremacy".
+Anyone can
+</p>
+<ul>
+<li>
+declare pretty much any arrangement of atoms to be a "quantum computer",
+</li>
+<li>
+point out that we don't know fast algorithms
+to accurately simulate our observations of this "computer",
+and
+</li>
+<li>
+declare "quantum supremacy".
+</li>
+</ul>
+<p>
+More to the point,
+Google's chip still won't be able to run any of the quantum algorithms discussed below.
+</p>
+<p>
+I don't mean to dismiss the risk of a coming quantum apocalypse.
+I see many signs of progress in quantum computing.
+I've recently
+<a href="https://cr.yp.to/talks.html#2017.09.20">bet $2048</a>
+that the RSA-2048 challenge
+will be publicly factored by a quantum computer by 2033.
+</p>
+<p>
+This doesn't mean, however,
+that quantum computers are going to magically speed up all computations.
+Big quantum speedups, such as Shor's speedup for integer factorization,
+have been found for only a few special types of computations.
+Most quantum speedups are only moderate,
+such as Grover's method to speed up brute-force searches,
+which I'll discuss in a moment.
+Many more computations don't seem to be sped up at all;
+this is particularly common for computations involving large amounts of data.
+</p>
+<h3>Grover's method</h3>
+<p>
+People frequently say that quantum computers
+will force us to move from AES-128 to AES-256.
+The reason is Grover's method.
+</p>
+<p>
+Suppose a protocol reveals the AES-128 encryption of a known plaintext block
+under a secret key.
+Many protocols do this,
+and of course AES-128 should remain secure in this known-plaintext scenario.
+How quickly can an attacker find the key?
+The obvious attack is to search through all 2<sup>128</sup> keys;
+on average this will succeed after about 2<sup>127</sup> keys.
+This is too expensive to be a concern today.
+</p>
+<p>
+Grover's method sounds much more worrisome:
+it searches through all 2<sup>128</sup> keys
+using just 2<sup>64</sup> quantum evaluations of AES.
+But this operation count is only the beginning of the analysis.
+Given current quantum-computer designs,
+it is reasonable to predict that
+a quantum evaluation of AES is going to cost considerably more hardware and time
+than a non-quantum evaluation of AES.
+Furthermore,
+Grover's method performs its 2<sup>64</sup> iterations <i>serially</i>.
+If one quantum evaluation of AES takes a microsecond,
+and the attacker wants results within a decade,
+then Grover's method is limited to 2<sup>48</sup> iterations,
+so it searches only 2<sup>96</sup> keys.
+Searching all 2<sup>128</sup> keys requires 2<sup>32</sup> parallel copies of this computation.
+</p>
+<p>
+Breaking AES-128 with Grover's method
+is much less efficient than breaking RSA-2048 with Shor's algorithm.
+It could be so inefficient as to be infeasible.
+Even worse,
+for reasonable time limits,
+the speedup from Grover's method
+could be wiped out by the overhead of quantum operations
+compared to non-quantum operations.
+This means that
+Grover's method could be even more expensive
+than non-quantum attacks against AES-128.
+In other words,
+even if Shor's algorithm is successful,
+Grover's method could turn out to be useless.
+At the moment NIST sounds
+<a href="https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/faqs">quite skeptical about Grover's method</a>:
+</p>
+<blockquote>
+When all of these considerations are taken into account,
+it becomes quite likely that variants of Grover's algorithm will
+provide no advantage
+to an adversary wishing to perform a cryptanalytic
+attack that can be completed in a matter of years,
+or even decades.
+</blockquote>
+<p>
+All of the quantum algorithms that I'm going to discuss
+are based on generalizations and applications of Grover's method.
+If Grover's method turns out to be useless
+then these algorithms will be useless too.
+But I'm going to be more optimistic for the attacker:
+I'm going to assume that quantum overheads can be reduced far enough
+to make Grover's method useful.
+</p>
+<h3>The Brassard&ndash;Høyer&ndash;Tapp algorithm</h3>
+<p>
+Grover's paper was posted in 1996.
+The next year,
+<a href="https://arxiv.org/abs/quant-ph/9705002">Brassard, Høyer, and Tapp</a>
+announced that they could find collisions in an n-bit hash function
+using only about 2<sup>n/3</sup> quantum evaluations of the function.
+I'll write "BHT" for Brassard, Høyer, and Tapp.
+</p>
+<p>
+This 2<sup>n/3</sup> sounds like a solid improvement compared to the non-quantum 2<sup>n/2</sup>.
+The exponent is dropping by a factor 1.5:
+not as large as Grover's factor 2,
+but still important for deciding how big n needs to be for security.
+This is why
+<a href="https://eprint.iacr.org/2011/506">SIDH</a>
+uses 768-bit fields instead of 512-bit fields, for example.
+But looking at hardware cost and time
+tells a completely different story.
+</p>
+<p>
+The BHT algorithm works as follows:
+</p>
+<ul>
+  <li>
+    Compute T = 2<sup>n/3</sup> targets:
+    hash values H(x<sub>1</sub>),H(x<sub>2</sub>),...,H(x<sub>T</sub>) where x<sub>1</sub>,x<sub>2</sub>,...,x<sub>T</sub> are chosen randomly.
+    Assume for simplicity that these don't collide;
+    they aren't likely to.
+  </li>
+  <li>Define f(y) as 1 if y collides with at least one of x<sub>1</sub>,x<sub>2</sub>,...,x<sub>T</sub> under H.
+    In other words, define f(y) as 1 if H(y) is in the set {H(x<sub>1</sub>),H(x<sub>2</sub>),...,H(x<sub>T</sub>)}
+      while y is not in the set {x<sub>1</sub>,x<sub>2</sub>,...,x<sub>T</sub>}.
+    Define f(y) as 0 otherwise.
+  </li>
+  <li>
+    Notice that computing f involves only one evaluation of H,
+    since H(x<sub>1</sub>),H(x<sub>2</sub>),...,H(x<sub>T</sub>) are already known at this point.
+    Notice also that a preimage of 1 under f,
+    an input y such that f(y) = 1, reveals a collision in H.
+  </li>
+  <li>Use Grover's method to find a preimage of 1 under this function f.
+    Within 2<sup>n/3</sup> steps, Grover's method searches 2<sup>2n/3</sup> possible preimages;
+    this is likely to be enough.
+  </li>
+</ul>
+<p>
+Imagine that there is some magical way
+to quickly carry out comparisons to
+a giant precomputed list of targets H(x<sub>1</sub>),H(x<sub>2</sub>),...,H(x<sub>T</sub>).
+The series of 2<sup>n/3</sup> quantum evaluations of f
+still includes a series of 2<sup>n/3</sup> quantum evaluations of H,
+taking time on the scale of 2<sup>n/3</sup>.
+The hardware cost of this algorithm is also on the scale of 2<sup>n/3</sup>.
+</p>
+<p>
+For comparison,
+parallel rho finds a collision
+in the time for 2<sup>n/4</sup> <i>non-quantum</i> evaluations of H,
+using just 2<sup>n/4</sup> cores.
+For reasonable functions H, this is much less time and much less hardware
+than the BHT algorithm.
+(The picture could change if H cores are gigantic,
+for example if H is a "password hashing" function,
+but then the overheads in Grover's method will also be gigantic.)
+</p>
+<p>
+In short, the BHT algorithm
+is a step backwards from the non-quantum parallel rho algorithm.
+I pointed out this problem in a
+<a href="https://cr.yp.to/papers.html#collisioncost">2009 paper</a>.
+I also analyzed some variants of the BHT algorithm
+but couldn't find any variants better than parallel rho:
+</p>
+<blockquote>
+The point of this paper is that all known quantum algorithms to find collisions in hash functions
+are <i>less</i> cost-effective than traditional cryptanalytic hardware,
+even under optimistic assumptions regarding the speed of quantum computers.
+...
+Within the space of known quantum collision algorithms,
+the most cost-effective algorithms are tantamount to non-quantum algorithms,
+and it is clear that non-quantum algorithms should be implemented with standard bits
+rather than with qubits.
+</blockquote>
+<p>
+I'm not aware of any dispute about any part of my algorithm analysis.
+NIST, in its call for post-quantum submissions,
+commented that the best algorithm known to find an AES-128 key
+takes "2<sup>170</sup>/MAXDEPTH quantum gates or 2<sup>143</sup> classical gates",
+while the best algorithm known to find a SHA3-256 collision
+takes "2<sup>146</sup> classical gates" with no quantum speedup.
+</p>
+<h3>Applying the BHT algorithm to occasional hash values</h3>
+<p>
+This brings me to the new CNS paper,
+"An efficient quantum collision search algorithm and
+implications on symmetric cryptography".
+Let's look at what this paper does.
+</p>
+<p>
+The CNS paper has a parameter r.
+An example highlighted in the paper is r = n/5.
+Define H<sub>r</sub>(x) as follows:
+search through r-bit strings s to find strings H(x,s) ending with r zero bits;
+output a random such string, assuming at least one exists.
+Using Grover's method one can compute H<sub>r</sub>(x) using approximately 2<sup>r/2</sup> operations.
+The paper's strategy to find a collision in H is to find a collision in H<sub>r</sub>.
+</p>
+<p>
+Let's try a sanity check at this point.
+Instead of applying parallel rho to an n-bit hash function,
+do we gain anything by applying parallel rho to an (n-r)-bit hash function
+that takes 2<sup>r/2</sup> times as long to compute?
+As before, let's ignore quantum overhead;
+and let's assume that we can work around the complications
+of H<sub>r</sub> being non-deterministic and often undefined.
+</p>
+<p>
+Say we can afford 2<sup>n/4</sup> hardware.
+Applying rho to the n-bit hash function takes time 2<sup>n/4</sup>.
+Applying rho to an equally fast (n-r)-bit hash function would take time only 2<sup>n/4-r/2</sup>,
+saving a factor 2<sup>r/2</sup>.
+But we actually have a function that's 2<sup>r/2</sup> times slower,
+so the savings disappears.
+There's no advantage here.
+</p>
+<p>
+Back to the paper.
+The paper applies the BHT algorithm to H<sub>r</sub>:
+i.e., it precomputes H<sub>r</sub>(x<sub>1</sub>),...,H<sub>r</sub>(x<sub>T</sub>)
+and then uses Grover's method
+to search for y colliding with one of x<sub>1</sub>,...,x<sub>T</sub> under H<sub>r</sub>.
+(T is "2<sup>t-r</sup>" in the paper's notation.)
+</p>
+<p>
+If BHT can't beat parallel rho,
+and parallel rho applied to H<sub>r</sub> can't beat parallel rho applied to H,
+then how can BHT applied to H<sub>r</sub> beat parallel rho applied to H?
+(As mentioned above, BHT doesn't look so bad if H cores are gigantic,
+but replacing H with H<sub>r</sub> doesn't move in this direction.)
+</p>
+<p>
+Let's go through the analysis of time and hardware cost.
+Presumably y collides with x<sub>i</sub> under H<sub>r</sub> with probability about 1/2<sup>n-r</sup>,
+since r bits of H<sub>r</sub> are already forced to be 0;
+and thus collides with at least one of x<sub>1</sub>,...,x<sub>T</sub> with probability about T/2<sup>n-r</sup>.
+Grover's method thus involves 2<sup>(n-r)/2</sup>/T<sup>1/2</sup> iterations
+(or "2<sup>(n-t)/2</sup>" in the paper's notation).
+</p>
+<p>
+Each iteration involves, among other things,
+an evaluation of H<sub>r</sub>, which is 2<sup>r/2</sup> iterations of H.
+Grover's method thus takes time at least 2<sup>n/2</sup>/T<sup>1/2</sup>.
+Meanwhile the hardware cost is on the scale of T.
+At this point r has disappeared:
+for example, the case T = 2<sup>n/3</sup> takes time at least 2<sup>n/3</sup>
+with hardware cost 2<sup>n/3</sup>,
+just like the original BHT case that I described above.
+This is again beaten by parallel rho.
+</p>
+<h3>CNS false advertising, part 1</h3>
+<p>
+The CNS paper claims that if "time-space product
+(including classical space) ... is the quantity of interest
+then we can take s = n/5 in our quantum parallel algorithm
+and we will obtain a time-space product
+of Õ(2<sup>12n/25</sup>) ... which again beats
+the best classical algorithms with this benchmarking."
+Jean-Philippe Aumasson
+<a href="https://twitter.com/veorq/status/905682451565031425">tweeted</a>
+that this 12n/25 was interesting.
+</p>
+<p>
+However, the 12n/25 claim is simply wrong.
+The time-space product actually has exponent 13n/25,
+which is worse than the n/2 from parallel rho.
+Let's look at the details.
+</p>
+<p>
+As background,
+the best BHT variant considered in my 2009 paper
+(page 8: "quantum analogue of the
+more sophisticated size-M machine discussed above")
+was to compute H(y<sub>1</sub>),...,H(y<sub>T</sub>) in parallel
+and check for any collisions with H(x<sub>1</sub>),...,H(x<sub>T</sub>).
+This variant also doesn't beat parallel rho,
+although it does match parallel rho
+if communication costs are ignored.
+</p>
+<p>
+The CNS paper, not crediting my paper,
+similarly considers "2<sup>s</sup>"
+cores computing H<sub>r</sub>(y<sub>1</sub>),H<sub>r</sub>(y<sub>2</sub>),... in parallel.
+Instead of one core using 2<sup>(n-r)/2</sup>/T<sup>1/2</sup> iterations,
+there are 2<sup>s</sup> cores each using 2<sup>(n-r-s)/2</sup>/T<sup>1/2</sup> iterations.
+Each iteration takes time 2<sup>r/2</sup> as before,
+so each core uses time 2<sup>(n-s)/2</sup>/T<sup>1/2</sup>.
+</p>
+<p>
+Rather than sorting,
+the paper applies each of H<sub>r</sub>(x<sub>1</sub>),...,H<sub>r</sub>(x<sub>T</sub>) successively
+to each of the quantum cores.
+This takes time T,
+asymptotically slower than the T<sup>1/2</sup> for sorting,
+although it has the virtue of not requiring
+quantum communication between the quantum cores.
+The paper takes T specifically as 2<sup>r/2</sup>
+to balance these T steps
+against the cost of an H<sub>r</sub> computation.
+Each core thus uses time 2<sup>(n-s)/2-r/4</sup>.
+</p>
+<p>
+A reasonable way to handle the communication here would be to put
+H<sub>r</sub>(x<sub>1</sub>),...,H<sub>r</sub>(x<sub>T</sub>) into a giant "shift register",
+a specialized T-core device that gradually rotates its input.
+If the first 2<sup>s</sup> of these cores
+are attached to the 2<sup>s</sup> quantum cores,
+then each of the quantum cores
+sees each of H<sub>r</sub>(x<sub>1</sub>),...,H<sub>r</sub>(x<sub>T</sub>) within exactly T steps.
+I'm assuming here that 2<sup>s</sup> is at most T.
+</p>
+<p>
+The initial computation of H<sub>r</sub>(x<sub>1</sub>),...,H<sub>r</sub>(x<sub>T</sub>)
+takes 2<sup>r/2</sup> T = 2<sup>r</sup> steps,
+split as 2<sup>r-s</sup> steps on each of the 2<sup>s</sup> quantum cores.
+To balance this against the subsequent time 2<sup>(n-s)/2-r/4</sup>,
+the paper takes r = 2n/5 + 2s/5.
+The time is now 2<sup>2n/5-3s/5</sup>.
+The assumption that 2<sup>s</sup> is at most T
+translates into s being at most n/4.
+</p>
+<p>
+The CNS paper takes s = n/5.
+The time is then 2<sup>7n/25</sup>.
+There are 2<sup>n/5</sup> quantum cores,
+plus T = 2<sup>6n/25</sup> cores in the shift register.
+The "time-space product 
+(including classical space)"
+is the product of 2<sup>7n/25</sup> and 2<sup>6n/25</sup>,
+namely 2<sup>13n/25</sup>.
+</p>
+<p>
+How does the CNS paper claim 2<sup>12n/25</sup>?
+Details of the calculation aren't provided.
+Presumably the authors counted only the 2<sup>n/5</sup> quantum cores,
+and forgot to count the 2<sup>6n/25</sup> non-quantum cores storing 2<sup>6n/25</sup> hash outputs,
+even though they said they were (properly) "including classical space".
+Oops.
+</p>
+<h3>CNS false advertising, part 2</h3>
+<p>
+It's common for a paper saying
+"Algorithm A is beaten by Algorithm B"
+to be followed by a paper saying
+"Algorithm B is beaten by Algorithm C".
+The paper introducing Algorithm C
+typically tries to argue that Algorithm C is surprising.
+Occasionally there's an easy argument for this:
+namely,
+someone wrote "I conjecture that B is the best algorithm".
+Typically this conjecture happens because
+the author writing
+"Algorithm A is beaten by Algorithm B"
+thought through avenues of further improvements,
+and decided that Algorithm B was one of the rare algorithms
+that couldn't be improved.
+</p>
+<p>
+Part of the CNS advertising
+is that its collision algorithm has lower cost than parallel rho.
+This is false advertising, as I explained above.
+Another part of the CNS advertising
+is that parallel rho
+was conjectured&mdash;even more extreme, <i>claimed</i>&mdash;to be optimal.
+This is also false advertising, as I'll explain now.
+</p>
+<p>
+The first public version of the CNS paper (3 Sep 2017 on eprint)
+included the following fabrications:
+first, that in my 2009 paper I
+"claimed that quantum computers would not make
+any improvement over on-purpose hardware for collision search",
+second,
+that I "remarked that all post-quantum algorithms for collision
+search had an <i>effective</i> cost
+of at least 2<sup>n/2</sup>".
+</p>
+<p>
+In fact,
+my paper clearly and repeatedly
+states that it is analyzing the costs of <i>known</i> algorithms.
+Here's the quote again:
+</p>
+<blockquote>
+The point of this paper is that all known quantum algorithms to find collisions in hash functions
+are <i>less</i> cost-effective than traditional cryptanalytic hardware,
+even under optimistic assumptions regarding the speed of quantum computers.
+...
+Within the space of known quantum collision algorithms,
+the most cost-effective algorithms are tantamount to non-quantum algorithms,
+and it is clear that non-quantum algorithms should be implemented with standard bits
+rather than with qubits.
+</blockquote>
+<p>
+I didn't make any claims regarding "all post-quantum algorithms for collision search";
+I explicitly referred to all <i>known</i> quantum algorithms
+for collision search.
+I made one narrow conjecture regarding
+a specific class of collision algorithms
+that I had thought about
+("There are several obvious ways to combine quantum search with the rho method,
+but I have not found any such combinations that improve performance,
+and I conjecture that&mdash;in a suitable generic model&mdash;no such improvements are possible");
+I avoided making broader conjectures.
+</p>
+<p>
+After seeing the CNS paper,
+I privately asked CNS for an erratum.
+CNS removed the fabrications
+from a subsequent update of their paper.
+However, removing a false statement isn't the same as admitting that it's false.
+There's still no erratum.
+</p>
+<p>
+This might not seem important
+as long as nobody has managed to beat 2<sup>n/2</sup>.
+But that's not the point.
+I devote a tremendous amount of effort
+to carefully assessing cryptographic risks and other security risks.
+I have very high standards for security claims,
+security conjectures, and security recommendations.
+It was wrong for the CNS paper
+to misrepresent my paper as making a security claim
+that my paper does not, in fact, make.
+</p>
+<h3>Interlude: multi-target preimages</h3>
+<p>
+The collision problem can be viewed as a simplification
+of another problem that shows up very frequently,
+namely the multi-target preimage problem.
+</p>
+<p>
+In the multi-target preimage problem,
+one is given H(x<sub>1</sub>),...,H(x<sub>T</sub>),
+and the goal is to find some y such that H(y) is in the set {H(x<sub>1</sub>),...,H(x<sub>T</sub>)}.
+A multi-target preimage attack immediately implies a collision attack
+(assuming H is reasonably far from being injective),
+so the multi-target preimage problem is at least as difficult as the collision problem,
+perhaps more difficult.
+At the end of this blog post I'll say more about the gap between these problems.
+</p>
+<p>
+Part of the security analysis in the
+<a href="https://eprint.iacr.org/2014/795">SPHINCS paper</a>
+considers the post-quantum security of multi-target preimages.
+"Bernstein [8] concludes that all known
+post-quantum collision-finding algorithms
+cost at least 2<sup>n/2</sup>,
+implying that the post-quantum cost
+of multi-target preimage attacks is also 2<sup>n/2</sup>",
+the paper states.
+"For example,
+for n = 256 and T = 2<sup>56</sup>
+the best post-quantum attacks
+use only 2<sup>100</sup> queries
+but still cost 2<sup>128</sup>."
+</p>
+<p>
+The cost metric used here is
+again price-performance ratio,
+i.e., the <i>product</i> of time and hardware cost.
+Obviously time and hardware cost
+can <i>each</i> be reduced below 2<sup>n/2</sup>:
+the parallel rho method does this for collision search,
+and parallel Grover does this for preimage search.
+But nobody has published an algorithm
+where the <i>product</i> is below 2<sup>n/2</sup>.
+</p>
+<h3>CNS false advertising, part 3</h3>
+<p>
+The CNS paper advertises multi-target preimage search
+in very much the same way that it advertises collision search:
+it falsely attributes
+conjectures to previous papers
+that did not in fact state those conjectures;
+it then falsely claims to disprove those conjectures.
+</p>
+<p>
+Specifically,
+the CNS paper considers the same
+2<sup>56</sup>-target 256-bit preimage-search example
+used in the SPHINCS paper.
+The CNS paper states
+"they claim that the best
+quantum algorithm has a cost of 2<sup>128</sup>".
+This omits a critical piece of context,
+the word "known" from the SPHINCS paper.
+Someone reading the SPHINCS paper
+finds an undisputed analysis of <i>known</i> algorithms;
+someone reading the summary in the CNS paper
+incorrectly thinks that the SPHINCS paper
+was making a claim regarding <i>all</i> algorithms.
+</p>
+<p>
+The CNS paper then says that
+"it is possible to attack their example
+with a time complexity of ... 2<sup>119.6</sup>".
+What exactly is this supposed to be contradicting?
+<i>Cost</i> in the SPHINCS paper is not <i>time</i>:
+it is the product of time and hardware cost.
+The SPHINCS paper does not make the silly claim
+that time alone is at least 2<sup>n/2</sup>:
+as noted above,
+parallel rho beats time 2<sup>n/2</sup> for collision search,
+and parallel Grover beats time 2<sup>n/2</sup> for preimage search.
+</p>
+<p>
+The CNS attack does not beat cost 2<sup>128</sup> for n=256:
+it uses 2<sup>119.6</sup> quantum operations
+times megabytes of memory.
+The CNS attack beats time 2<sup>128</sup>
+(if the quantum overhead is low enough),
+but this is not new.
+</p>
+<h3>CNS vagueness</h3>
+<p>
+Beyond the clear errors described above,
+the CNS paper has various claims of novelty
+whose meaning is unclear,
+making the claims difficult to evaluate.
+</p>
+<p>
+The abstract claims that the paper has
+"the first proof of an actual quantum time
+speedup for collision search".
+What do CNS think they mean by "actual time"?
+</p>
+<p>
+The CNS paper claims that its parallel algorithms
+"are the first ones to significantly improve
+on the best classical algorithms"
+for collision search,
+and provide "better performance
+than classical algorithms for a wide range
+[of] parameters."
+In precisely what metric
+do they think they have an improvement
+compared to non-quantum collision-finding algorithms?
+</p>
+<p>
+Of course one can point to,
+e.g., the number of H queries as a metric where the CNS algorithm
+is faster than non-quantum collision-finding algorithms.
+But then the claim to be "first" is wrong:
+the BHT algorithm already does better in this metric.
+The CNS paper also makes this claim for
+multi-target preimage search,
+but how can they say this
+when non-quantum preimage algorithms
+are already beaten by Grover's method?
+</p>
+<p>
+The CNS paper also claims
+to "solve an open problem
+and contradict a conjecture
+on the complexity of quantum collision
+and multi-target preimage search ...
+We ask the reader to keep in mind that
+these results seemed particularly
+surprising as it was conjectured that
+quantum algorithms for solving these problems
+wouldn't be more efficient than classical ones."
+What exactly is the "open problem"
+that the authors claim to be solving?
+Where is the "conjecture"
+that they claim to be contradicting?
+And, again, why are they ignoring Grover's method
+in the case of preimage search?
+</p>
+<h3>Multi-target preimage search, revisited</h3>
+<p>
+Let me close by returning to the gap
+between the complexities of collision search and multi-target preimage search.
+</p>
+<p>
+In pre-quantum cryptography,
+multi-target preimage search is quite worrisome.
+It's the main reason that I tell people to 
+<a href="20151120-batchattacks.html">upgrade from 128-bit ciphers to 256-bit ciphers</a>.
+But multi-target preimage search is certainly not as fast as collision search.
+</p>
+<p>
+In post-quantum cryptography,
+single-target preimage search suddenly drops down to 2<sup>n/2</sup> operations.
+Multi-target preimage search is therefore also 2<sup>n/2</sup> operations:
+simply focus on the first target.
+This is just as few operations as collision search,
+if we ignore quantum overhead.
+</p>
+<p>
+The post-quantum situation becomes more subtle
+if we look at the whole tradeoff curve
+between hardware cost and time.
+For example, if the time limit is 2<sup>n/3</sup>:
+</p>
+<ul>
+  <li>
+  The best collision-search algorithm known
+  uses 2<sup>n/6</sup> hardware.
+  (This is what my 2009 paper says,
+  and it's still true today.)
+  </li>
+  <li>
+  Multi-target preimage search
+  is at least as hard as collision search;
+  i.e., at least 2<sup>n/6</sup> hardware by all known algorithms.
+  </li>
+  <li>
+  Multi-target preimage search is no harder than single-target preimage search,
+  which uses 2<sup>n/3</sup> hardware by Grover's method.
+  </li>
+</ul>
+<p>
+This leaves a range of possibilities between 2<sup>n/6</sup> and 2<sup>n/3</sup>
+for the hardware cost of multi-target preimage search.
+</p>
+<p>
+Banegas and I published a 
+<a href="https://cr.yp.to/papers.html#groverrho">paper</a>
+on this topic at SAC 2017.
+There are various epsilon-power overheads in the paper
+that need to be analyzed in more detail,
+but the asymptotic exponents are clear:
+compared to single-target preimage search,
+we reduce the hardware cost by a factor T<sup>1/2-ε</sup>
+for T targets.
+(This breaks down when T is beyond the hardware size,
+but let's focus on the important case of a well-equipped attacker
+who has more hardware than targets.)
+Equivalently,
+we save a factor T<sup>1/4-ε</sup> in time
+(with a different ε) for the same hardware cost.
+</p>
+<p>
+If long-distance communication were free
+then we would do even better,
+reducing the hardware cost by a factor close to T.
+The idea here, as in my 2009 paper,
+is to make T guesses y<sub>1</sub>,...,y<sub>T</sub> in parallel,
+and then check whether any of H(y<sub>1</sub>),...,H(y<sub>T</sub>) match any of H(x<sub>1</sub>),...,H(x<sub>T</sub>),
+by sorting the whole list.
+This has chance T<sup>2</sup>/2<sup>n</sup> of success, and has hardware cost on the scale of T.
+Free communication means that parallel sorting takes very little time,
+so with time limit 2<sup>n/3</sup> we can afford 2<sup>n/3</sup> Grover iterations,
+checking 2<sup>2n/3</sup> possibilities for the vector (y<sub>1</sub>,...,y<sub>T</sub>)
+and thus increasing the success chance from T<sup>2</sup>/2<sup>n</sup> to T<sup>2</sup>/2<sup>n/3</sup>.
+Running the same thing 2<sup>n/3</sup>/T<sup>2</sup> times in parallel
+has a good chance of success, and hardware cost on the scale of 2<sup>n/3</sup>/T.
+</p>
+<p>
+With realistic communication costs,
+sorting slows down to T<sup>1/2</sup>.
+Losing a factor T<sup>1/2</sup> in the number of Grover iterations
+would reduce the success chance to T/2<sup>n/3</sup>,
+not beating single-target preimage search
+for the same amount of hardware.
+To do better,
+we combine Grover's method with the rho method:
+we compute roughly T<sup>1/2</sup> iterations of H on each of y<sub>1</sub>,...,y<sub>T</sub>,x<sub>1</sub>,...,x<sub>T</sub>,
+stopping at distinguished points,
+and sort the results.
+The paper explains how we do all of this reversibly, as required for Grover's method.
+In the end we save a factor T<sup>1/2-ε</sup> in hardware cost for the same time limit.
+</p>
+<p>
+The CNS paper instead compares H<sub>r</sub>(y) to H(x<sub>1</sub>),...,H(x<sub>T</sub>).
+Since H<sub>r</sub>(y) starts with r zero bits,
+there's no point in checking H(x<sub>i</sub>) if H(x<sub>i</sub>) doesn't start with r zero bits.
+CNS thus begin by paring the list H(x<sub>1</sub>),...,H(x<sub>T</sub>)
+down to a reduced list of approximately T/2<sup>r</sup> targets that do start with r zero bits.
+Each guess for y thus has chance
+about (T/2<sup>r</sup>)/2<sup>n-r</sup> = T/2<sup>n</sup> of success.
+Grover's method uses 2<sup>(n-s)/2</sup>/T<sup>1/2</sup> iterations on each of 2<sup>s</sup> parallel cores.
+</p>
+<p>
+The CNS paper takes r as (2/3) log<sub>2</sub> T so that serially checking T/2<sup>r</sup> = T<sup>1/3</sup> targets
+is balanced against the cost of an H<sub>r</sub> computation.
+Each core thus takes time T<sup>1/3</sup> 2<sup>(n-s)/2</sup>/T<sup>1/2</sup> = 2<sup>(n-s)/2</sup>/T<sup>1/6</sup>.
+To bring the time down to, say, 2<sup>n/3</sup>,
+one must take 2<sup>s</sup> as 2<sup>n/3</sup>/T<sup>1/3</sup>,
+and then the hardware cost is 2<sup>n/3</sup>/T<sup>1/3</sup>.
+This saves a factor T<sup>1/3</sup> in hardware cost for the same time limit.
+(As before, this breaks down when T becomes very large.)
+My result with Banegas is better, at least asymptotically:
+T<sup>1/2-ε</sup> is more of a savings than T<sup>1/3</sup>.
+</p>
+<p>
+Banegas and I put our paper online the week of SAC 2017.
+The CNS paper was posted a few weeks later,
+but the authors say that it was written independently,
+and there's no reason to question this.
+(The SAC and Asiacrypt submission deadlines were months earlier.)
+The CNS paper could and should have
+simply reported its straightforward T<sup>1/3</sup> improvement
+for multi-target preimage search,
+without the false advertising discussed above.
+But then the paper wouldn't have been accepted to Asiacrypt.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2017.10.17 of the 20171017-collisions.html web page.
+</font></body>
+</html>

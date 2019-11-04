@@ -1,0 +1,76 @@
+We looked briefly at the offline tester posted today:
+
+   https://github.com/crocs-muni/roca/blob/master/roca/detect.py
+
+The has_fingerprint_real function checks the RSA modulus N against
+various small primes (self.primes). Specifically, for each small prime
+l, it checks whether N mod l is in a precomputed list (encoded as an
+integer in self.prints).
+
+Some of these primes are filler material: e.g., the test for N mod 167
+is content-free. The other tests are as follows:
+
+   11 [1, 10]
+   13 [1, 3, 4, 9, 10, 12]
+   17 [1, 2, 4, 8, 9, 13, 15, 16]
+   19 [1, 4, 5, 6, 7, 9, 11, 16, 17]
+   37 [1, 10, 26]
+   53 [1, 4, 6, 7, 9, 10, 11, 13, 15, 16, 17, 24, 25, 28, 29, 36, 37, 38, 40, 42, 43, 44, 46, 47, 49, 52]
+   61 [1, 3, 8, 9, 11, 20, 23, 24, 27, 28, 33, 34, 37, 38, 41, 50, 52, 53, 58, 60]
+   71 [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 19, 20, 24, 25, 27, 29, 30, 32, 36, 37, 38, 40, 43, 45, 48, 49, 50, 54, 57, 58, 60, 64]
+   73 [1, 3, 7, 8, 9, 10, 17, 21, 22, 24, 27, 30, 43, 46, 49, 51, 52, 56, 63, 64, 65, 66, 70, 72]
+   79 [1, 8, 10, 18, 21, 22, 38, 46, 52, 62, 64, 65, 67]
+   97 [1, 35, 36, 61, 62, 96]
+   103 [1, 2, 4, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 23, 25, 26, 28, 29, 30, 32, 33, 34, 36, 38, 41, 46, 49, 50, 52, 55, 56, 58, 59, 60, 61, 63, 64, 66, 68, 72, 76, 79, 81, 82, 83, 91, 92, 93, 97, 98, 100]
+   107 [1, 3, 4, 9, 10, 11, 12, 13, 14, 16, 19, 23, 25, 27, 29, 30, 33, 34, 35, 36, 37, 39, 40, 41, 42, 44, 47, 48, 49, 52, 53, 56, 57, 61, 62, 64, 69, 75, 76, 79, 81, 83, 85, 86, 87, 89, 90, 92, 99, 100, 101, 102, 105]
+   109 [1, 3, 4, 5, 7, 9, 12, 15, 16, 20, 21, 22, 25, 26, 27, 28, 29, 31, 34, 35, 36, 38, 43, 45, 46, 48, 49, 60, 61, 63, 64, 66, 71, 73, 74, 75, 78, 80, 81, 82, 83, 84, 87, 88, 89, 93, 94, 97, 100, 102, 104, 105, 106, 108]
+   127 [1, 2, 4, 5, 8, 10, 16, 19, 20, 25, 27, 32, 33, 38, 40, 47, 50, 51, 54, 61, 63, 64, 66, 73, 76, 77, 80, 87, 89, 94, 95, 100, 102, 107, 108, 111, 117, 119, 122, 123, 125, 126]
+   151 [1, 3, 8, 9, 19, 20, 24, 26, 27, 28, 29, 41, 44, 50, 53, 57, 59, 60, 64, 65, 67, 68, 70, 72, 73, 78, 79, 81, 83, 84, 86, 87, 91, 92, 94, 98, 101, 107, 110, 122, 123, 124, 125, 127, 131, 132, 142, 143, 148, 150]
+   157 [1, 3, 4, 9, 10, 11, 12, 13, 14, 16, 17, 19, 25, 27, 30, 31, 33, 35, 36, 37, 39, 40, 42, 44, 46, 47, 48, 49, 51, 52, 56, 57, 58, 64, 67, 68, 71, 75, 76, 81, 82, 86, 89, 90, 93, 99, 100, 101, 105, 106, 108, 109, 110, 111, 113, 115, 117, 118, 120, 121, 122, 124, 126, 127, 130, 132, 138, 140, 141, 143, 144, 145, 146, 147, 148, 153, 154, 156]
+
+For example, the function checks whether N mod 11 is 1 or 10. Normal RSA
+moduli N can have N mod 11 being any of 1,2,3,4,5,6,7,8,9,10.
+
+For each l above, the list modulo l is a proper cyclic subgroup of the
+multiplicative group of integers modulo l. For example, 1,10,26 are the
+powers of 10 modulo 37. (Of course it is possible that there are some
+fake entries to make reverse-engineering more difficult: for example,
+the above list allows N mod 109 to be 10, but maybe the breakable keys
+are more restricted.)
+
+How can an RSA key-generation procedure be stupid enough to have N
+always restricted to, e.g., one of the six powers of 36 modulo 97?
+Speculation: Both p and q are generated in a way restricted to these
+powers, forcing N to also be one of these powers.
+
+Speculation: Infineon uses CRT and a power generator. "CRT" here means
+generating a prime by generating its remainders modulo a specified list
+of small primes, such as the list above (perhaps more---the list inside
+a test tool can be truncated once there are enough primes to prevent
+false positives), and then adding a random multiple of the product of
+the small primes: p = r + s*l1*l2*..., where s is random and r is
+constructed using CRT from its remainders. "Power generator" means that
+the remainder modulo l is generated as a power of a precomputed constant
+modulo l: i.e., r mod l1 is g^random1, r mod l2 is g^random2, etc.
+
+CRT and power generator are known techniques and are not necessarily
+bad. However, g for a correct power generator must be a generator of the
+entire multiplicative group modulo l. The problem here is that g seems
+to have been chosen poorly, as a generator of a sometimes very small
+subgroup. This restricts the number of choices for r mod l, which means
+restricting the number of choices for p mod l (and q mod l).
+
+If this is in fact what is occurring, the attacker simply tries every
+combination of possibilities for p mod l1, p mod l2, etc., from the list
+of powers of g mod l1, g mod l2, etc. There is a standard algorithmic
+technique to find "divisors in residue classes" that efficiently finds s
+if the product l1*l2*... is more than N^(1/4) (or slightly smaller).
+
+The "divisors in residue classes" technique is due to Lenstra, Rivest,
+Shamir, Konyagin, Pomerance, Coppersmith, Howgrave-Graham, and Nagaraj.
+For details and references see, e.g., Sections 5 and 6 of
+https://cr.yp.to/papers.html#smallheight.
+
+Of course primes with fewer choices are more effective here because they
+require fewer trials. If the product is larger then less effective
+primes can be skipped.

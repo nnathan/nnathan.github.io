@@ -1,0 +1,801 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2017.07.19: Benchmarking post-quantum cryptography
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html accesskey=k><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><b>2017.07.19: Benchmarking post-quantum cryptography</b> News regarding the SUPERCOP benchmarking system, and more recommendations to NIST. #benchmarking #supercop #nist #pqcrypto</td></tr>
+<tr><td><a href=20161030-pqnist.html accesskey=j><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2017.07.19: Benchmarking post-quantum cryptography</h2>
+<p>
+<a href="https://bench.cr.yp.to/supercop.html">SUPERCOP</a>,
+the System for Unified Performance Evaluation Related to Cryptographic Operations and Primitives,
+is an open benchmarking package
+that measures (currently) 2202 implementations
+of 602 cryptographic primitives.
+</p>
+<p>
+For example,
+the <tt>crypto&#95;hash/sha256</tt> directory in SUPERCOP
+contains five implementations of
+the standard SHA-256 hash function:
+<tt>crypto&#95;hash/sha256/ref</tt> (a reference implementation designed to be easy to read),
+<tt>crypto&#95;hash/sha256/cryptopp</tt> (a fast C++ implementation using the <a href="https://github.com/weidai11/cryptopp">Crypto++</a> library),
+<tt>crypto&#95;hash/sha256/openssl</tt>,
+<tt>crypto&#95;hash/sha256/sphlib</tt>,
+and
+<tt>crypto&#95;hash/sha256/sphlib-small</tt>.
+Each computer automatically selects the fastest SHA-256 implementation for the final
+<a href="https://bench.cr.yp.to/results-hash.html">speed reports</a>,
+the same way that a user prioritizing performance will select the fastest implementation.
+Including a slow implementation in the benchmarks doesn't cause any harm,
+except for a slight waste of benchmarking time.
+</p>
+<p>
+There are nearly 300 people listed in "designers" files in primitives included in SUPERCOP,
+and nearly 150 people listed in "implementors" files in implementations;
+see, e.g., the online list of
+<a href="https://bench.cr.yp.to/primitives-hash.html">hash functions and implementations</a>.
+Code is sometimes shared between implementations of primitives in the same family
+(for example,
+<tt>crypto&#95;stream/chacha12</tt> is almost
+identical to <tt>crypto&#95;stream/chacha20</tt>),
+but there are a huge number of different families.
+One of the main reasons that we've successfully reached this scale
+is that we've <b>made it very easy to add new primitives and new implementations to SUPERCOP</b>.
+To add, e.g., a
+<a href="https://bench.cr.yp.to/call-hash.html">new hash function</a>,
+you implement just one C function:
+</p>
+<pre>
+   #include "crypto&#95;hash.h"
+
+   int crypto&#95;hash(
+     unsigned char *out,
+     const unsigned char *in,unsigned long long inlen
+   )
+   {
+     ...
+     return 0;
+   }
+</pre>
+<p>
+You also create a separate file <tt>api.h</tt> with one line
+</p>
+<pre>
+   #define CRYPTO&#95;BYTES 32
+</pre>
+<p>
+saying how big the hash output is. That's it.
+</p>
+<p>
+Most cryptographic operations are more complicated than hashing,
+but the SUPERCOP interface consistently keeps the fuss to a minimum.
+Signatures, for example, use exactly three functions.
+First,
+</p>
+<pre>
+   int crypto&#95;sign&#95;keypair(
+     unsigned char *pk,
+     unsigned char *sk
+   )
+</pre>
+<p>
+generates a public key and secret key (and returns 0).
+Second,
+</p>
+<pre>
+   int crypto&#95;sign(
+     unsigned char *sm,unsigned long long *smlen,
+     const unsigned char *m,unsigned long long mlen,
+     const unsigned char *sk
+   )
+</pre>
+<p>
+uses a secret key <tt>sk</tt>
+to sign a message <tt>m</tt>
+containing <tt>mlen</tt> bytes,
+creating a signed message <tt>sm</tt>
+containing <tt>*smlen</tt> bytes
+(and again returns 0).
+Third,
+</p>
+<pre>
+   int crypto&#95;sign&#95;open(
+     unsigned char *m,unsigned long long *mlen,
+     const unsigned char *sm,unsigned long long smlen,
+     const unsigned char *pk
+   )
+</pre>
+<p>
+uses a public key <tt>pk</tt>
+to verify a signed message <tt>sm</tt>,
+creating a verified message <tt>m</tt>
+(and returns 0, or −1 if verification failed).
+Finally, there's a file <tt>api.h</tt> containing, e.g.,
+</p>
+<pre>
+   #define CRYPTO&#95;SECRETKEYBYTES 64
+   #define CRYPTO&#95;PUBLICKEYBYTES 32
+   #define CRYPTO&#95;BYTES 64
+</pre>
+<p>
+to say that <tt>sk</tt> has 64 bytes,
+<tt>pk</tt> has 32 bytes,
+and <tt>sm</tt> is at most 64 bytes longer than <tt>m</tt>.
+</p>
+<p>
+It's not a coincidence that this is exactly the same easy-to-use API
+provided by the increasingly popular NaCl (pronounced "salt") family
+of production cryptographic libraries:
+notably
+<a href="https://nacl.cr.yp.to">the original NaCl</a>,
+<a href="https://download.libsodium.org/doc/">libsodium</a>,
+and
+<a href="https://tweetnacl.cr.yp.to">TweetNaCl</a> ("tweet-salt").
+Obviously production libraries are under more constraints than benchmarks&mdash;
+</p>
+<ul>
+<li>
+  NaCl is quite picky in its choice of primitives.
+  SUPERCOP doesn't object to benchmarking MD5.
+</li>
+<li>
+  NaCl systematically avoids timing attacks such as
+  <a href="https://ts.data61.csiro.au/projects/TS/cachebleed/">CacheBleed</a>.
+  SUPERCOP doesn't object to benchmarking variable-time software.
+</li>
+<li>
+  NaCl never uses global variables and never dynamically allocates memory
+  (in its C interface; C++ NaCl uses C++ strings and does allocate memory).
+  SUPERCOP doesn't impose these rules.
+</li>
+<li>
+  NaCl follows standard library-namespacing rules.
+  SUPERCOP generally doesn't impose these rules,
+  although primitives that are used inside higher-level primitives
+  do have to follow these rules.
+</li>
+<li>
+  NaCl has gone through state-of-the-art manual verification,
+  and there are efforts to push the confidence level even higher,
+  as illustrated by <a href="https://github.com/mitls/hacl-star">HaCl*</a>
+  (which clearly should be pronounced "halt")
+  and <a href="https://gfverif.cryptojedi.org">gfverif</a>.
+  SUPERCOP is mostly unaudited.
+</li>
+</ul>
+<p>
+&mdash;but none of these constraints require a different API.
+See my paper
+<a href="https://cr.yp.to/papers.html#coolnacl">"The security impact of a new cryptographic library"</a>
+with Lange and Schwabe for further analysis of the choices made in NaCl.
+</p>
+<h3>The NIST post-quantum competition</h3>
+<p>
+NIST has announced a
+<a href="http://csrc.nist.gov/groups/ST/post-quantum-crypto/">Post-Quantum Cryptography Project</a>
+to develop standards for post-quantum cryptography.
+Submissions are due by the end of November 2017.
+(I should note that NIST
+doesn't refer to this competition
+as a "competition";
+NIST seems to think that in a "competition"
+there must be only one winner,
+the one algorithm that manages
+to chop off the heads of all the others.)
+</p>
+<p>
+A submission that turns out to be much less secure than originally claimed
+will almost certainly be kicked out of the competition:
+people will be scared of a security story that's unstable,
+or that's actually stable but poorly understood.
+But suppose many submissions survive security analysis.
+How will NIST decide what to standardize?
+</p>
+<p>
+One of the most obvious ways to answer this question
+is to ask which submissions offer the best tradeoffs
+between performance and (apparent) security:
+i.e., which submissions offer the best security levels
+under various performance constraints.
+But this requires understanding how submissions perform,
+which brings me back to benchmarking.
+</p>
+<p>
+The most important topics in this competition
+are public-key signatures and public-key encryption.
+I've happy to announce that
+SUPERCOP is now ready for post-quantum submissions of both types.
+</p>
+<h3>Case study: <tt>crypto&#95;kem/rsa2048</tt></h3>
+<p>
+The new <tt>crypto&#95;kem</tt> directory in SUPERCOP
+is for <b>key-encapsulation mechanisms</b> (KEMs).
+KEMs are a simple, robust way to handle public-key encryption,
+also highlighted in my
+<a href="20161030-pqnist.html">previous blog post</a>.
+</p>
+<p>
+What makes KEMs easier than other types of public-key encryption
+is that they don't take a user-specified message as input.
+Instead they generate and transport a secret session key.
+For example,
+Shoup's <a href="http://shoup.net/papers/iso-2&#95;1.pdf">"RSA-KEM"</a>
+(originally named "Simple RSA")
+simply chooses a random number m
+modulo the public key pq,
+and sends the ciphertext m<sup>3</sup> mod pq
+to transport the session key SHA-256(m).
+This session key can then be used to encrypt and authenticate
+any number of messages to the receiver (or from the receiver back to the sender).
+</p>
+<p>
+<tt>crypto&#95;kem/rsa2048</tt>
+is RSA-KEM using a 2048-bit public key pq.
+There are two implementations:
+<tt>crypto&#95;kem/rsa2048/gmp</tt> using the C interface
+to the GMP bigint library
+(which is automatically compiled as part of SUPERCOP),
+and
+<tt>crypto&#95;kem/rsa2048/gmpxx</tt> using the C++ interface
+to the same library.
+The C++ implementation has the advantage
+of being somewhat easier to read;
+the C implementation has the advantage
+of being callable from C programs.
+The implementations have essentially the same speed.
+</p>
+<p>
+There are four sizes in <tt>api.h</tt>.
+<tt>CRYPTO&#95;PUBLICKEYBYTES</tt> is 256 (i.e., 2048 bits).
+<tt>CRYPTO&#95;CIPHERTEXTBYTES</tt> is also 256.
+<tt>CRYPTO&#95;BYTES</tt> is 32 (i.e., 256 bits),
+the size of the session key.
+<tt>CRYPTO&#95;SECRETKEYBYTES</tt> is 384;
+this is used for two 1024-bit primes p and q,
+and the 1024-bit inverse of p modulo q.
+</p>
+<p>
+The C++ implementation defines
+<tt>crypto&#95;kem&#95;keypair</tt> in <tt>keypair.cpp</tt>,
+<tt>crypto&#95;kem&#95;enc</tt> in <tt>enc.cpp</tt>,
+and
+<tt>crypto&#95;kem&#95;dec</tt> in <tt>dec.cpp</tt>.
+It also has two subroutines,
+<tt>gmpxx&#95;export.cpp</tt>
+and
+<tt>gmpxx&#95;import.cpp</tt>,
+for conversions between GMP bigints
+(<tt>mpz&#95;class</tt>)
+and little-endian strings.
+The C implementation is structured similarly.
+</p>
+<p>
+To hash the random number <tt>m</tt>,
+<tt>enc.cpp</tt> and <tt>dec.cpp</tt>
+simply call the <tt>crypto&#95;hash&#95;sha256</tt> function
+defined elsewhere in SUPERCOP:
+</p>
+<pre>
+   #include "crypto&#95;hash&#95;sha256.h"
+   ...
+   crypto&#95;hash&#95;sha256(k,mstr,NBYTES);
+</pre>
+<p>
+Notice that this is including
+<tt>crypto&#95;hash&#95;sha256.h</tt>
+and calling <tt>crypto&#95;hash&#95;sha256</tt>,
+whereas the SHA-256 implementation
+included <tt>crypto&#95;hash.h</tt>
+and defined <tt>crypto&#95;hash</tt>.
+The extended name <tt>crypto&#95;hash&#95;sha256</tt>
+allows several hash functions to coexist
+inside the SUPERCOP library.
+Another automatic name change is that the
+</p>
+<pre>
+   #define CRYPTO&#95;BYTES 32
+</pre>
+<p>
+from <tt>api.h</tt> in the SHA-256 implementation
+turns into a definition of
+<tt>crypto&#95;hash&#95;BYTES</tt>
+in <tt>crypto&#95;hash.h</tt> in that implementation,
+and a definition of
+<tt>crypto&#95;hash&#95;sha256&#95;BYTES</tt>
+in <tt>crypto&#95;hash&#95;sha256.h</tt>.
+</p>
+<p>
+Does the NIST API allow submitters to call
+<tt>crypto&#95;hash&#95;sha256</tt>?
+The answer isn't clear.
+The alternative is to demand separate SHA-256 implementations
+from every submitter who wants to use SHA-256;
+I see this as a pointless waste of time.
+The benchmarking framework can and does provide SHA-256,
+and someone who wants to write another benchmarking framework
+should also provide SHA-256
+instead of asking a bunch of submitters to provide it.
+<b>Recommendation to NIST:</b>
+Adjust the API to clearly allow submissions
+to call <tt>crypto&#95;hash&#95;sha256</tt>.
+</p>
+<p>
+Does the NIST API allow submitters to call GMP?
+Again the answer isn't clear,
+even though there will certainly be submissions
+that will benefit from GMP.
+NIST has made a generic proposal to allow each submission package
+to include a script to compile and install external libraries,
+but
+</p>
+<ul>
+  <li>
+    the scalability of this proposal is terrible
+    (how many times is each benchmarking run going to compile GMP?),
+  </li>
+  <li>
+    there are many unclear details that would be needed for automation
+    (e.g., how does the benchmarking package know to link to <tt>libgmp.a</tt>?
+    <tt>libgmpxx.a</tt>?),
+    and
+  </li>
+  <li>
+    forcing multiple submitters to create library scripts
+    is clearly worse than doing the work once centrally.
+  </li>
+</ul>
+<p>
+<b>Recommendation to NIST:</b>
+Adjust the API to clearly allow submissions
+to call GMP.
+</p>
+<p>
+Finally,
+there are actually two different security goals for KEMs,
+a stronger "active" goal ("IND-CCA2")
+and a weaker "passive" goal.
+There's a file <tt>crypto&#95;kem/rsa2048/active</tt>
+indicating that <tt>crypto&#95;kem/rsa2048</tt>
+is aiming for the active goal.
+Of course, we'll benchmark submissions to SUPERCOP
+whether or not they have such security declarations.
+</p>
+<h3>Converting KEMs to traditional public-key cryptosystems</h3>
+<p>
+In my previous blog post,
+I suggested
+</p>
+<blockquote>
+defining some standard conversions that NIST will apply
+automatically: e.g., converting a CCA2-secure KEM into CCA2-secure PKE
+by composition with AES-256-GCM, and converting the other way by
+encrypting a random 256-bit key. NIST won't want to listen to pointless
+arguments such as "yes we know we're worse than this PKE but it wasn't
+submitted to the KEM category" from KEM submitters, and won't want to
+have to wade through artificially bloated PKE+KEM submissions that are
+really just one design but want to compete in every category.
+</blockquote>
+<p>
+PKE is the traditional notion of a public-key cryptosystem,
+where the ciphertext communicates a user-selected plaintext.
+</p>
+<p>
+NIST has issued a vague statement that it will
+"apply standard conversion techniques
+to convert between schemes if necessary",
+but it hasn't made an explicit list of which conversions will be applied.
+For example,
+it's totally unclear to me whether NIST will automatically
+treat KEM submissions as PKE submissions,
+and, if so, what conversion it will apply.
+<b>Recommendation to NIST:</b>
+Make an explicit list of automatic conversions that NIST is guaranteed to apply.
+</p>
+<p>
+Here's an illustrative example of a conversion that can be applied
+(by submitters or by NIST).
+There's now a <tt>crypto&#95;encrypt/rsa2048</tt>
+that puts together <tt>crypto&#95;kem/rsa2048</tt>
+and <tt>crypto&#95;aead/aes256gcmv1</tt>
+in a straightforward way,
+using the session key transported by RSA-KEM
+as the key for AES-256-GCM
+to encrypt and authenticate the plaintext.
+The PKE ciphertext is the KEM ciphertext followed by the AES-256-GCM ciphertext.
+(Maybe I should again emphasize that
+SUPERCOP is generally unaudited;
+even something that sounds this easy can be screwed up.)
+</p>
+<p>
+SUPERCOP compiles <tt>crypto&#95;kem</tt>
+before <tt>crypto&#95;encrypt</tt>.
+Any <tt>crypto&#95;encrypt</tt> function
+can call any <tt>crypto&#95;kem&#95;X</tt> function,
+provided that there's a <tt>crypto&#95;kem/X/used</tt> file
+to tell SUPERCOP to include
+<tt>crypto&#95;kem&#95;X</tt>
+in the library.
+The <tt>crypto&#95;kem/X/Y</tt> implementation
+has to follow standard library-namespacing rules,
+keeping all non-static symbols
+within the <tt>crypto&#95;kem&#95;X&#95;Y&#95;*</tt> namespace.
+This is done automatically by <tt>crypto&#95;kem.h</tt>
+for the <tt>crypto&#95;kem&#95;keypair</tt>,
+<tt>crypto&#95;kem&#95;enc</tt>,
+and
+<tt>crypto&#95;kem&#95;dec</tt> functions.
+</p>
+<p>
+I've considered including a <tt>crypto&#95;kem2</tt>
+compiled after <tt>crypto&#95;encrypt</tt>,
+to simplify code reuse in the other direction,
+but this has been subsumed by a broader plan
+to allow
+arbitrary directed acyclic graphs of dependencies.
+As a workaround in the meantime,
+submitters can use symbolic links
+to share software across directories.
+</p>
+<p>
+There was already a <tt>crypto&#95;encrypt/ronald2048</tt>
+using RSA-2048 in a more complicated way,
+including "message recovery" to save space:
+if the plaintext is long then the <tt>ronald2048</tt> ciphertext
+is just 75 bytes longer.
+As this example illustrates,
+building PKE directly can have an efficiency advantage
+compared to building PKE via KEM.
+Typically the session key transported by a KEM
+is reused to encrypt many packets,
+making this advantage unnoticeable,
+but sometimes it's important to squeeze as much as possible
+into the first packet.
+</p>
+<p>
+The <tt>ronald2048</tt> implementation
+is a wrapper that I wrote almost a decade ago
+on top of OpenSSL.
+(This assumes that the operating system has OpenSSL installed.
+Including OpenSSL in SUPERCOP,
+and specifically dealing with the OpenSSL build system,
+turned out to be too much of a hassle,
+although maybe this decision should be revisited
+after various improvements to OpenSSL.)
+GMP seems about twice as fast as OpenSSL on Haswell,
+suggesting that
+<tt>ronald2048</tt> should be reimplemented on top of GMP.
+GMP now includes various <tt>sec</tt> functions
+that are supposed to run in constant time,
+although I haven't tried using these yet.
+</p>
+<h3>Frequently asked questions</h3>
+<p>
+<b>Where does SUPERCOP discussion happen?</b>
+Send an empty message to <tt>ebats-subscribe</tt> at <tt>list.cr.yp.to</tt>
+to join the mailing list.
+</p>
+<p>
+<b>How do I obtain random bytes in my software?</b>
+Call <tt>randombytes</tt> wherever the specification asks for random bytes.
+<tt>randombytes</tt> is a strong random-number generator (RNG)
+provided by SUPERCOP.
+Don't use <tt>rand</tt> or <tt>random</tt>: they aren't cryptographically strong.
+If possible,
+don't use the OpenSSL RNG: SUPERCOP's automatic testing relies on
+all randomness coming from <tt>randombytes</tt>.
+</p>
+<p>
+Later in this blog post I'll give examples of how <tt>randombytes</tt> is used.
+My next blog post will dive into the internal details
+of the "fast-key-erasure RNG" now used by SUPERCOP,
+but you can simply call <tt>randombytes</tt> without worrying about these details.
+</p>
+<p>
+<b>Do I have to submit both a reference implementation and an "optimized" implementation?</b>
+No.
+If in doubt,
+submit just a reference implementation:
+an implementation that's designed to be as easy as possible to read,
+without concern for speed.
+There are many good examples (and some not-so-good examples)
+in various <tt>ref</tt> directories in SUPERCOP.
+</p>
+<p>
+Of course you can also submit one or more "optimized" implementations,
+but your best bet for making things run <i>really</i> fast
+is to attract the attention of an optimization expert.
+The expert will start by asking how much arithmetic your code is doing
+and whether some of this arithmetic can be removed;
+this is generally much easier to understand
+from a reference implementation than from an "optimized" implementation.
+</p>
+<p>
+<b>Can my software use <tt>gcc</tt> features beyond C89 ("ANSI C")?</b>
+Yes.
+Whatever compiles and runs on our benchmarking machines is fine.
+This is a benchmarking project, not a language-lawyering project.
+</p>
+<p>
+Practically all of the benchmarking machines have <tt>gcc</tt> installed,
+and the stragglers have <tt>clang</tt>,
+which seems to try hard to support all of the usual uses of <tt>gcc</tt>.
+SUPERCOP automatically tries many different compiler options;
+see <tt>okcompilers/c</tt> for the list,
+and <tt>okcompilers/cpp</tt> for the corresponding C++ list.
+If your code desperately needs another compiler option,
+please speak up on the mailing list to explain the issue.
+Most, although not all, of the machines are little-endian.
+All of the machines have two's-complement arithmetic and 8-bit "char".
+</p>
+<p>
+<b>Can the optimized software use vector instructions? Assembly?</b>
+Yes, of course.
+Most cryptographic speed records use vector instructions and/or assembly.
+<b>Recommendation to NIST:</b>
+Clearly state that this is allowed.
+</p>
+<p>
+<b>Can the optimized software use multiple cores?</b>
+No.
+Running on multiple cores might make sense for some big operations
+(such as RSA key generation)
+but creates various measurement issues that SUPERCOP hasn't learned how to handle.
+</p>
+<h3>Randomness and known-answer tests</h3>
+<p>
+Let's go back to <tt>crypto&#95;kem/rsa2048</tt>.
+To generate a random m in the first place,
+<tt>enc.cpp</tt> calls
+a <tt>randombytes</tt> function provided by SUPERCOP:
+</p>
+<pre>
+   #include "randombytes.h"
+   ...
+   unsigned char mstr[NBYTES];
+   ...
+   randombytes(mstr,NBYTES);
+</pre>
+<p>
+Similarly,
+<tt>keypair.cpp</tt> has
+a <tt>randomprime</tt> function
+that calls <tt>randombytes</tt> in a loop.
+Each time through the loop generates a random integer
+and then checks whether the integer is prime.
+</p>
+<p>
+SUPERCOP has two implementations of <tt>randombytes</tt>.
+Both of them are built from strong high-speed stream ciphers.
+In previous versions of SUPERCOP, <tt>randombytes</tt> was strong but much slower.
+The new speed doesn't really matter for RSA,
+and in general there have been very few complaints
+about the time for <tt>randombytes</tt>
+(which has always been included in SUPERCOP's measurements);
+but randomness is a much larger part
+of the overall computation
+for some post-quantum primitives,
+making RNG speed an important issue.
+If those primitives end up being deployed
+then production cryptographic libraries
+will also start paying more attention
+to the speed of randomness generation.
+</p>
+<p>
+The big difference between the two <tt>randombytes</tt> implementations
+is that one, <tt>fastrandombytes</tt>,
+is seeded from the kernel's random-number generator
+and used by SUPERCOP for benchmarks,
+while the other, <tt>knownrandombytes</tt>,
+is <i>deterministically</i> seeded
+and used by SUPERCOP
+to automatically generate known-answer tests.
+Of course,
+making this automatic strategy work
+means prohibiting
+all use of randomness from other sources.
+That's why I said that you shouldn't use, e.g.,
+the random-number generator built into OpenSSL.
+</p>
+<p>
+Sometimes a simple reference implementation
+will have a loop of processing random numbers,
+say 1024 times calling <tt>randombytes(...,4)</tt>
+and processing the result.
+An optimized implementation
+might instead call <tt>randombytes(...,4096)</tt>
+and use vector instructions to process the results.
+Will the resulting bytes from <tt>randombytes</tt>
+be identical for known-answer tests?
+SUPERCOP now guarantees that the answer is yes.
+<b>Recommendation to NIST:</b>
+Make the same guarantee in the NIST API.
+</p>
+<p>
+If an optimization involves a heavier change in randomness generation
+(e.g., switching a lattice-based system from one "sampler" to another),
+then the optimization is a different primitive,
+with different results in known-answer tests
+and potentially with a different security level,
+so it has to be submitted to SUPERCOP under a different name.
+But merely changing how the <tt>randombytes</tt> stream is divided into packets
+doesn't require splitting primitives.
+</p>
+<p>
+SUPERCOP now reports the number of bytes
+obtained from <tt>randombytes</tt>,
+and the number of calls to <tt>randombytes</tt>,
+allowing reasonably accurate extrapolations
+of the impact of changes in the performance of <tt>randombytes</tt>.
+</p>
+<h3>How NIST currently handles randomness and known-answer tests</h3>
+<p>
+The NIST API puts three unfortunate restrictions
+on how implementations use <tt>randombytes</tt>.
+</p>
+<p>
+<b>First:</b>
+NIST requires implementations
+to provide not merely <tt>keygenerate</tt>
+and <tt>encapsulate</tt> and <tt>decapsulate</tt>
+(i.e., <tt>keypair</tt> and <tt>enc</tt> and <tt>dec</tt>),
+but also a deterministic <tt>keygenerate&#95;KAT</tt>
+and a deterministic <tt>encapsulate&#95;KAT</tt>.
+These deterministic functions take as extra input
+a limited-size seed
+(24, 32, or 40 bytes,
+depending on the security level),
+and are required to deterministically expand this seed
+into whatever number of bytes they actually need.
+</p>
+<p>
+The <tt>rsa2048</tt> example illustrates how annoying this would be.
+Consider, for example,
+the rejection-sampling loop in encryption,
+used to generate a uniform random integer m below the public key n:
+</p>
+<pre>
+   do {
+     randombytes(mstr,NBYTES);
+     m = gmpxx&#95;import(mstr,NBYTES);
+   } while (m &gt;= n);
+</pre>
+<p>
+This <tt>randombytes</tt> call has to be replaced:
+<tt>mstr</tt> has to be produced in some specified way
+from the seed provided as <tt>encapsulate&#95;KAT</tt> input.
+There has to be some sort of state initialized from the seed,
+modified each time through the loop,
+and used to generate <tt>mstr</tt>.
+</p>
+<p>
+The situation is even worse for key generation:
+<tt>randombytes</tt> is naturally called
+inside <tt>randomprime</tt>,
+so the state needs to be passed
+from the key-generation function to <tt>randomprime</tt>.
+This means more arguments to the <tt>randomprime</tt> function
+(including a return mechanism for the updated state);
+or, alternatively, putting the state into a global variable,
+which is okay for benchmarking
+but pointlessly separates benchmarking from production.
+</p>
+<p>
+Why is this randomness-state-management effort being imposed upon every implementor
+instead of being done once <i>inside</i> the implementation of <tt>randombytes</tt>?
+Why should public-key people have to worry about randomness-generation details?
+</p>
+<p>
+<b>Second:</b>
+NIST requires the deterministic expansion
+to use a NIST-approved DRBG
+(unless the submitter can explain
+why a NIST-approved DRBG
+wouldn't be "suitable").
+This makes the submitter's job even more complicated:
+NIST's DRBGs are not particularly easy to understand or implement.
+</p>
+<p>
+For comparison,
+if submitters simply call <tt>randombytes</tt> whenever they need randomness,
+then using a NIST-approved DRBG to generate randomness
+boils down to <i>one person</i> implementing the DRBG
+and providing it as <tt>randombytes</tt>.
+This is much better software engineering
+than having every submitter reimplement the DRBG.
+</p>
+<p>
+<b>Third:</b>
+Are you thinking that it will at least be possible
+to submit <tt>keygenerate</tt>
+and <tt>encapsulate</tt> functions
+that simply call <tt>randombytes</tt>,
+so that readers can skip the bloated
+<tt>keygenerate&#95;KAT</tt>
+and <tt>encapsulate&#95;KAT</tt>?
+</p>
+<p>
+Nope.
+NIST requires the non-deterministic <tt>keygenerate</tt>
+and <tt>encapsulate</tt>
+to limit their use of <tt>randombytes</tt>,
+generating only the same limited-size seed
+used by the <tt>KAT</tt> calls.
+So a simple implementation isn't possible:
+the submitter can't do better than having <tt>keygenerate</tt>
+and <tt>encapsulate</tt>
+call <tt>keygenerate&#95;KAT</tt>
+and <tt>encapsulate&#95;KAT</tt>
+respectively.
+</p>
+<p>
+(You can and should provide simpler
+<tt>keypair</tt> and <tt>enc</tt> and <tt>dec</tt>
+functions for SUPERCOP,
+using <tt>randombytes</tt> for randomness.)
+</p>
+<p>
+<b>Recommendation to NIST:</b>
+Change the NIST API to allow <tt>randombytes</tt>
+to be called as often as desired.
+Explicitly say that <tt>randombytes</tt> should be used
+whenever the specification calls for randomness.
+Rename <tt>keygenerate</tt>
+and <tt>encapsulate</tt> and <tt>decapsulate</tt>
+as <tt>keypair</tt> and <tt>enc</tt> and <tt>dec</tt>
+(but don't do this if you're still insisting
+on incompatibilities in the randomness semantics!).
+Scrap the extra <tt>KAT</tt> calls:
+they're a big step backwards from SUPERCOP's automatic known-answer tests.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2017.07.19 of the 20170719-pqbench.html web page.
+</font></body>
+</html>

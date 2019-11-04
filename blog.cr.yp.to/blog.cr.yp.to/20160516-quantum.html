@@ -1,0 +1,934 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2016.05.16: Security fraud in Europe's "Quantum Manifesto"
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html accesskey=k><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b> How quantum cryptographers are stealing a quarter of a billion Euros from the European Commission. #qkd #quantumcrypto #quantummanifesto</td></tr>
+<tr><td><a href=20160315-jefferson.html accesskey=j><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</h2>
+<p>
+"Europe plans giant billion-euro quantum technologies project,"
+says a 21 April 2016
+<a href="http://www.nature.com/news/europe-plans-giant-billion-euro-quantum-technologies-project-1.19796">news story</a> in <i>Nature</i>.
+"The European Commission has quietly announced plans
+to launch a €1-billion (US$1.13 billion) project
+to boost a raft of quantum technologies&mdash;from secure communication networks
+to ultra-precise gravity sensors and clocks."
+</p>
+<p>
+The relevant
+<a href="http://europa.eu/rapid/press-release%5FIP-16-1408%5Fen.htm">press release</a>
+from the European Commission
+is actually titled
+"European Cloud Initiative to give Europe a global lead in the data-driven economy"
+and says
+"The Commission today presented its blueprint
+for cloud-based services and world-class data infrastructure
+to ensure science, business and public services reap benefits of big data revolution."
+The word "quantum" appears just twice in the press release:
+</p>
+<ul>
+<li>
+Günther H. Oettinger, Commissioner for the Digital Economy and Society,
+is quoted as saying "We will also be looking into the potential of quantum technologies
+which hold the promise to solve computational problems beyond current supercomputers."
+</li>
+<li>
+One of the "actions" that the "Commission will progressively put in place"
+is "launching a flagship-type initiative to accelerate the nascent development of quantum technology,
+which is the basis for the next generation of supercomputers."
+</li>
+</ul>
+<p>
+The word appears just once in the European Commission's
+accompanying <a href="http://europa.eu/rapid/press-release%5FMEMO-16-1409%5Fen.htm">"fact sheet"</a>,
+proposing to spend
+"€1 billion for a large-scale EU-wide quantum technologies flagship"
+as part of spending
+6.7 billion Euros on a "European Cloud Initiative".
+</p>
+<p>
+<h3>Mission creep, part 1: from big data to quantum computing</h3>
+<p>
+It is clear that if large universal quantum computers are built
+then they will be much faster than conventional supercomputers
+for many important computations.
+In particular, Grover's algorithm will speed up very large "combinatorial searches"
+that arise in many areas of science and that consume huge amounts of computation today.
+The scientific literature contains ample justification for continuing to fund research into
+</p>
+<ul>
+<li>
+<b>quantum hardware:</b>
+plausible methods of building large universal quantum computers,
+and eventually finding ways to make them run faster;
+and
+</li>
+<li>
+<b>quantum software:</b>
+understanding what these computers will be able to do&mdash;in particular,
+designing and optimizing quantum algorithms.
+</li>
+</ul>
+<p>
+But the interesting quantum computations are not big-data computations.
+They are <i>big computations on small data</i>.
+The big-data computations that people carry out, and want to carry out,
+fundamentally involve much more input and output,
+exactly the weak point of quantum algorithms.
+Even under extremely optimistic 20-year projections of progress in building quantum computers,
+big-data computations cannot reasonably be expected to see a quantum speedup.
+No, Grover's algorithm will <i>not</i> let Google search the Internet more quickly.
+</p>
+<p>
+The European Commission says that its goal
+is to "give Europe a global lead in the data-driven economy"
+so that everyone reaps "benefits of big data revolution".
+How could they have thought that this goal
+justifies putting massive funding (1 billion Euros, 15% of the total European Cloud Initiative funding)
+into quantum computation?
+Here are three theories:
+</p>
+<ul>
+<li><b>Theory 1: malice.</b>
+The European Commission consulted experts in quantum algorithms,
+and those experts allowed honesty to be overridden by financial incentives.
+Here's what an expert could have been thinking:
+"If I tell them that quantum computers won't process big data
+then they'll take away money for quantum-algorithms research!
+So I'll tell them that that quantum algorithms are important for future supercomputing
+and that supercomputing is important for big data.
+It's not my fault if they leap to the incorrect conclusion
+that quantum algorithms are important for big data, right?"
+</li>
+<li><b>Theory 2: stupidity.</b>
+The European Commission didn't consult experts in quantum algorithms.
+Instead it consulted physicists who are working on <i>building</i> quantum computers
+and who don't have any real understanding
+of what future quantum computers can reasonably be expected to do.
+These people could have been honestly thinking
+that quantum algorithms are important for big data,
+because they simply don't know any better.
+</li>
+<li><b>Theory 3: marketing.</b>
+The European Commission actually has only the foggiest idea
+of what it means by "the Cloud" and "the data-driven economy".
+Isn't every Internet server really part of the Cloud?
+And don't all algorithm inputs qualify as data?
+Isn't even the tiniest piece of data
+part of the big-data revolution that surrounds us all?
+Join us in relabeling your research with the latest buzzwords!
+</li>
+</ul>
+<p>
+Each of these theories raises troubling questions
+regarding the mechanisms used to build
+public interest in funding scientific research.
+</p>
+<h3>Mission creep, part 2: from quantum computing to quantum everything</h3>
+<p>
+For the rest of this blog post,
+let's simply assume that it's reasonable to spend 1 billion Euros
+to look into "the potential of quantum technologies
+which hold the promise to solve computational problems beyond current supercomputers."
+This is still quite different from what the <i>Nature</i> story said:
+namely, that the 1 billion Euros are
+"to boost a raft of quantum technologies&mdash;from secure communication networks
+to ultra-precise gravity sensors and clocks."
+</p>
+<p>
+Where does <i>Nature</i> get the idea that the European Commission
+is funding an unfocused "raft of quantum technologies"
+rather than quantum computing in particular?
+The story quotes Tommaso Calarco, who
+"co-authored a blueprint behind the initiative,
+which was published in March, called the Quantum Manifesto";
+and says that this "initiative" was
+"driven by an 18-month dialogue between the commission
+and a group of researchers who, at the organization’s request, produced the manifesto."
+</p>
+<p>
+The
+<a href="http://qurope.eu/system/files/u567/Quantum%20Manifesto.pdf">Quantum Manifesto</a>
+is a 19-page white paper full of pictures and sidebars,
+obviously aimed at politicians.
+Its title is "Quantum Manifesto: A New Era of Technology" ("Draft&mdash;March 2016").
+The Manifesto has two other pages with statements in very large fonts:
+page 2 says
+"This manifesto is a call to launch
+an ambitious European initiative in quantum technologies,
+needed to ensure Europe's leading role in a technological revolution now under way"
+and page 6 says
+"Europe needs strategic investment now in order to lead the second quantum revolution.
+Building upon its scientific excellence,
+Europe has the opportunity to create a competitive industry for long-term prosperity and security."
+</p>
+<p>
+The six items highlighted in the Manifesto's "Quantum Technologies Timeline" are
+"Atomic quantum clocks";
+"Quantum sensors";
+"Intercity quantum link";
+"Quantum simulators" (special-purpose quantum computers for physics simulation);
+"Quantum-safe communication network";
+and
+"Universal quantum computers".
+The four main topics highlighted in sidebars are
+"Quantum communication";
+"Quantum simulators";
+"Quantum sensors";
+and
+"Quantum computers".
+</p>
+<p>
+The Manifesto doesn't claim that "Atomic quantum clocks" and "Quantum sensors"
+and "Intercity quantum link" and "Quantum-safe communication network"
+are relevant to the goal stated by Oettinger
+("to solve computational problems beyond current supercomputers")
+or to the rationale stated by the European Commission for funding a quantum-technology flagship
+("the basis for the next generation of supercomputers").
+Instead the Manifesto claims that these are beneficial for their own sake.
+For example, the Manifesto mentions
+"gravity and magnetic sensors for health care, geosurvey and security";
+it doesn't claim supercomputing as an application
+(and I can't imagine how anyone would try to justify such a claim).
+</p>
+<p>
+In short,
+at least half of the scope of the Manifesto,
+presumably at least half of the billion Euros in funding,
+is quite blatantly hijacking "European Cloud Initiative" funding
+and diverting it to different goals.
+</p>
+<p>
+It is interesting to note that a
+<a href="http://www.nature.com/news/market-forces-1.19878">subsequent <i>Nature</i> editorial</a>
+described the spread of Manifesto topics as a "mistake"
+and recommended instead
+"focusing investment on one high-risk, high-gain goal&mdash;such as a universal quantum computer".
+The editorial board doesn't seem to have noticed
+that quantum computing was the sole rationale stated by the European Commission
+for funding this flagship!
+</p>
+<h3>The dark side of quantum computing</h3>
+<p>
+If I saw a funding proposal for, say, the coal industry,
+then I would expect it to have an extensive discussion
+of the environmental impact of the coal industry.
+I would expect it to allocate massive funding towards <i>reducing</i> this impact.
+And I would expect the politicians
+to solicit feedback from environmental experts:
+is this funding really the best way to address the problem,
+or should it instead be spent in other ways?
+</p>
+<p>
+Similarly,
+I think that anyone proposing funding for quantum computing
+is ethically obliged to highlight the fact that
+quantum technologies are a <b>huge threat to security</b>.
+</p>
+<p>
+We all rely on the security of cryptographic signatures on software updates.
+But RSA and ECC, the most popular signature mechanisms today,
+are both known to be broken in polynomial time by Shor's quantum algorithm.
+This algorithm is smaller and faster than most of the algorithms
+used to justify investment in building large universal quantum computers.
+There are no obvious obstacles to attackers building quantum computers
+that will rapidly break RSA keys and ECC keys,
+allowing the attackers to forge software updates
+and seize control of all of our computers.
+</p>
+<p>
+<a href="https://pqcrypto.org"><b>Post-quantum cryptography</b></a>
+is society's most plausible path towards preventing the quantum apocalypse.
+Most importantly, this research area includes
+</p>
+<ul>
+<li><b>quantum cryptanalysis</b>,
+i.e.,
+analyzing which cryptographic systems beyond RSA and ECC will be broken by quantum computers;
+and
+</li>
+<li><b>post-quantum cryptographic engineering</b>,
+i.e.,
+preparing the remaining cryptographic algorithms for deployment as soon as possible.
+</li>
+</ul>
+<p>
+Example of a question in quantum cryptanalysis:
+recent research has found a polynomial-time quantum algorithm
+to break the Smart&ndash;Vercauteren lattice-based cryptosystem;
+can the attacks be extended to other lattice-based cryptosystems?
+Example of a question in post-quantum cryptographic engineering:
+researchers have built confidence in the security of the SHA-3 hash function
+and hash-based signature systems;
+but can we deploy these signature systems
+while meeting the performance and usability requirements of applications?
+</p>
+<p>
+Obviously we need to replace RSA and ECC <i>before</i>
+attackers are armed with quantum computers running Shor's algorithm.
+There are several reasons that action is particularly urgent.
+First, there is a long path from papers to widespread deployment.
+Second, many deployed devices last for years without being upgraded.
+Third,
+larger and larger fractions of Internet traffic are being recorded,
+including the private communications of
+doctors, journalists, lawyers, diplomats, therapists, human-rights workers, etc.,
+again protected primarily by RSA and ECC.
+</p>
+<p>
+There is a significant risk that
+all of the benefits of quantum computing during the next 20 years
+will be outweighed by the security devastation caused by quantum computing during the same period.
+Does this mean that public research into quantum computing should be halted?
+I don't think so.
+I don't believe that halting research will be effective in stopping attackers.
+NSA, for example, has its own quantum-computing budget,
+as shown by the Snowden revelations.
+What <i>will</i> be effective in stopping attackers
+is post-quantum cryptography.
+</p>
+<h3>How security is advertised in the Quantum Manifesto</h3>
+<p>
+This brings me to what <i>really</i> bugs me about the Quantum Manifesto.
+Instead of highlighting the security threat of quantum technology
+and recommending funding for a scientifically justified response,
+the Manifesto makes the thoroughly deceptive claim
+that quantum technology <i>improves</i> security.
+</p>
+<p>
+Later I'll get to the details of this claim.
+First let's look at some examples of how prominent this security advertising is:
+</p>
+<ul>
+<li>The accompanying call for endorsement of the Manifesto
+says that this "initiative" will
+"create new commercial opportunities addressing global challenges,
+provide <i>strategic capabilities for security</i>
+and seed as yet unimagined capabilities for the future" (emphasis added).
+Security is the only actual topic hiding inside this thicket of buzzwords
+("opportunities" and "challenges" and "capabilities" and so on).
+This sentence is repeated inside the Manifesto.
+</li>
+<li>The same call for endorsement concludes that the initiative
+"will result in a more sustainable, more productive, more entrepreneurial
+<i>and more secure</i>
+European Union" (emphasis added).
+This is also repeated inside the Manifesto.
+</li>
+<li>The Manifesto claims that quantum technologies have
+"far-reaching applications,
+including
+<i>secure communication networks</i>,
+sensitive sensors for biomedical imaging
+and fundamentally new paradigms of computation" (emphasis added).
+Notice that security is again highlighted as the top application.
+</li>
+<li>The Manifesto claims that "Applications [of quantum technologies]
+are of strategic importance to Europe's independence and safety&mdash;in
+<i>the field of secure information storage and transmission, for instance,</i>
+and in creating new materials for energy solutions and medicine" (emphasis added).
+Notice that security is once again highlighted.
+</li>
+<li>I mentioned above that "Quantum communication" is one of four main topics
+highlighted in sidebars inside the Manifesto.
+The "Quantum communication" sidebar begins as follows:
+"Communication security is of strategic importance to consumers, enterprises and governments alike."
+</li>
+<li>The third of six items highlighted in the "Timeline" is as follows:
+"A secure intercity quantum link between a number of European capitals
+will allow transmission of highly sensitive data without any risk of interception.
+It may contain ground or satellite-based protected nodes
+derived from the development of trusted nodes and quantum repeaters."
+</li>
+<li>The fifth of six items highlighted in the "Timeline" is as follows:
+"A global quantum-safe communication network&mdash;a quantum internet combining
+quantum with classical information and encryption&mdash;offers security for internet
+transactions against the threat of a quantum computer breaking purely classical
+encryption schemes."
+Notice that the Manifesto briefly mentions the security threat here,
+but at the same time claims that it solves the threat.
+</li>
+</ul>
+<p>
+Security is mentioned a total of 30 times in the manifesto,
+with quantum technologies consistently portrayed as the hero saving the day.
+This is like a coal-industry proposal
+proudly portraying coal as being <i>good</i> for the environment.
+Coal has far-reaching applications to improve the environment!
+Whatever threat coal might pose to the environment,
+coal itself is the solution!
+Coal will lead to a cleaner European Union!
+</p>
+<p>
+This coal-industry example is imaginary (I hope),
+but I've seen many other examples of funding requests
+that rely critically on exaggerated claims of societal benefits.
+Of course, people in research area X
+who make exaggerated claims of impact <i>within X</i>
+can expect to find their claims shredded by reviewers from the same area,
+but how will they be punished
+if they make exaggerated claims of impact <i>on something else</i>?
+This is particularly important for exaggerated claims of security impact:
+security has always been notoriously difficult for users to evaluate.
+</p>
+<p>
+Suppose you're a politician seeing
+a bunch of physicists asking for a quarter of a billion Euros for "quantum communication".
+The core justification for this request
+is the claim that "quantum communication" will provide security benefits.
+Don't you want to hear an assessment of this claim from security experts?
+Obviously society is facing security problems,
+but this doesn't mean that you should mindlessly throw money
+at anything that claims to be a solution.
+Don't you want to know whether the security community
+views this expenditure as a smart way to address the problems,
+or as an astoundingly stupid way to address the problems?
+</p>
+<p>
+The claims of amazing security benefits from "quantum communication" aren't new.
+My experience is that most security experts
+simply dismiss quantum communication on the basis of its prohibitive cost (see below),
+but it isn't hard to find literature analyzing the security claims in more detail.
+For example:
+</p>
+<ul>
+<li>The 2004 Paterson&ndash;Piper&ndash;Schack paper
+<a href="https://eprint.iacr.org/2004/156.pdf">"Quantum cryptography: a practical information security perspective"</a>
+concludes that the set of applications for an "unconditionally secure QKE protocol
+... is in fact rather limited".
+</li>
+<li>The 2008 Schneier essay
+<a href="https://www.schneier.com/essays/archives/2008/10/quantum%5Fcryptography.html">"Quantum cryptography: as awesome as it is pointless"</a>
+concludes
+"There are far more serious security problems to worry about,
+and it makes much more sense to spend effort securing those."
+</li>
+<li>A February 2016
+<a href="https://www.cesg.gov.uk/white-papers/quantum-key-distribution">white paper</a>
+from CESG, the UK government's National Technical Authority for Information Assurance,
+concludes that quantum cryptography has "fundamental practical limitations"
+and that it fails to "address large parts of the security problem",
+while "post-quantum public key cryptography appears to offer much more effective mitigations
+for real-world communications systems from the threat of future quantum computers".
+(I should add a caveat here:
+the people at CESG don't publish much
+and haven't really established their expertise by normal scientific standards.
+CESG, like NSA, is widely viewed in the security community as having questionable motives.
+But I'd nevertheless expect a politician to take CESG seriously.)
+</li>
+<li>My March 2016 paper
+<a href="https://cr.yp.to/papers.html#holographic">"Is the security of quantum cryptography guaranteed by the laws of physics?"</a>
+concludes that the main security claim for quantum cryptography
+is "not justified anywhere in the literature,
+and it seems very difficult to justify,
+in light of what the laws of physics actually say."
+</ul>
+<p>
+The European Commission could easily have, and should have,
+assembled a panel of security experts
+to publicly evaluate the security claims in the Quantum Manifesto.
+The Manifesto authors should of course have been allowed to provide references and further input,
+and to answer questions from the security experts.
+The result would have been a public Security Impact Assessment,
+just like a public Environmental Impact Assessment.
+</p>
+<p>
+Obviously this security review never happened.
+The Manifesto says that it is
+"endorsed by a broad community of industries, research institutes and scientists in Europe"
+and is accompanied by an online list of thousands of signatories;
+but the list looks more like a rather narrow community of people
+who are hoping that the Manifesto makes money for them,
+such as quantum physicists and their students.
+Security review, like environmental review,
+requires <i>experts</i> who are <i>skeptical</i>.
+</p>
+<h3>Security failures of physical cryptography, part 1: locked-briefcase cryptography</h3>
+<p>
+<blockquote>
+The snake oil peddler became a stock character in Western movies:
+a traveling "doctor" with dubious credentials,
+selling fake medicines with boisterous marketing hype,
+often supported by pseudo-scientific evidence.
+To increase sales,
+an accomplice in the crowd (a shill) would often attest to the value of the product
+in an effort to provoke buying enthusiasm.
+The "doctor" would leave town before his customers realized they had been cheated.
+&mdash;<a href="https://en.wikipedia.org/wiki/Snake%5Foil">"Snake oil" entry in Wikipedia</a>
+</blockquote>
+</p>
+<p>
+Security experts commonly use the term "snake oil"
+for products whose
+<a href="https://www.schneier.com/crypto-gram/archives/1999/0215.html#snakeoil">security hype</a>
+far exceeds their security value.
+</p>
+<p>
+Imagine, for example, that the manufacturers of lockable briefcases
+start advertising "provably secure locked-briefcase cryptography".
+The salesmen explain that locked-briefcase cryptography
+uses the magical power of locks to physically protect information
+against all possible attacks:
+</p>
+<ul>
+<li>Alice places secret information into a briefcase and locks the briefcase.</li>
+<li>A courier transports the briefcase from Alice to Bob.</li>
+<li>Bob unlocks the briefcase and retrieves the secret information.</li>
+</ul>
+<p>
+There is a mathematical proof that locked-briefcase cryptography
+hides all information from the attacker!
+We should therefore replace cryptography on the Internet
+with locked-briefcase cryptography on a new "locked-briefcase Internet"!
+End of sales pitch.
+</p>
+<p>
+<i>Should</i> we build a "locked-briefcase Internet"?
+Security experts can fully justify any of the following answers to this question:
+</p>
+<ul>
+<li>No, this would actually make security much worse.</li>
+<li>No, this would be insanely expensive.</li>
+<li>We should not dignify such a dumb question with a response.</li>
+</ul>
+<p>
+Security experts will often opt for the second answer
+because the cost of a locked-briefcase Internet
+seems easier to understand than the security failures.
+Security experts will often opt for the third answer
+because they have real work to do.
+But merely giving the second and third answers,
+and skipping the first answer,
+leaves the briefcase manufacturers in a position to request massive research funding
+aimed at reducing the costs of their magical "provably secure locked-briefcase Internet".
+Funding agencies need to understand that locked-briefcase cryptography is
+more expensive <i>and less secure</i> than alternatives.
+</p>
+<p>
+So what's wrong with the security of locked-briefcase cryptography?
+Here are some of the obvious avenues of attack:
+</p>
+<ul>
+<li>Alice bought the briefcase from a manufacturer.
+What happens if the attacker secretly convinced the manufacturer
+to place a hidden camera inside the briefcase?
+</li>
+<li>What happens if the attacker also controls the courier,
+and secretly convinced the manufacturer
+to place a master combination into the lock, or place a weakness into the hinges?
+</li>
+<li>Even if the manufacturer is honest,
+is the lock actually safe against a courier trying to open it?
+Cheap locks are well known to provide very little physical security,
+and more expensive locks seem to rely primarily on obscurity
+rather than on actually being difficult to break.
+</li>
+<li>The "security proof" assumes that the attacker's only information
+consists of observations of the outside of the locked briefcase.
+What happens to
+the security of the lock,
+and to
+the security of the information in the briefcase,
+if the attacker X-rays the briefcase?
+</li>
+<li>What happens if the attacker substitutes a new identical-looking briefcase
+that contains forged documents and that opens with the same combination?
+</li>
+<li>What happens if the attacker disrupts delivery of the briefcase,
+for example by stealing it?
+Does Alice recognize this somehow and try sending another briefcase?
+If disruption is much cheaper than delivery,
+does Alice eventually fall back to another mechanism of communication?
+</li>
+<li>Bob needs to know the secret combination to open Alice's briefcase.
+What happens if the attacker overhears Alice giving this combination to Bob?
+</li>
+</ul>
+<p>
+The bottom line is that there are many low-cost attacks against locked-briefcase cryptography.
+</p>
+<h3>Security advantages of real-world cryptography</h3>
+<p>
+Real-world cryptography&mdash;algorithmic cryptography&mdash;starts with the recognition
+that putting secret information close to the attacker
+has always been a security nightmare.
+It is terribly difficult even to fully <i>understand</i>, let alone limit,
+all the ways that the attacker can physically interact with the secrets.
+</p>
+<p>
+Real-world cryptography instead keeps Alice and Bob's secrets
+heavily shielded inside Alice and Bob's computers,
+the same computers that are storing and processing the secrets in the first place.
+Alice encrypts a secret message,
+mathematically transforming the message into ciphertext,
+before sending it through the Internet to Bob.
+</p>
+<p>
+Real-world cryptography relies on <b>published</b> cryptographic systems
+with <b>comprehensive specifications</b>
+that have convincingly survived <b>many years of publicly documented attack efforts</b>
+from a <b>large research community</b> aiming at <b>clear security goals</b>.
+I'm not saying that this process has reached perfection
+(the remaining problems are major motivations for my own research);
+I'm saying that the security of these systems
+is much, much, much better understood than the security of locked-briefcase cryptography.
+</p>
+<p>
+What happens if the attacker secretly convinced the cryptographic software author
+to keep copies of Alice's messages,
+or to place a weakness into the ciphertext?
+Most serious real-world cryptography has transitioned to <b>open-source software</b>,
+which is subjected to increasingly comprehensive <b>security reviews</b>
+and in some cases <b>formal verification</b>.
+There are also increasingly sophisticated efforts
+to verify the security of compilers, operating systems, and the underlying chips.
+All of this work is required for the broader goal of computer security
+(which Alice and Bob would need
+even if they magically had secure communication by some other mechanism),
+and real-world cryptography is leading the way.
+</p>
+<p>
+What happens if the attacker overhears the secret key exchanged by Alice and Bob?
+One of the most spectacular advances in real-world cryptography
+was the advent of <b>public-key cryptography</b> four decades ago.
+Alice generates a secret key and a corresponding public key;
+she gives the public key to Bob,
+and keeps the secret key safely hidden.
+Bob generates his own secret key and the corresponding public key,
+and gives the public key to Alice.
+Alice uses Bob's public key to encrypt information for Bob,
+and Bob uses Alice's public key to verify that the information comes from Alice.
+The system is designed to be <b>secure even if attackers see all the public keys</b>.
+</p>
+<p>
+Of course,
+if an attacker manages to quietly replace the public keys with his own public keys,
+then he can fool Alice into encrypting data to him,
+and he can fool Bob into accepting data from him.
+But the fact that keys are <i>public</i>
+allows the keys to be easily sent through multiple channels
+(certified by "certificate authorities",
+broadcast through intermediates,
+double-checked by "transparency", etc.).
+An attacker who does not control <i>all</i> of the channels between Alice and Bob
+will be unable to quietly replace keys.
+</p>
+<p>
+Again,
+I'm not saying that real-world cryptography has already reached perfection.
+I'm merely saying that real-world cryptography
+provides huge security advantages over locked-briefcase cryptography.
+Locked-briefcase cryptography isn't even <i>trying</i> to tackle tough security problems
+that real-world cryptography has been addressing for many years.
+</p>
+<h3>Security failures of physical cryptography, part 2: quantum cryptography</h3>
+<p>
+Like locked-briefcase cryptography,
+quantum cryptography tries to use physical techniques to protect information.
+The physical details are different,
+making quantum cryptography much more expensive than locked-briefcase cryptography,
+but the same fundamental security problems remain.
+</p>
+<p>
+The centerpiece of quantum cryptography is "quantum key distribution",
+notably the "BB84" and "E91" protocols.
+E91-type protocols require maintaining long-distance entanglement,
+making them even more expensive than BB84-type protocols.
+There are papers claiming "provable security" for BB84-type protocols,
+and papers claiming "provable security" for E91-type protocols.
+</p>
+<p>
+A company named ID Quantique has been selling quantum-cryptography hardware,
+specifically hardware for BB84-type protocols, since 2004.
+ID Quantique claims that quantum cryptography provides
+"absolute security, guaranteed by the fundamental laws of physics."
+However,
+Vadim Makarov and his collaborators
+have shown that the ID Quantique devices are
+<a href="https://arxiv.org/pdf/1008.4593v2.pdf">vulnerable to control by attackers</a>,
+that various subsequent countermeasures are
+<a href="https://arxiv.org/pdf/1601.00993v2.pdf">still vulnerable</a>,
+and that analogous vulnerabilities in another quantum-key-distribution system are
+<a href="https://arxiv.org/pdf/1011.0105v2.pdf">completely exploitable at low cost</a>.
+The most reasonable extrapolation from the literature
+is that all of ID Quantique's devices are exploitable.
+</p>
+<p>
+How can a product be broken if it provides
+"absolute security, guaranteed by the fundamental laws of physics"?
+I've heard several different answers from proponents of quantum cryptography:
+</p>
+<ul>
+<li>
+Some people claim that ID Quantique wasn't correctly implementing BB84
+and that a correct implementation would have been provably immune to attack.
+But these people fail to identify what aspect of BB84 was not being correctly implemented.
+</li>
+<li>
+Some people claim that for true "provable security" one needs E91 rather than BB84.
+I asked one of these people what he thought was wrong with the BB84 security proofs.
+He dodged the question,
+so I didn't get to ask why he thought the E91 proofs didn't have the same basic flaw.
+</li>
+<li>
+I've heard an ID Quantique salesman
+claim that certain characteristics of ID Quantique's current devices
+are unknown to the attacker, and that this blocks attacks.
+In other words,
+Alice and Bob are trusting ID Quantique
+to deliver shared secrets (the device characteristics) to them.
+How is this an improvement over having secrets delivered on SD cards by a trusted courier?
+</li>
+</ul>
+<p>
+Let me get back to the question:
+how can a product be broken if it provides
+"absolute security, guaranteed by the fundamental laws of physics"?
+The correct answer is that the hypotheses of the theorems,
+the assumptions made in the theorems, are not the laws of physics.
+The hypotheses include
+</p>
+<ul>
+<li>an embarrassingly oversimplified model of physics
+that can express some quantum concepts
+but that ignores critical long-distance interactions, notably electromagnetism;
+and
+</li>
+<li>an embarrassingly oversimplified model of the attacker
+that allows the attacker to inspect photons being sent between quantum-cryptography devices
+but that does not allow the attacker to interact with the devices in any other way.
+</li>
+</ul>
+<p>
+This is like assuming
+that the world outside a locked briefcase cannot interact with the contents of the briefcase,
+and that the only attack possibility is to inspect the outside of the briefcase.
+The attacker actually has many other options, as Makarov's attacks illustrate.
+In short,
+the "provable security" of quantum cryptography
+draws a useless, inaccurate conclusion
+starting from unrealistic, oversimplified hypotheses.
+</p>
+<p>
+One might imagine that the poor security of modern quantum cryptography
+is merely a short-term accident.
+One might imagine
+that future redefinitions of quantum cryptography will exclude ID Quantique's mistakes
+and bring us to a happy future of quantum devices that really <i>do</i>
+provide "absolute security, guaranteed by the fundamental laws of physics".
+But a careful look at the literature
+provides no reason to believe that this will ever happen,
+and my aforementioned March 2016 paper explains
+<a href="https://cr.yp.to/papers.html#holographic">serious obstacles</a>
+to making this happen.
+It seems reasonably clear that
+<b>the laws of physics actually guarantee the breakability of quantum cryptography</b>
+by an attacker who collects enough data and performs enough computation
+(perhaps including quantum computation).
+Quantum cryptography is advertised as having security independent
+of "the conjectured difficulty of computing certain functions",
+but a closer look shows that this advertisement is completely wrong.
+</p>
+<p>
+Fundamentally,
+quantum cryptography makes the same mistake as locked-briefcase cryptography:
+it aims for security in an oversimplified model of the physical world,
+takes resources away from more serious security techniques,
+and ends up damaging security in the real world.
+Quantum cryptography, like locked-briefcase cryptography,
+also relies on a preexisting secure channel
+(to authenticate choices of "bases" by Alice and Bob),
+and does nothing to address the problems handled by public-key cryptography.
+Quantum cryptography is even more vulnerable than locked-briefcase cryptography
+to denial-of-service attacks.
+Furthermore,
+quantum cryptography is even easier than locked-briefcase cryptography
+for the manufacturer to subvert,
+and is practically impossible to audit.
+</p>
+<h3>Examples of security statements in the Quantum Manifesto</h3>
+<p>
+"Communication security is of strategic importance to consumers, enterprises and governments alike.
+At present, it is provided by encryption via classical computers":
+Yes, security is important.
+Yes, <i>confidentiality</i> is provided by encryption.
+But security includes more than confidentiality:
+it also includes <i>integrity</i>, which is provided by authentication,
+and <i>availability</i> (protection against denial-of-service attacks),
+which is provided by a mix of techniques.
+There are also huge differences between secret-key techniques and public-key techniques.
+</p>
+<p>
+"[Encryption via classical computers] which could be broken by a quantum computer":
+I mentioned above that the most popular <i>public-key</i> systems,
+RSA and ECC,
+are both known to be broken in polynomial time by Shor's quantum algorithm.
+But there are other public-key systems that have resisted all attempts at quantum attack.
+Furthermore,
+there is no reason to believe
+that quantum computers threaten <i>secret-key</i> systems such as AES-256.
+Saying that these systems "could be broken by a quantum computer"
+is idle speculation devoid of content.
+</p>
+<p>
+"Secure solutions based on quantum encryption are immune to this risk,
+and are commercially available today":
+This is ludicrously inaccurate.
+The "solutions based on quantum encryption" that are "commercially available today"
+all seem to be breakable.
+The possibilities for future "solutions based on quantum encryption"
+are <i>not</i> immune to the risks of quantum computers;
+see above regarding the meaningless "provable security" of quantum cryptography.
+Furthermore,
+"quantum encryption" has the basic security properties of a secret-key stream cipher;
+it is <i>not</i> a replacement for the public-key systems broken by Shor's algorithm.
+</p>
+<p>
+"Quantum information is secure because it cannot be cloned":
+This is accurate as a technical statement
+regarding the abstract concept of "quantum information",
+but it will lead most readers to incorrect conclusions
+regarding the real-world security of quantum cryptography.
+The information of interest to users is <i>not</i> "quantum information",
+and its security is <i>not</i> guaranteed by the abstract unclonability of "quantum information".
+The aforementioned attacks against quantum-cryptography systems
+do not make any effort to clone "quantum information";
+they focus on the actual goal,
+namely eavesdropping upon all information of interest to users.
+</p>
+<p>
+"The advantage of trusted-node schemes is that they provide access for lawful intercept,
+as required by many nation states":
+A recent United Nations
+<a href="http://www.ohchr.org/EN/HRBodies/HRC/RegularSessions/Session29/Documents/A.HRC.29.32%5FAEV.doc">"Report of the Special Rapporteur on the promotion and protection of the right to freedom of opinion and expression"</a>
+concludes that
+"States should avoid all measures that weaken the security that individuals may enjoy online,
+such as backdoors, weak encryption standards and key escrows."
+Escrowing copies of all users' cryptographic keys at "trusted nodes" for government use
+is a horrifying security weakness
+and should not be advertised as a feature.
+There are reports of key escrow being required in
+<a href="http://cryptolaw.org">a few repressive countries, such as Iran,</a>
+but this is a human-rights violation.
+We are under an ethical obligation to <i>protect</i> human rights,
+not to violate them.
+</p>
+<p>
+"As soon as this happens [quantum repeaters reaching the market],
+true internet-wide quantum-safe security could become a reality":
+This is obviously wrong.
+There is a gigantic cost difference between merely reaching the market
+and being deployed "internet-wide".
+As for "true quantum-safe security", see above.
+</p>
+<p>
+"Based on quantum coherence, data can be protected in a
+completely secure way that makes eavesdropping impossible.
+Given the explosive growth of cybercrime and espionage, this is a highly strategic capability":
+Quantum technology does <i>not</i> securely protect data,
+and does <i>not</i> make eavesdropping impossible.
+If the goal is to protect against cybercrime and espionage
+then there are many, many, many better ways to spend money.
+</p>
+<h3>Concluding thoughts</h3>
+<p>
+Consider two scientists, Alice and Bob.
+Alice honestly and accurately and comprehensibly reports her previous accomplishments
+and the prospects for her future research.
+Bob, whether out of greed or out of ignorance,
+exaggerates his previous accomplishments and the prospects for his future research.
+</p>
+<p>
+Do we want this exaggeration to produce more research funding for Bob?
+Obviously not.
+In fact,
+we want to discourage Bob from exaggerating in the first place.
+But this doesn't work if the incentives <i>against</i> exaggeration are so weak
+that the expected cost of exaggeration is outweighed by the expected benefits.
+</p>
+<p>
+For many years I've been watching
+quantum cryptographers wildly exaggerate the security impact of their work.
+Public corrections from security experts have had negligible effect:
+quantum cryptographers repeat the same wild exaggerations again and again and again.
+Apparently these exaggerations are now producing
+a quarter of a billion Euros in funding for quantum cryptography.
+</p>
+<p>
+This incident clearly illustrates the incentives towards exaggeration.
+Where are the compensating incentives <i>against</i> exaggeration?
+Do we want other scientists to conclude that exaggeration is the path to success?
+</p>
+<p>
+I mentioned earlier that
+people in research area X who make exaggerated claims of impact within X
+<i>will</i> typically be punished by their reviewers, other people in area X.
+But people in research area X
+who make exaggerated claims of impact upon Y
+are normally reviewed by people in X, not people in Y,
+and the people in X have a categorical incentive to <i>endorse</i> the same exaggerations.
+</p>
+<p>
+Ultimately the victims are the users.
+A quarter of a billion Euros, despite being explicitly aimed at communication security,
+will actually be devoted to quantum technologies that are much <i>less</i> secure
+than modern real-world cryptography.
+The occasional users who can afford to deploy quantum cryptography
+won't realize how easy it is to break.
+Meanwhile a similar level of funding will be sensibly devoted to quantum computing,
+but without a proper acknowledgment of the resulting security apocalypse,
+and without a corresponding level of funding
+for the most plausible plan to prevent this apocalypse.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2016.05.16 of the 20160516-quantum.html web page.
+</font></body>
+</html>

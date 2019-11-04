@@ -1,0 +1,1169 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2014.03.23: How to design an elliptic-curve signature system
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html accesskey=k><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><b>2014.03.23: How to design an elliptic-curve signature system</b> There are many choices of elliptic-curve signature systems. The standard choice, ECDSA, is reasonable if you don't care about simplicity, speed, and security. #signatures #ecc #elgamal #schnorr #ecdsa #eddsa #ed25519</td></tr>
+<tr><td><a href=20140213-ideal.html accesskey=j><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2014.03.23: How to design an elliptic-curve signature system</h2>
+<blockquote>
+<i>[In answer to: "Is the NSA aware of any weaknesses in the DES or the DSS? The RSA?"]
+We are unaware of any weaknesses in the DES or the DSS when properly
+implemented and used for the purposes for which they both are designed.</i>
+&mdash;National Security Agency, June 1992
+</blockquote>
+<p>
+Earlier this month a new paper by
+<a href="http://eprint.iacr.org/2014/161">Naomi Benger, Joop van de Pol, Nigel Smart, and Yuval Yarom</a>
+hit the
+<a href="http://arstechnica.com/security/2014/03/scientist-devised-crypto-attack-could-one-day-steal-secret-bitcoin-keys/">news</a>.
+The paper
+explains how to recover secret keys from OpenSSL's implementation of ECDSA-secp256k1
+using timing information from "as little as 200 signatures";
+ECDSA-secp256k1 is the signature system used by Bitcoin.
+The timing information is collected by
+an attack process running on the same machine,
+but the process doesn't need any privileges;
+I don't see any obstacle to running the attack process
+in a separate virtual machine.
+Earlier papers by
+<a href="http://eprint.iacr.org/2013/448">Yarom and Katrina Falkner</a>
+and
+<a href="http://eprint.iacr.org/2014/140">Yarom and Benger</a>
+had explained how to carry out similarly efficient attacks
+against various implementations of RSA and binary-field ECDSA.
+</p>
+<p>
+These attacks are what I call
+<a href="http://cr.yp.to/papers.html#cachetiming">"cache-timing attacks"</a>:
+they exploit data flow
+</p>
+<ol>
+<li>from secrets to load/store addresses
+and
+<li>from load/store addresses to
+attacker-visible differences in timing between different addresses.
+</ol>
+<p>
+For comparison, conventional timing attacks
+exploit data flow
+</p>
+<ol>
+<li>from secrets to the program counter
+(i.e., the instruction address as a function of time)
+and
+<li>from the program counter to
+attacker-visible differences in timing between different instruction addresses.
+</ol>
+<p>
+In both cases the second part of the data flow is built into chips,
+but the first part is built into the software.
+</p>
+<p>
+Did the software designers have to allow data flow from secrets to addresses?
+"Obviously not!" say the theoreticians.
+"Everybody knows that <i>any</i> computation
+using branches and random access to data
+can be efficiently simulated
+by a computation that accesses only
+a predefined public sequence of instructions
+and a predefined public sequence of memory locations.
+Didn't you take a course in computational complexity theory?
+If the software designers had done a better job
+then this attack would never have worked."
+</p>
+<p>
+I have a different view.
+I blame this attack on the <a href="http://www.nsa.gov">ECDSA designers</a>.
+Every natural implementation of ECDSA
+makes heavy use of secret branches and secret array indices.
+Eliminating these secrets
+makes the code much more complicated and much slower.
+(The theoreticians are blind to these problems:
+their notion of "efficient" uses an oversimplified cost metric.)
+The ECDSA designers are practically begging the implementors
+to create variable-time software,
+so it's not a surprise that the implementors oblige.
+</p>
+<p>
+Do elliptic-curve signature systems have to be designed this way?
+No, they don't.
+There are other elliptic-curve signature systems
+that are much easier to implement in constant time.
+</p>
+<p>
+The broader picture is that
+elliptic-curve signature systems vary considerably in
+simplicity, speed, and security.
+ECDSA does a bad job on all three axes.
+It's unnecessarily difficult to implement correctly.
+It's full of unnecessary traps that can compromise security.
+It's unnecessarily slow no matter how it's implemented,
+and it's even slower if it's implemented securely.
+These performance problems encourage implementors
+to downgrade to breakable security levels,
+or to disable signatures entirely.
+</p>
+<p>
+In this blog post
+I'll review the choices made in designing elliptic-curve signature systems,
+and explain the consequences of those choices.
+This blog post turned out to be longer than I was expecting at first,
+because there are so many different things that ECDSA does wrong.
+</p>
+<p>
+Thanks to
+<a href="http://hyperelliptic.org/tanja">Tanja Lange</a>
+for help with this blog post.
+</p>
+<h3>Wait a minute. Is constant time really possible? Are you sure?</h3>
+<p>
+Yes.
+A few years ago a team of cryptographers (including me)
+designed and implemented
+<a href="http://ed25519.cr.yp.to">Ed25519</a>,
+a state-of-the-art high-security elliptic-curve signature system.
+Ed25519
+fits signatures into 64 bytes;
+fits public keys into 32 bytes;
+verifies more than 18000 signatures per second
+on a three-year-old Intel laptop (2-core 2.1GHz Core i3-2310M);
+signs even more messages per second;
+and takes negligible time to generate a new key.
+These performance results are from software with
+<i>no</i> data flow from secrets to branch conditions and
+<i>no</i> data flow from secrets to load/store addresses.
+</p>
+<p>
+The numbers here come from
+<a href="http://bench.cr.yp.to">eBACS</a>,
+a cryptographic benchmarking site that Lange and I run;
+specifically, from the
+<a href="http://bench.cr.yp.to/results-sign.html">signature results</a>
+for a computer named <tt>bridge</tt>.
+The signing and verification benchmarks are for short messages.
+For very long messages the bottleneck is cryptographic hashing,
+but of course it's relatively easy for hashing to keep up with the network.
+All of the benchmarked implementations and benchmarking tools
+are publicly available,
+so it's easy for anyone to check the numbers.
+</p>
+<h3>What about RSA?</h3>
+<p>
+RSA provides even faster signature verification than ECC.
+But RSA has much slower signing,
+much slower key generation,
+much larger signatures,
+and much larger public keys.
+It's hard to find applications where this is a sensible tradeoff,
+and it's easy to find 
+<a href="http://en.wikipedia.org/wiki/Texas%5FInstruments%5Fsigning%5Fkey%5Fcontroversy">applications</a>
+where RSA's poor performance profile has compromised security.
+RSA also has many implementation traps,
+and even a state-of-the-art RSA implementation
+is more worrisome from a security perspective than ECC is,
+but that's a topic for another blog post.
+</p>
+<p>
+Once upon a time I thought
+that elliptic-curve signature verification
+was too slow for some verification-intensive applications.
+The actual story is that typical <i>implementations of ECDSA</i>
+are too slow for some applications;
+but, again, ECDSA is very far from a state-of-the-art elliptic-curve signature system.
+</p>
+<p>
+I have a
+<a href="http://cr.yp.to/papers.html#rwsota">survey paper</a>
+that explains what you should do if you're considering RSA signatures.
+In particular,
+you should <i>not</i>
+use the original system proposed by Ron Rivest, Adi Shamir, and Len Adleman;
+there were many important improvements since then,
+notably in a
+<a href="http://publications.csail.mit.edu/lcs/pubs/pdf/MIT-LCS-TR-212.pdf">followup paper</a>
+by Michael Rabin.
+Some of these improvements
+(such as small exponents, which are critical for fast signature verification)
+are already included in a typical RSA description,
+but most of them aren't.
+Overall today's use of RSA is even farther from the state of the art
+than today's use of ECC.
+</p>
+<h3>How do elliptic-curve signatures work?</h3>
+<p>
+The history began with a signature system proposed by 
+<a href="http://link.springer.com/content/pdf/10.1007%2F3-540-39568-7%5F2.pdf">Taher ElGamal in 1985</a>,
+and continued with a much better signature system proposed by
+<a href="http://link.springer.com/content/pdf/10.1007%2F0-387-34805-0%5F22.pdf">Claus Schnorr in 1990</a>.
+ECDSA was later than Schnorr but is essentially ElGamal's system,
+ignoring most of Schnorr's improvements.
+EdDSA and Ed25519 are from 2011 and use Schnorr's improvements,
+together with some new improvements.
+</p>
+<p>
+The following description starts with ElGamal signatures
+and then makes a series of small changes to reach Schnorr signatures.
+[This classification of changes
+comes from a talk 
+<a href="http://cr.yp.to/talks.html#2012.07.13">"The security impact of a new
+cryptographic library"</a>
+that Lange and I presented to Qualcomm's security group.
+The description here is more detailed than our slides.]
+</p>
+<p>
+<b>The ElGamal signature system: B<sup>H(M)</sup> = A<sup>R</sup> R<sup>S</sup>.</b>
+ElGamal didn't use elliptic curves;
+he used multiplication modulo a prime number.
+Saying that (R,S) is an ElGamal signature of a message M under public key A
+means that R and S are integers between 0 and p−2
+and that B<sup>H(M)</sup> = A<sup>R</sup> R<sup>S</sup> (mod p).
+Here p is a standard prime number,
+B is a standard base,
+and H is a standard hash function.
+The signer generates A (long term) and R (for this message)
+as secret random powers of B,
+and easily solves for S.
+</p>
+<p>
+<b>Hashing the exponent: B<sup>H(M)</sup> = A<sup>H(R)</sup> R<sup>S</sup>.</b>
+ElGamal's system still works
+if the exponent R is replaced by a hash of R.
+This is cheap (hashing is fast)
+and is a serious obstacle to any attack strategies
+that rely on choosing a particular exponent of A.
+</p>
+<p>
+<b>Prime-order subgroups: B<sup>H(M)</sup> = A<sup>H(R)</sup> R<sup>S</sup>.</b>
+Same equation,
+but now S is between 0 and q−1,
+where q is a prime divisor of p−1,
+and B has order q.
+This simplifies the security analysis.
+This also saves space
+(for example, 2<sup>128</sup> security needs p around 3000 bits
+but q only around 256 bits),
+although this savings disappears in the elliptic-curve context.
+</p>
+<p>
+<b>Elliptic curves: H(M)B = H(R)A + SR.</b>
+At this point it's also easy to state an elliptic-curve signature system.
+ECC replaces multiplication mod p
+with addition on an elliptic curve.
+A, B, R are now elliptic-curve points,
+while H(M), H(R), S are integers.
+I'll continue describing multiplicative systems,
+but I'll also mention the ECC versions in parallel.
+</p>
+<p>
+<b>Two exponents: B<sup>H(M)/H(R)</sup> = A R<sup>S/H(R)</sup>; (H(M)/H(R))B = A + (S/H(R))B.</b>
+It's safe to assume that nobody will ever generate an H(R) divisible by q,
+the prime order of the standard base B.
+The verifier divides the three exponents H(M),H(R),S
+by H(R) modulo q, obtaining exponents H(M)/H(R),1,S/H(R);
+the cost of these divisions is outweighed by the speedup in exponentiation.
+This change can't have lost any security:
+if B<sup>H(M)/H(R)</sup> = A R<sup>S/H(R)</sup> then B<sup>H(M)</sup> = A<sup>H(R)</sup> R<sup>S</sup>,
+so any forgery against this system
+would also have been a valid forgery against the system without the change.
+</p>
+<p>
+<b>Relabel: B<sup>H(M)/H(R)</sup> = A R<sup>S</sup>; (H(M)/H(R))B = A + SR.</b>
+Since the verifier is going to use S/H(R),
+the signer might as well send S/H(R) rather than sending S,
+and we can simplify the description by renaming S/H(R) as S.
+This change can't have lost any security:
+any forgery (R,S) against this system
+implies a forgery (R,S H(R)) against the previous system.
+</p>
+<p>
+<b>Merge the hashes: B<sup>H(R,M)</sup> = A R<sup>S</sup>; H(R,M)B = A + SR.</b>
+Both the signer and the verifier are using H(M)/H(R) as a black-box function of (R,M).
+There's no reason for the division structure;
+we can simply hash R and M together,
+creating an obstacle for any attacks
+that were relying on the separation between H(M) and H(R).
+</p>
+<p>
+In particular,
+imagine that the attacker manages to compute
+an innocent-looking message M
+and a dangerous message M' with H(M) = H(M'),
+and manages to convince the signer to sign M.
+In the previous system,
+the attacker has now succeeded at a forgery:
+the same (R,S) is a valid signature of M'.
+This doesn't work in the new system:
+H(R,M) won't be the same as H(R,M').
+In other words, this change has made the system resilient to collisions.
+</p>
+<p>
+Of course, the attacker could have taken a legitimate signature (R,S) of M
+and tried to find M' with H(R,M) = H(R,M'),
+but this attack requires "second preimages" of H rather than collisions.
+The number of targets M
+is now limited by the number of legitimate signatures performed,
+whereas previously the number of targets was limited only by the attacker's computation.
+</p>
+<p>
+Standard practice is to throw away cryptographic hash functions
+for which collisions have been found (e.g., MD5),
+or for which collisions can be found by a feasible computation (e.g., SHA-1).
+If collisions are never found
+then collision resilience has no obvious benefit.
+But it's still comforting to have this extra level of protection.
+Sometimes extra protections have extra costs,
+raising difficult questions of which protections are most valuable
+given the user's performance budget,
+but in this case the extra protection didn't cost anything:
+in fact, it made the system simpler and faster.
+</p>
+<p>
+<b>Eliminate divisions: B<sup>S</sup> = R A<sup>H(R,M)</sup>; SB = R + H(R,M)A.</b>
+In all of the previous systems,
+the signer's computation of S
+involved divisions modulo q.
+Fast "extended Euclid" divisions
+are a standard feature of big-number libraries,
+but these divisions take <i>variable time</i>.
+"Fermat" divisions are much easier to perform in constant time
+but require many multiplications mod q,
+and if those multiplications aren't optimized
+then one division can easily dominate the time required for signing.
+</p>
+<p>
+It's normal to simplify and accelerate modular arithmetic
+by choosing "nice" primes p, such as 2<sup>255</sup>−19 or 2<sup>521</sup>−1 for ECC.
+I'll explain later how to perform fast constant-time multiplications
+modulo nice primes.
+But q doesn't naturally end up being a nice prime.
+The number of points on an elliptic curve mod p
+is always within 2 sqrt(p) of p+1 by Hasse's theorem,
+and multiplying modulo this number isn't quite as slow
+as multiplying modulo a general number,
+but it's still not fast,
+especially with the modifications needed to make it run in constant time.
+One ECC paper proposed taking very special elliptic curves where q=p,
+allowing reuse of the mod-p functions as mod-q functions,
+but three groups of researchers quickly showed that taking q=p
+provides 
+<a href="http://safecurves.cr.yp.to/transfer.html">very low security</a>.
+</p>
+<p>
+Simply juggling where the exponents are placed,
+and in particular using B<sup>S</sup>,
+produces a signature system in which neither the signer nor the verifier
+performs any divisions modulo q.
+The signer performs just <i>one</i> reduction modulo q to compute S,
+so there's no performance problem from using the simplest constant-time reduction methods.
+</p>
+<p>
+<b>Compress R to H(R,M): H(B<sup>S</sup> A<sup>h</sup>,M) = −h; H(SB+hA,M) = −h.</b>
+Instead of sending (R,S) as a signature,
+the signer can send (−H(R,M),S) as a signature.
+Given (h,S),
+the verifier (or anyone else) recomputes R as B<sup>S</sup> A<sup>h</sup>,
+and checks that h = −H(R,M).
+This change can't have lost any security:
+a forgery (h,S) here implies a forgery (B<sup>S</sup> A<sup>h</sup>,S) in the previous system.
+</p>
+<p>
+If H(R,M) is shorter than R
+then this saves space in signatures.
+On the other hand,
+elliptic-curve points are typically sent as 256 bits,
+and then a 256-bit hash doesn't save any space.
+Sending R instead of H(R,M) also has the advantage of allowing
+<a href="http://cr.yp.to/papers.html#badbatch">batch signature verification</a>,
+which is typically twice as fast as verifying one signature at a time.
+That's why Ed25519 doesn't use this compression.
+</p>
+<p>
+<b>Use half-size H output.</b>
+Given that we don't need collision resistance (see above),
+do we really need a 256-bit hash?
+Schnorr proposed using a half-size hash.
+Together with the previous compression idea
+this saves 25% of the space in signatures:
+instead of a 4n-bit signature (2n-bit curve point R and 2n-bit integer S)
+there's a 3n-bit signature (n-bit hash and 2n-bit integer S).
+</p>
+<p>
+Schnorr's paper has been cited more than 2000 times, according to Google Scholar,
+but I'm often amazed at how few people actually seem to have read the paper.
+For example,
+twenty years later
+<a href="http://www.neven.org/papers/schnorr.pdf">Greg Neven, Nigel Smart, and Bogdan Warinschi</a>
+published a paper "Hash function requirements for Schnorr signatures"
+saying that Schnorr signatures don't need a collision-resistant hash function
+and can be reduced from 4n bits to 3n bits.
+As another example,
+David Naccache and Jacques Stern have a paper (and patent)
+explaining how to recover n message bits from a 4n-bit signature,
+reducing the effective signature overhead to 3n bits.
+As another example,
+2n-bit pairing-based "short signatures"
+are usually claimed to be half the size of Schnorr signatures.
+</p>
+<p>
+I don't mean to say that I recommend n-bit hashes:
+in particular,
+I don't think there has been adequate analysis
+of their security against multiple-target attacks.
+Ed25519 goes in the opposite direction,
+using a 512-bit hash function
+to "alleviate concerns regarding hash-function security".
+Remember that Ed25519 sends R rather than H(R,M),
+so using a longer hash doesn't cost any space:
+Ed25519 signatures are 64 bytes, independent of the length of the H output.
+</p>
+<p>
+<b>Hash the public key: B<sup>S</sup> = R A<sup>H(R,A,M)</sup>; SB = R + H(R,A,M)A.</b>
+This is an extra modification in Ed25519
+that doesn't appear in Schnorr signatures.
+The idea is to
+"alleviate concerns that several public keys could be attacked simultaneously":
+an attacker computing many different hash values
+now has to commit each hash value to a single public key being attacked.
+</p>
+<p>
+<b>DSA/ECDSA, a return to the dark ages: B<sup>H(M)/S</sup> A<sup>R/S</sup> = R; (H(M)/S)B + (x(R)/S)A = R.</b>
+DSA is the ElGamal signature scheme with the following three changes:
+use prime-order subgroups;
+replace A with A<sup>−1</sup>;
+and divide the three exponents by S to obtain two exponents.
+DSA doesn't hash the R exponent
+and doesn't replace the division structure with a merged hash of R and M;
+it isn't resilient to collisions.
+DSA requires division mod q for the signer,
+and requires division mod q (or three exponents) for the verifier.
+</p>
+<p>
+DSA was "invented" by NSA's David Kravitz,
+according to a patent application filed secretly in July 1991.
+It was proposed as a standard by NIST the next month.
+NIST didn't
+<a href="http://epic.org/crypto/dss/new%5Fnist%5Fnsa%5Frevelations.html">admit NSA's role</a>
+until after a lawsuit was filed by
+Computer Professionals for Social Responsibility.
+NIST memos state that the
+"reasons for the selection" of DSA are summarized in an NSA document;
+as far as I know, that document is still classified Top Secret.
+</p>
+<p>
+NIST received many public objections to DSA.
+(As
+<a href="http://link.springer.com/content/pdf/10.1007%2F3-540-48071-4%5F6.pdf">NIST put it</a>:
+"the number of negative comments was significantly larger
+than normally received for a proposed Federal Information Processing Standard".)
+For example,
+here are some of 
+<a href="http://people.csail.mit.edu/rivest/pubs/RHAL92.pdf">Rivest's comments</a>:
+</p>
+<blockquote>
+It is my belief that the NIST proposal
+represents an attempt to install weak cryptography as a national standard,
+and that NIST is doing so in order to please
+the NSA and federal law enforcement agencies. ...
+A U.S. standard, even if weak and flawed,
+may be widely used overseas, making NSA's job easier.
+</blockquote>
+<p>
+Technical topics of the objections included
+DSA's obviously breakable 2<sup>60</sup> security level
+(DSA was limited to 512-bit moduli);
+the lack of an accompanying encryption mechanism;
+DSA's poor performance;
+DSA's unnecessary computation of an inverse "each time a message is to be signed";
+and DSA's requirement of a cryptographically strong random number for each signature
+(Rivest wrote "the poor user is given enough rope with which to hang himself").
+I'll say more later about the random-number part.
+</p>
+<p>
+NIST made one change, namely allowing 1024-bit moduli,
+and then issued DSA as a standard in 1994.
+Later NIST extended the standard to ECDSA,
+allowing 15 different elliptic curves
+that had been chosen by Jerry Solinas at NSA.
+</p>
+<h3>What is elliptic-curve addition?</h3>
+<p>
+There are two different answers to this question:
+the modern answer used in Ed25519,
+and the implementation nightmare used in ECDSA.
+</p>
+<p>
+<img class=pic30 src="20140323-edpic.jpg">
+<b>Edwards curves.</b>
+The modern answer is only slightly more difficult than clock addition.
+Mathematically,
+the clock is a circle x<sup>2</sup>+y<sup>2</sup>=1.
+Here are some examples of points on the clock:
+</p>
+<ul>
+<li>12:00 is the point (0,1).
+<li>6:00 is (0,−1).
+<li>3:00 is (1,0).
+<li>2:00 is (sqrt(3/4),1/2).
+<li>5:00 is (1/2,−sqrt(3/4)).
+<li>7:00 is (−1/2,−sqrt(3/4)).
+</ul>
+<p>
+The sum of two clock points (x<sub>1</sub>,y<sub>1</sub>) and (x<sub>2</sub>,y<sub>2</sub>)
+is (x<sub>1</sub>y<sub>2</sub>+y<sub>1</sub>x<sub>2</sub>,y<sub>1</sub>y<sub>2</sub>−x<sub>1</sub>x<sub>2</sub>).
+You can check, for example, that the sum of 2:00 and 5:00 with this formula is 7:00.
+</p>
+<p>
+"Elliptic curve" is not the same thing as "ellipse",
+and in particular the circle isn't an elliptic curve,
+but you can obtain an elliptic curve by slightly deforming a circle.
+On the right is a graph of x<sup>2</sup>+y<sup>2</sup>=1−30x<sup>2</sup>y<sup>2</sup>;
+that's an elliptic curve.
+More generally,
+modern ECC uses a <b>complete Edwards curve</b> x<sup>2</sup>+y<sup>2</sup>=1+dx<sup>2</sup>y<sup>2</sup>
+where the curve constant d is a non-square.
+The sum of (x<sub>1</sub>,y<sub>1</sub>) and (x<sub>2</sub>,y<sub>2</sub>) on this curve
+is ((x<sub>1</sub>y<sub>2</sub>+y<sub>1</sub>x<sub>2</sub>)/(1+dx<sub>1</sub>x<sub>2</sub>y<sub>1</sub>y<sub>2</sub>),(y<sub>1</sub>y<sub>2</sub>−x<sub>1</sub>x<sub>2</sub>)/(1−dx<sub>1</sub>x<sub>2</sub>y<sub>1</sub>y<sub>2</sub>)).
+The denominators are always nonzero.
+</p>
+<p>
+<b>Weierstrass curves.</b>
+ECDSA uses a different shape of elliptic curve,
+a <b>short Weierstrass curve</b> y<sup>2</sup>=x<sup>3</sup>−3x+b.
+The curve points aren't simply the solutions (x,y) to this equation;
+there's also another curve point, ∞.
+The standard addition formulas
+have <i>six different cases</i>:
+</p>
+<ul>
+<li>If x<sub>1</sub> is not x<sub>2</sub>: (x<sub>1</sub>,y<sub>1</sub>)+(x<sub>2</sub>,y<sub>2</sub>) = (x<sub>3</sub>,y<sub>3</sub>)
+where x<sub>3</sub> = λ<sup>2</sup>−x<sub>1</sub>−x<sub>2</sub>, y<sub>3</sub> = λ(x<sub>1</sub>−x<sub>3</sub>)−y<sub>1</sub>, λ=(y<sub>2</sub>−y<sub>1</sub>)/(x<sub>2</sub>−x<sub>1</sub>).
+<li>If y<sub>1</sub> is not 0: (x<sub>1</sub>,y<sub>1</sub>)+(x<sub>1</sub>,y<sub>1</sub>) = (x<sub>3</sub>,y<sub>3</sub>)
+where x<sub>3</sub> = λ<sup>2</sup>−x<sub>1</sub>−x<sub>1</sub>, y<sub>3</sub> = λ(x<sub>1</sub>−x<sub>3</sub>)−y<sub>1</sub>, λ=(3x<sub>1</sub><sup>2</sup>−3)/2y<sub>1</sub>.
+<li>(x<sub>1</sub>,y<sub>1</sub>)+(x<sub>1</sub>,−y<sub>1</sub>) = ∞.
+<li>(x<sub>1</sub>,y<sub>1</sub>) + ∞ = (x<sub>1</sub>,y<sub>1</sub>).
+<li>∞ + (x<sub>2</sub>,y<sub>2</sub>) = (x<sub>2</sub>,y<sub>2</sub>).
+<li>∞ + ∞ = ∞.
+</ul>
+<p>
+This is a mess to implement and test
+(for example,
+Watson Ladd pointed out a week ago that
+<a href="https://tools.ietf.org/html/rfc6090">RFC 6090</a>,
+which is coauthored by NSA,
+<a href="http://www.ietf.org/mail-archive/web/cfrg/current/msg04378.html">gets it wrong</a>
+in a way that can easily
+<a href="http://www.ietf.org/mail-archive/web/cfrg/current/msg04380.html">cause security
+problems</a>),
+and I don't even want to try to explain how to make it run in constant time.
+There have been some efforts to merge the first two cases
+(at the expense of speed),
+but the merged formulas still have failure cases,
+and there have been fancy
+<a href="http://www.iacr.org/archive/pkc2003/25670224/25670224.pdf">attacks</a>
+showing how attackers can learn secret information by triggering these failure cases.
+It's much better to have a single formula that always works.
+</p>
+<p>
+From the perspective of discrete-logarithm attacks
+(computing the secret key from the public key),
+Edwards curves can be viewed as Weierstrass curves,
+and the standard security analysis
+(<a href="http://safecurves.cr.yp.to/rho.html">Pollard's rho method</a>,
+<a href="http://safecurves.cr.yp.to/transfer.html">transfers</a>, etc.)
+works in exactly the same way for both types of elliptic curves.
+But if you take a broader attack view
+(does the implementation always work?
+can the attacker trigger failure cases?
+is the implementation constant time?)
+then Edwards curves are much safer than Weierstrass curves.
+As a bonus,
+Edwards curves are also considerably faster than Weierstrass curves.
+</p>
+<p>
+<b>History.</b>
+Most of the ECDSA flaws that I'm describing in this blog post
+were already known to be fixable when ECDSA was standardized.
+The case distinctions for addition are an exception.
+Before 2007, everyone thought that addition on an elliptic curve
+<i>needed</i> case distinctions.
+Here's some of the relevant history:
+</p>
+<ul>
+<li>1985:
+<a href="http://link.springer.com/content/pdf/10.1007%2F3-540-39799-X%5F31.pdf">Victor Miller</a>
+introduced ECC,
+defining elliptic curves as short Weierstrass curves y<sup>2</sup>=x<sup>3</sup>+ax+b.
+<li>1986:
+<a href="http://www.sciencedirect.com/science/article/pii/0196885886900230">Chudnovsky and Chudnovsky</a>
+pointed out a speedup for a=−3,
+and analyzed the performance of various other elliptic-curve shapes.
+Every addition formula in the paper has exceptional cases.
+<li>1987:
+<a href="http://www.ams.org/mcom/1987-48-177/S0025-5718-1987-0866109-5/S0025-5718-1987-0866109-5.pdf">Neal Koblitz</a>
+independently introduced ECC,
+again defining elliptic curves as short Weierstrass curves.
+(The paper was submitted in 1985.)
+<li>1987: 
+<a href="http://www.ams.org/journals/mcom/1987-48-177/S0025-5718-1987-0866113-7/S0025-5718-1987-0866113-7.pdf">Montgomery</a>
+introduced what are now called
+"Montgomery curves" and the "Montgomery ladder" formulas
+for single-scalar multiplication.
+Single-scalar multiplication is more restrictive than general addition,
+although it's good enough for ECDH.
+<li>1995: <a href="http://www.math.ru.nl/~bosma/pubs/JNT1995.pdf">Bosma and Lenstra</a>
+proved that
+"The smallest cardinality of a complete system of addition laws on E equals two".
+This means that a single addition law can't be "complete".
+Nobody realized, at the time,
+that the definition of "complete" in the paper was misleading.
+(Note for mathematicians:
+The definition is geometric, not arithmetic;
+it considers only algebraically closed base fields.)
+<li>2000: IEEE P1363 standardized y<sup>2</sup>=x<sup>3</sup>−3x+b,
+claiming (with a citation to Chudnovsky and Chudnovsky)
+that this curve shape provides "the fastest arithmetic on elliptic curves".
+<li>2000: NIST standardized ECDSA using y<sup>2</sup>=x<sup>3</sup>−3x+b.
+<li>2005: I introduced
+<a href="http://cr.yp.to/papers.html#curve25519">Curve25519</a>,
+setting speed records for ECDH software,
+and proved that the Montgomery ladder has no exceptional cases on Curve25519.
+<li>2007: 
+<a href="http://www.ams.org/journals/bull/2007-44-03/S0273-0979-07-01153-6/S0273-0979-07-01153-6.pdf">Harold Edwards</a>
+published what are now called "Edwards curves".
+<li>2007: 
+<a href="http://eprint.iacr.org/2007/286">Lange and I</a>
+proved that the Edwards addition law
+for x<sup>2</sup>+y<sup>2</sup>=1+dx<sup>2</sup>y<sup>2</sup> is complete if d is not a square.
+Specifically, if d is a non-square in a field k
+then the Edwards addition law for the curve E defined by x<sup>2</sup>+y<sup>2</sup>=1+dx<sup>2</sup>y<sup>2</sup>
+has no exceptional cases in E(k)×E(k).
+</ul>
+<p>
+Curve25519 turned out to be expressible as a complete Edwards curve.
+This is the curve used in the Ed25519 signature system.
+</p>
+<h3>How does field arithmetic work?</h3>
+<p>
+The arithmetic operations used in Curve25519
+are additions, subtractions, and multiplications modulo the prime number p=2<sup>255</sup>−19.
+Multiplications are the main bottleneck in the computation.
+Divisions are delayed until the end of the computation
+(i.e., intermediate results are stored as fractions);
+the final division a/b is computed as ab<sup>p−2</sup>,
+and b<sup>p−2</sup> is computed as a sequence of slightly more than 255 multiplications.
+Similar comments apply to Ed25519.
+</p>
+<p>
+<b>Constant-time Curve25519.</b>
+Building constant-time software for arithmetic
+is very much like building unrolled hardware circuits for arithmetic:
+you allocate a constant number of bits for each integer,
+and always perform arithmetic on all of the bits.
+For example, when you add two integers a,b between 0 and 2<sup>255</sup>,
+each stored as 255 bits,
+you always set aside 256 bits for the result a+b.
+When you multiply two integers a,b between 0 and 2<sup>256</sup>,
+you always set aside 512 bits for the result ab.
+</p>
+<p>
+Between multiplications it's important to reduce the number of bits
+by subtracting an appropriate multiple of p.
+Specifically,
+starting from a big integer c,
+mask c to obtain the bottom 255 bits r,
+shift c right by 255 bits to obtain the remaining bits q,
+and then compute 19q+r;
+this is the same as c−pq.
+If c is between (e.g.) 0 and 2<sup>600</sup> then 19q+r fits into 350 bits,
+and a second iteration of the same procedure produces 256 bits.
+This isn't guaranteed to be between 0 and p−1,
+but it's small enough for the next multiplication.
+</p>
+<p>
+At the end of the computation it's not enough to produce a 256-bit integer x:
+it's important to <i>completely</i> reduce modulo p,
+producing a result between 0 and p−1.
+One safe way to do this is with two iterations
+of a constant-time conditional subtraction.
+A conditional subtraction replaces x with x−(1−s)p,
+where s is the (twos-complement) sign bit in x−p.
+This can be optimized further,
+but since it's done only at the end of the computation
+the exact performance doesn't matter.
+</p>
+<p>
+<b>Constant-time NIST P-256.</b>
+In principle one can adapt the ideas of the previous three paragraphs
+to NIST P-256,
+the usual choice of curve for ECDSA,
+producing constant-time arithmetic modulo the NIST P-256 prime.
+The problem is that NIST P-256
+has what Adam Langley calls a
+<a href="https://www.imperialviolet.org/2010/12/21/eccspeed.html">"nasty prime formation"</a>,
+with many intermediate terms:
+it's 2<sup>256</sup>−2<sup>224</sup>+2<sup>192</sup>+2<sup>96</sup>−1.
+This makes every reduction modulo this prime
+considerably more complicated and considerably slower
+than reduction modulo a two-term prime.
+</p>
+<p>
+As I mentioned, the NIST curves were chosen by Jerry Solinas at NSA.
+Solinas published a paper 
+<a href="http://cacr.uwaterloo.ca/techreports/1999/corr99-39.pdf">"Generalized Mersenne numbers"</a>
+in 1999
+claiming that his primes were
+"particularly well suited for machine implementation".
+The ECDSA standard also has various comments on the efficiency of these primes.
+For the NIST P-256 prime,
+the ECDSA standard specifies the following procedure
+to reduce modulo p an integer "A less than p<sup>2</sup>":
+</p>
+<ol>
+<li>Write A as
+(A<sub>15</sub>, A<sub>14</sub>, A<sub>13</sub>, A<sub>12</sub>, A<sub>11</sub>, A<sub>10</sub>, A<sub>9</sub>, A<sub>8</sub>, A<sub>7</sub>, A<sub>6</sub>, A<sub>5</sub>, A<sub>4</sub>, A<sub>3</sub>, A<sub>2</sub>, A<sub>1</sub>, A<sub>0</sub>),
+meaning
+A<sub>15</sub> 2<sup>480</sup>
++ A<sub>14</sub> 2<sup>448</sup>
++ A<sub>13</sub> 2<sup>416</sup>
++ A<sub>12</sub> 2<sup>384</sup>
++ A<sub>11</sub> 2<sup>352</sup>
++ A<sub>10</sub> 2<sup>320</sup>
++ A<sub>9</sub> 2<sup>288</sup>
++ A<sub>8</sub> 2<sup>256</sup>
++ A<sub>7</sub> 2<sup>224</sup>
++ A<sub>6</sub> 2<sup>192</sup>
++ A<sub>5</sub> 2<sup>160</sup>
++ A<sub>4</sub> 2<sup>128</sup>
++ A<sub>3</sub> 2<sup>96</sup>
++ A<sub>2</sub> 2<sup>64</sup>
++ A<sub>1</sub> 2<sup>32</sup>
++ A<sub>0</sub> 2<sup>0</sup>.
+<li>Compute T = (A<sub>7</sub>, A<sub>6</sub>, A<sub>5</sub>, A<sub>4</sub>, A<sub>3</sub>, A<sub>2</sub>, A<sub>1</sub>, A<sub>0</sub>).
+<li>Compute S<sub>1</sub> = (A<sub>15</sub>, A<sub>14</sub>, A<sub>13</sub>, A<sub>12</sub>, A<sub>11</sub>, 0, 0, 0).
+<li>Compute S<sub>2</sub> = (0, A<sub>15</sub>, A<sub>14</sub>, A<sub>13</sub>, A<sub>12</sub>, 0, 0, 0).
+<li>Compute S<sub>3</sub> = (A<sub>15</sub>, A<sub>14</sub>, 0, 0, 0, A<sub>10</sub>, A<sub>9</sub>, A<sub>8</sub>).
+<li>Compute S<sub>4</sub> = (A<sub>8</sub>, A<sub>13</sub>, A<sub>15</sub>, A<sub>14</sub>, A<sub>13</sub>, A<sub>11</sub>, A<sub>10</sub>, A<sub>9</sub>).
+<li>Compute D<sub>1</sub> = (A<sub>10</sub>, A<sub>8</sub>, 0, 0, 0, A<sub>13</sub>, A<sub>12</sub>, A<sub>11</sub>).
+<li>Compute D<sub>2</sub> = (A<sub>11</sub>, A<sub>9</sub>, 0, 0, A<sub>15</sub>, A<sub>14</sub>, A<sub>13</sub>, A<sub>12</sub>).
+<li>Compute D<sub>3</sub> = (A<sub>12</sub>, 0, A<sub>10</sub>, A<sub>9</sub>, A<sub>8</sub>, A<sub>15</sub>, A<sub>14</sub>, A<sub>13</sub>).
+<li>Compute D<sub>4</sub> = (A<sub>13</sub>, 0, A<sub>11</sub>, A<sub>10</sub>, A<sub>9</sub>, 0, A<sub>15</sub>, A<sub>14</sub>).
+<li>Compute T+2S<sub>1</sub>+2S<sub>2</sub>+S<sub>3</sub>+S<sub>4</sub>−D<sub>1</sub>−D<sub>2</sub>−D<sub>3</sub>−D<sub>4</sub>.
+<li>Reduce modulo p "by adding or subtracting a few copies" of p.
+</ol>
+<p>
+How is the implementor supposed to handle "adding or subtracting a few copies"?
+A loop would take variable time, presumably leaking secret information.
+A pile of 6 constant-time conditional operations will work correctly
+(conditional addition of 4p,
+conditional addition of 2p,
+conditional addition of p,
+conditional subtraction of 4p,
+conditional subtraction of 2p,
+conditional subtraction of p)
+but is also quite slow.
+An implementor who removes these steps,
+delaying complete reduction until the end of the computation,
+then has to handle products that are not "less than p<sup>2</sup>",
+and the standard doesn't give any hint of how to adapt its reduction procedure
+to handle such inputs.
+</p>
+<p>
+<b>Radix flexibility.</b>
+The standard NIST P-256 reduction procedure becomes even more painful
+if integers aren't represented in radix 2<sup>32</sup> (or 2<sup>16</sup> or 2<sup>8</sup>):
+the word shuffling required for T,S<sub>1</sub>,S<sub>2</sub>,S<sub>3</sub>,S<sub>4</sub>,D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>,D<sub>4</sub>
+then turns into a long sequence of bit manipulations.
+The reason this is important is that radix 2<sup>32</sup> isn't the best way
+to carry out big-integer arithmetic on most CPUs.
+Even on CPUs where the largest multiplier size is exactly 32 bits,
+it's almost always better to use a radix smaller than 2<sup>32</sup>,
+so that carries can be delayed.
+</p>
+<p>
+For comparison,
+the prime 2<sup>255</sup>−19 is friendly to radix 2<sup>32</sup> (simply reduce modulo 2<sup>256</sup>−38)
+but is also friendly to many other choices of radix.
+Curve25519 is a frequent topic of ECC-optimization papers
+(not just my own papers!),
+and those papers have used many different choices of radix
+to take advantage of different multipliers on different platforms:
+</p>
+<ul>
+<li>My original paper for Pentium M etc.:
+radix 2<sup>21.25</sup> using double-precision floating-point,
+and radix 2<sup>25.5</sup> using extended-precision floating-point.
+<li>2007 
+<a href="http://www.loria.fr/~gaudry/publis/mpfq.pdf">Gaudry&ndash;Thomé</a>
+for Core 2 and Athlon 64:
+radix 2<sup>64</sup> using 64-bit integers.
+<li>2009 
+<a href="http://cryptojedi.org/papers/celldh-20090331.pdf">Costigan&ndash;Schwabe</a>
+for Cell:
+radix 2<sup>12.75</sup> using 16-bit integers.
+<li>2011 
+<a href="http://ed25519.cr.yp.to/papers.html">Bernstein&ndash;Duif&ndash;Lange&ndash;Schwabe&ndash;Yang</a>
+for Nehalem and Westmere:
+radix 2<sup>64</sup> and 2<sup>51</sup> using 64-bit integers.
+<li>2012
+<a href="http://cr.yp.to/papers.html#neoncrypto">Bernstein&ndash;Schwabe</a> for Cortex A8:
+radix 2<sup>25.5</sup> using 32-bit integers.
+<li>2014
+<a href="https://github.com/floodyberry/ed25519-donna">Langley&ndash;Floodyberry</a>
+(no paper but software online) for various Intel chips:
+radix 2<sup>25.5</sup> using 32-bit integers,
+and radix 2<sup>51</sup> using 64-bit integers.
+<li>2014
+<a href="http://eprint.iacr.org/2014/198">Mahé&ndash;Chauvet</a>
+for various GPUs:
+radix 2<sup>25.5</sup> using 32-bit integers,
+and radix 2<sup>51</sup> using 64-bit integers.
+</ul>
+<p>
+A simple 32-bit implementation of Curve25519 (or Ed25519)
+is already considerably faster than NIST P-256 (or ECDSA using NIST P-256),
+and tuning the radix provides an extra speed boost,
+thanks to the simple shape of 2<sup>255</sup>−19.
+</p>
+<p>
+<b>Other standard primes.</b>
+To be fair I should mention that there's one standard NIST curve
+using a nice prime, namely 2<sup>521</sup>−1;
+but the sheer size of this prime makes it much slower than NIST P-256.
+The other NIST primes are
+2<sup>192</sup>−2<sup>64</sup>−1 (substandard security level),
+2<sup>224</sup>−2<sup>96</sup>+1,
+and 2<sup>384</sup>−2<sup>128</sup>−2<sup>96</sup>+2<sup>32</sup>−1.
+The secp256k1 (Bitcoin) prime is 2<sup>256</sup>−2<sup>32</sup>−977.
+The French (ANSSI FRP256v1) and German (Brainpool) standard primes
+have many more terms and are much slower.
+</p>
+<p>
+One central source of curve specifications is
+<a href="http://safecurves.cr.yp.to">safecurves.cr.yp.to</a>.
+This is an ECC security-evaluation site that Lange and I run,
+covering 20 different curves so far.
+That site doesn't evaluate performance,
+but many curves are included in
+the central eBACS benchmarking site that I mentioned earlier.
+</p>
+<h3>How does scalar multiplication work?</h3>
+<p>
+Signing starts by generating a secret random integer k
+and then computing R = kB.
+I'll discuss the randomization later.
+The main bottleneck in signing is the computation of kB from k,
+a "fixed-base-point scalar multiplication".
+</p>
+<p>
+One easy way to compute kB
+is to split k into (say) 4-bit pieces.
+For example,
+k has 256 bits in Ed25519,
+so it can be written as
+k<sub>0</sub> + 2<sup>4</sup> k<sub>1</sub> + 2<sup>8</sup> k<sub>2</sub> + 2<sup>12</sup> k<sub>3</sub> + ... + 2<sup>252</sup> k<sub>63</sub>
+where each k<sub>i</sub> is in {0,1,2,...,15}.
+Then kB is the sum of 64 points, namely 
+k<sub>0</sub> B, 2<sup>4</sup> k<sub>1</sub> B, 2<sup>8</sup> k<sub>2</sub> B, 2<sup>12</sup> k<sub>3</sub> B, ..., 2<sup>252</sup> k<sub>63</sub> B.
+The term k<sub>0</sub> B is looked up in a table containing
+the 16 points 0B,1B,2B,...,15B;
+the term 2<sup>4</sup> k<sub>1</sub> B is looked up in a table containing
+the 16 points 2<sup>4</sup> 0B,2<sup>4</sup> 1B,2<sup>4</sup> 2B,...,2<sup>4</sup> 15B;
+same for all the other terms.
+There are many possible tradeoffs
+between the total table size and the number of additions,
+and there are slightly more complicated methods
+that improve the tradeoffs.
+</p>
+<p>
+Wait a minute:
+for security we have to avoid secret array indices.
+So how do we look up k<sub>0</sub> B in a table?
+The index k<sub>0</sub> is secret!
+</p>
+<p>
+What the Ed25519 software actually does is read <i>all</i> of the table entries
+and perform arithmetic to extract the correct table entry.
+The basic idea is simple (and fundamentally the same as what RAM hardware does):
+if b is a bit then x[b] is the same as x[0]+b(x[0]−x[1]).
+You can replace the addition, multiplication, and subtraction here
+with XOR, AND, and XOR respectively.
+(On some processors there are "conditional move"/"select" instructions
+that perform the same computation,
+although you have to be careful to check whether those instructions
+actually take constant time.)
+If b and c are bits then x[2*c+b] is the same as y[0]+c(y[0]−y[1]),
+where y[0] is x[0]+b(x[0]−x[1])
+and y[1] is x[2]+b(x[2]−x[3]).
+</p>
+<p>
+<b>Scalar multiplication for ECDSA.</b>
+This method of computing kB in constant time might seem quite general
+and trivially applicable to ECDSA.
+The big problem is that ∞ is an exceptional case
+for the Weierstrass addition formulas,
+and the point 0B appearing in each table is exactly ∞.
+</p>
+<p>
+There are several ways to work around this problem
+without huge extra performance penalties.
+For example,
+one can change the range of each k<sub>i</sub> to exclude 0,
+although expanding k as a sum of k<sub>i</sub> then requires some thought.
+As another example,
+one can use arithmetic to replace P+0 with P
+in the case that k<sub>i</sub> is 0,
+so that a bogus computation of P+0 doesn't cause problems,
+although handling the possibility of an <i>initial</i> 0 then requires some thought.
+</p>
+<p>
+The ANSI X9.62 ECDSA standard doesn't consider these issues.
+(The NIST ECDSA standard also doesn't consider these issues:
+it simply specifies the NSA choices of elliptic curves
+and cites ANSI X9.62 for the remaining details of ECDSA.)
+The standard instead states a scalar-multiplication method commonly known as "NAF";
+this method doesn't involve any additions of 0
+but <i>doesn't take constant time</i>.
+The OpenSSL software broken by Benger, van de Pol, Smart, and Yarom
+uses a faster scalar-multiplication method commonly known as "wNAF",
+which also doesn't take constant time.
+</p>
+<p>
+I haven't actually bought a copy of the X9.62 standard;
+I'm looking at Appendix D.3.2 in a 
+<a href="http://grouper.ieee.org/groups/1363/Research/Other.html">free online draft</a>
+of the standard.
+Maybe the standard was changed after this draft,
+but back then people weren't really paying attention to timing attacks,
+so I would be surprised if the final standard
+explains a constant-time scalar-multiplication algorithm,
+while it's completely unsurprising to see that the OpenSSL ECDSA implementation
+uses a non-constant-time scalar-multiplication algorithm.
+</p>
+<p>
+It's of course possible that
+a constant-time scalar-multiplication algorithm
+will appear in a future ECDSA standard.
+But this will be yet another way
+that ECDSA is more complicated, and slower,
+than a properly designed elliptic-curve signature system.
+</p>
+<h3>How are signatures randomized?</h3>
+<p>
+ElGamal's signing procedure required the signer
+to choose a uniform random R independently for each message,
+by choosing the discrete logarithm k of R as a uniform random secret integer modulo q.
+ElGamal pointed out that a sufficiently severe screwup,
+such as publishing k or using the same k for two messages,
+would reveal the signer's long-term secret key.
+This is exactly how the Sony PlayStation 3 ECDSA signing key was
+<a href="http://events.ccc.de/congress/2010/Fahrplan/attachments/1780%5F27c3%5Fconsole%5Fhacking%5F2010.pdf">discovered</a>
+in 2010.
+</p>
+<p>
+Often k is called a "nonce";
+a <b>nonce</b>, by definition, is a number used once.
+However,
+this understates the security requirements for k.
+Followup papers showed that less severe deviations from randomness,
+such as always choosing the top 4 bits of k to be 0
+or merely revealing the top 4 bits of each k,
+would also reveal the signer's secret key.
+Recent papers on these attack techniques include
+<a href="http://eprint.iacr.org/2013/346">De Mulder&ndash;Hutter&ndash;Marson&ndash;Pearson</a>
+and the new Benger&ndash;van de Pol&ndash;Smart&ndash;Yarom paper.
+</p>
+<p>
+<b>The costs of RNGs.</b>
+An appendix to the 1994 DSA standard
+specified a typical RNG for generating k,
+starting by hashing a "secret initial value"
+and then updating this initial value for the next k.
+This is not a bad simulation of true randomness,
+but it begs the question of where the "secret initial value" comes from.
+It's also <b>stateful</b>:
+the RNG state <i>must</i> be updated for each signature.
+Multiple signers can't simply clone a single state.
+One has to be careful with crashes, VM rewinding, etc.
+</p>
+<p>
+Fortunately,
+the costs of getting an RNG right can be shared across applications.
+It's safe to have a single centralized RNG in an operating system
+(or, even better, a hypervisor)
+providing random numbers to all applications;
+if the RNG is secure
+then the outputs are indistinguishable
+from the outputs of separate application-specific secure RNGs.
+We need at least one secure RNG in any case
+to generate long-term secret keys,
+so we can reuse that RNG to generate k.
+</p>
+<p>
+<b>Avoiding RNGs in signatures.</b>
+It would be better if the signature system
+didn't need new randomness for each signature in the first place.
+The RNG would be used much less frequently,
+and could afford to be designed more conservatively.
+We wouldn't have to worry about the RNG taking entropy from
+<a href="20140205-entropy.html">malicious sources</a>.
+We could move a long-term secret key
+into a highly protected hardware device for signing,
+without having to pay for an RNG in the hardware device
+and without having to worry about the quality of that RNG.
+We could have <i>test vectors</i> for signing functions,
+because those functions wouldn't have a hidden RNG input.
+</p>
+<p>
+This is exactly what was accomplished by a very simple modification to DSA
+suggested by George Barwood in
+<a href="http://groups.google.com/group/sci.crypt/msg/b28aba37180dd6c6">February 1997</a>:
+namely,
+"a prng is used to generate k,
+keyed with d (the private key),
+and seeded with e (the message digest)."
+Essentially the same idea was suggested by John Wigley in
+<a href="http://groups.google.com/group/sci.crypt/msg/a6da45bcc8939a89">March 1997</a>:
+"Why not derive the random number from the message to be signed
+therefore removing the need for a hardware rng (smartcards) or a complex
+and potentially fallible software attempt. ...
+1)Hash the message to be signed as usual and use that as the message in
+the signature algorithm.
+2)hash the private key using the chaining variable state left by the
+previous hash, and use that as the random number."
+</p>
+<p>
+The same idea was reinvented by
+M'Raïhi, Naccache, Pointcheval, and Vaudenay,
+who managed to stretch it out into a
+<a href="http://www.di.ens.fr/users/pointche/Documents/Papers/1998%5Fsac.pdf">multiple-page
+conference paper</a>.
+Naccache, M'Raïhi, and Levy-dit-Vehel
+had actually filed a 
+<a href="https://www.google.com/patents/EP0980607A1">patent application</a>
+on the idea in May 1997;
+they abandoned the patent application in 2003.
+The idea was yet again reinvented by Katz and Wang
+and published as part of a 2003 paper,
+although the main point of that paper was something else
+so the idea wasn't stretched out. 
+</p>
+<p>
+<b>Maximum security.</b>
+Ed25519 actually generates k by hashing the secret key together with the entire message.
+Very fast "PRFs" used to authenticate messages, such as VMAC, are safe here,
+but Ed25519 simply uses SHA-512
+since it's quite rare for this to be a noticeable bottleneck.
+Using an RNG wouldn't break interoperability,
+but the safest option is the default.
+Using Ed25519 to sign H(m), rather than m, would mean hashing m only once
+(at the expense of collision resilience),
+but again the safest option is the default.
+</p>
+<p>
+Ed25519 has two secret keys,
+one used for the hashing to produce k
+and one used as the discrete logarithm of the public key,
+to prevent any weird interactions between the hashing and the rest of the signature system.
+Both of these keys are actually derived from a single 256-bit master secret key,
+but if the key-derivation function is secure then this is indistinguishable
+from having two independent secret keys.
+This derivation also means that
+quite severe deviations from randomness in the master secret key,
+such as having the first 64 bits all zero,
+still won't allow any easy attacks.
+</p>
+<p>
+<b>More possibilities for the hash input.</b>
+I've heard many stories from DSA/ECDSA implementors
+who generate k as a hash of various inputs.
+All of the inputs I've heard about fall into four categories:
+</p>
+<ul>
+<li>P: a string from some PRNG.
+<li>X: the DSA secret key, or some better-separated secret.
+<li>N: the number of messages signed.
+<li>M: the message, or a collision-resistant hash of the message.
+</ul>
+<p>
+It's important for k to be unguessable.
+M and N are guessable,
+so it's critical to use at least one of P, X.
+There's an easy argument that using X is sufficient here:
+if X were guessable then the whole system would be broken
+no matter how k is generated.
+Note that the same argument doesn't apply to P.
+</p>
+<p>
+It's also important for k to be different for each message.
+X doesn't vary from one message to another,
+so it's critical to use at least one of P, N, M.
+Using M is obviously sufficient here.
+Using N is also obviously sufficient.
+Using P might be sufficient but requires a serious PRNG audit.
+</p>
+<p>
+It's also helpful for signing to be stateless.
+This means that it's <i>bad</i> to use N or P.
+</p>
+<p>
+All of these criteria are satisfied by simply hashing (X,M),
+as Barwood and Wigley proposed.
+(P,X,M), (X,N,M), and (P,X,N,M) lose statelessness,
+and I have no idea why they're supposed to be better than (X,M).
+There's a very small speed argument for omitting M in favor of N,
+producing (X,N) or (P,X,N),
+but these lose statelessness and are certainly more difficult to get right.
+I'm not aware of any argument for omitting X.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2014.03.23 of the 20140323-ecdsa.html web page.
+</font></body>
+</html>

@@ -1,0 +1,493 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2019.04.30: An introduction to vectorization
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html accesskey=k><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><b>2019.04.30: An introduction to vectorization</b> Understanding one of the most important changes in the high-speed-software ecosystem. #vectorization #sse #avx #avx512 #antivectors</td></tr>
+<tr><td><a href=20171105-infineon.html accesskey=j><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2019.04.30: An introduction to vectorization</h2>
+<p>
+Your CPU has a 32-bit addition instruction
+that computes the sum of two 32-bit integers x and y,
+producing a 32-bit result.
+(The 33rd bit of the sum, the "carry bit", is usually thrown away.)
+</p>
+<p>
+A <b>2-way-vectorized</b> 32-bit addition instruction
+computes the sum of two vectors (x<sub>0</sub>,x<sub>1</sub>) and (y<sub>0</sub>,y<sub>1</sub>),
+where x<sub>0</sub>,x<sub>1</sub>,y<sub>0</sub>,y<sub>1</sub> are 32-bit integers.
+This means that the CPU
+computes the sum of x<sub>0</sub> and y<sub>0</sub>,
+and also
+computes the sum of x<sub>1</sub> and y<sub>1</sub>.
+</p>
+<p>
+A <b>4-way-vectorized</b> 32-bit addition instruction
+computes the sum of two 32-bit integers x<sub>0</sub> and y<sub>0</sub>;
+the sum of two 32-bit integers x<sub>1</sub> and y<sub>1</sub>;
+the sum of two 32-bit integers x<sub>2</sub> and y<sub>2</sub>;
+and
+the sum of two 32-bit integers x<sub>3</sub> and y<sub>3</sub>.
+</p>
+<p>
+Why should a CPU designer bother providing a vectorized addition instruction?
+Why doesn't the programmer simply use
+one 32-bit addition instruction to add x<sub>0</sub> and y<sub>0</sub>,
+another 32-bit addition instruction to add x<sub>1</sub> and y<sub>1</sub>,
+et cetera?
+To understand the answer,
+let's take a closer look at how the CPU handles
+a non-vectorized 32-bit addition instruction:
+</p>
+<ul>
+<li>
+  Fetch the instruction from RAM.
+  This is a huge, power-hungry operation compared to the addition,
+  even if the instruction is in a fast cache
+  (for example, a 32768-byte "level-1 code cache").
+</li>
+<li>
+  Decode the instruction, to recognize that it is an addition instruction.
+  Instructions are compressed into a compact format,
+  and uncompressing them takes time.
+  (Sometimes CPUs cache uncompressed instructions.)
+</li>
+<li>
+  Retrieve the inputs x and y from a small array, the "register file".
+</li>
+<li>
+  Add x to y.
+</li>
+<li>
+  Put the result into the register file.
+</li>
+</ul>
+<p>
+These five stages involve tremendous overhead
+beyond the addition.
+Typically there are even more stages:
+for example, an early stage that inserts the instruction into
+an array of instructions ready to be executed,
+and a late stage that "retires" the completed instruction, removing it from this array.
+It's not surprising for an Intel CPU to have 15 or more stages overall.
+(Readers interested in learning more about the Intel pipeline should study
+<a href="https://www.agner.org/optimize/">Agner Fog's optimization manuals</a>.)
+</p>
+<p>
+Students in algorithms courses are usually trained to count arithmetic operations
+and to ignore the cost of memory access.
+Does the overhead of handling an instruction
+really matter compared to the cost of arithmetic?
+To see that the answer is yes,
+let's scale up to a much more expensive arithmetic instruction,
+namely a 64-bit floating-point multiplication.
+An
+<a href="https://www.openfabrics.org/images/eventpresos/workshops2015/DevWorkshop/Tuesday/tuesday%5f10.pdf">Intel presentation</a>
+in 2015
+reported that a 64-bit floating-point multiplication costs 6.4 picojoules
+(at 22nm, scaling "well with process and voltage"),
+that reading 64 bits from a register file costs 1.2 picojoules
+(scaling "less well with voltage"),
+that reading 64 bits from a small (8KB) cache costs 4.2 picojoules,
+that reading 64 bits from a large (256KB) cache costs 16.7 picojoules,
+and that moving 64 bits through a wire 5 millimeters long costs 11.20 picojoules
+("more difficult to scale down").
+</p>
+<p>
+Now let's look at how the CPU handles
+a 4-way-vectorized 32-bit addition instruction:
+</p>
+<ul>
+<li>
+  Fetch the instruction.
+</li>
+<li>
+  Decode the instruction.
+</li>
+<li>
+  Retrieve the inputs
+  x<sub>0</sub>,x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub> and y<sub>0</sub>,y<sub>1</sub>,y<sub>2</sub>,y<sub>3</sub>
+  from the register file.
+</li>
+<li>
+  Add x<sub>0</sub>,x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub> to y<sub>0</sub>,y<sub>1</sub>,y<sub>2</sub>,y<sub>3</sub> respectively.
+</li>
+<li>
+  Put the 4 sums into the register file.
+</li>
+</ul>
+<p>
+The extra efficiency of the vectorized instruction is already clear at the first stage.
+Fetching a vectorized addition instruction
+might be slightly more expensive
+than fetching a non-vectorized addition instruction
+if the vectorized instruction has a longer encoding,
+but it certainly isn't 4 times as expensive.
+More broadly,
+4-way vectorization means that
+the overhead of handling each instruction
+(and, to some extent, the overhead of handling each input and output)
+is amortized across 4 arithmetic operations.
+Moving from 4-way vectorization to 8-way vectorization chops the overhead in half again.
+</p>
+<p>
+Computers are constantly applying the same computations
+to one input after another,
+continuing through large volumes of data.
+Handling these computations with vectorized instructions,
+rather than with non-vectorized instructions,
+increases the amount of useful work
+that the CPU can do in any particular amount of time
+under any particular limits on energy, power, temperature, etc.
+Commonly used optimizing compilers such as gcc
+automatically try to figure out how they can use vectorized instructions
+instead of non-vectorized instructions.
+Often the compiler's automatic vectorization doesn't succeed,
+so programmers manually vectorize critical inner loops
+in a broad range of performance-sensitive applications.
+</p>
+<p>
+Wikipedia's
+<a href="https://en.wikipedia.org/wiki/Advanced%5FVector%5FExtensions">AVX page</a>
+mentions
+Blender (movie creation),
+dav1d (AV1 movie player used inside Firefox),
+TensorFlow (machine learning),
+and various other popular applications that use
+Intel's instructions to handle 256-bit vectors.
+Intel's 128-bit instructions, "SSE" etc., were introduced a decade earlier
+and are used so pervasively that trying to keep a list of applications would be silly.
+</p>
+<p>
+There is overwhelming evidence of the huge performance increase
+produced by vectorization.
+This performance increase is also the reason that
+CPU designers include vector instructions in every big enough CPU.
+Some CPU designers have gone far beyond 4-way vectorization:
+massive vector processors called
+<a href="https://en.wikipedia.org/wiki/Graphics%5Fprocessing%5Funit">GPUs</a>
+(typically working with 1024-bit vectors)
+have set speed records for a remarkable range of computations.
+Current GPUs aren't designed to run full operating systems,
+so they can't replace current CPUs,
+but the performance of GPUs illustrates the fundamental efficiency of vectorization.
+</p>
+<p>
+It's possible for a high-speed vectorized computation
+to generate enough heat to overwhelm the CPU's cooling,
+or to consume more power than is available.
+The CPU then reduces its clock speed somewhat to compensate.
+(GPUs typically run below 2GHz.)
+CPU designers are perfectly aware of this,
+and continue to include vector instructions,
+because vectorization is still a huge win.
+</p>
+<h3>Software without full vectorization</h3>
+<p>
+Sometimes a CPU is busy running software
+that makes little use of the most powerful vector instructions provided by the CPU.
+There are two basic reasons for this.
+</p>
+<p>
+<b>Reason 1: Some computations are hard to vectorize.</b>
+Consider, for example, the RC4 stream cipher.
+This cipher was designed in the 1980s for high software speed,
+and for many years it was the main cipher used to encrypt HTTPS traffic.
+In 2001
+(as part of a
+<a href="https://web.archive.org/web/20070925062028/https://www.rsa.com/rsalabs/node.asp?id=2009">statement</a>
+downplaying the latest attacks against RC4),
+RSA Laboratories described RC4 as "extremely efficient".
+Today the
+<a href="https://en.wikipedia.org/wiki/RC4">Wikipedia page on RC4</a>
+describes RC4 as "remarkable for its simplicity and speed in software".
+But let's look at some benchmarks comparing RC4
+to my ChaCha20 stream cipher:
+</p>
+<ul>
+<li>RC4: 6.2 cycles/byte on a Intel Core 2 CPU core (Core 2 Quad Q6600, released 2007),
+according to <tt>openssl speed rc4</tt>.
+</li>
+<li>ChaCha20: 3.36 cycles/byte on an Intel Core 2 CPU core,
+according to
+<a href="https://bench.cr.yp.to/results-stream.html#amd64-margaux">eBATS</a>.
+</li>
+<li>RC4: 5.3 cycles/byte on an Intel Skylake CPU core (Xeon E3-1220 v5, released 2015).
+</li>
+<li>ChaCha20: 1.17 cycles/byte on an Intel Skylake CPU core.
+</li>
+</ul>
+<p>
+Behind the scenes,
+these ChaCha20 speeds are taking advantage of 128-bit vector instructions on the Core 2
+and 256-bit vector instructions on the Skylake,
+while it's awfully difficult for RC4 to make any use of vector instructions.
+One of the recurring themes in my research
+is exploring ways that non-vectorizable computations
+can be replaced with vectorizable computations.
+</p>
+<p>
+<b>Reason 2: Intel keeps changing its vector instruction sets.</b>
+Intel started releasing
+</p>
+<ul>
+<li>32-bit CPUs with 64-bit vector instructions ("MMX") in 1997,</li>
+<li>CPUs with 128-bit vector instructions ("SSE") in 1999,</li>
+<li>CPUs with more 128-bit vector instructions ("SSE2") in 2000,</li>
+<li>CPUs with more 128-bit vector instructions ("SSE3") in 2004,</li>
+<li>CPUs with more 128-bit vector instructions ("SSSE3") in 2006,</li>
+<li>CPUs with more 128-bit vector instructions ("SSE4") in 2008,</li>
+<li>CPUs with 256-bit vector instructions ("AVX") in 2011,</li>
+<li>CPUs with more 256-bit vector instructions ("AVX2") in 2013, and</li>
+<li>CPUs with 512-bit vector instructions ("AVX-512") in 2016.</li>
+</ul>
+<p>
+Each new instruction-set extension is a new hassle.
+Someone needs to figure out how to modify software to use the new instructions,
+how to deploy the new software for the new CPUs,
+and how to avoid having software crash if it tries using the new instructions
+on older CPUs that do not support those instructions.
+Wide use of the new instructions is years away.
+Intel often seems to have
+<a href="https://arstechnica.com/gadgets/2016/01/intel-skylake-bug-causes-pcs-to-freeze-during-complex-workloads/">trouble</a>
+figuring out which clock speeds are going to be safe
+for software using the new instructions.
+Eventually these problems are resolved for each new instruction set,
+but the resolution can take years.
+</p>
+<p>
+Some vector instruction sets,
+such as ARM's Scalable Vector Extension (SVE),
+instead allow "vector-length agnostic" software
+that works with many different vector sizes.
+To process an N-bit vector,
+the software tells the CPU to
+</p>
+<ul>
+<li>
+perform vector operations on min{C,N} bits,
+where C is the CPU's vector size;
+</li>
+<li>
+move C bits through the vector;
+</li>
+<li>
+subtract C from N; and
+</li>
+<li>
+go back to the beginning if N is nonnegative.
+</li>
+</ul>
+<p>
+These instructions don't state C explicitly.
+There's one initial software upgrade
+to use these scalable vector instructions,
+and then subsequent changes in the vector length C don't need further upgrades.
+A new CPU with a larger C
+will automatically run exactly the same software
+using its larger vector lengths.
+</p>
+<p>
+Perhaps ARM will make further changes to the instructions,
+for example to correct what turn out to be design flaws in the current details.
+But what matters is the scalable design.
+The CPU designer is free to try different vector lengths,
+without the hassle of introducing a new instruction set.
+The CPU designer can use all the previous vectorized software to test the new vector lengths.
+The user doesn't have to wait for software modifications
+to take advantage of the new CPU.
+</p>
+<h3>Vectorization denial: the anti-vectors campaign</h3>
+<p>
+Out of the 69
+<a href="https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions">round-1 submissions</a>
+to NIST's
+<a href="https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Post-Quantum-Cryptography-Standardization">Post-Quantum Cryptography Standardization Project</a>,
+22% already provided Haswell-optimized software at the beginning of round 1
+using 256-bit AVX2 vector instructions.
+The fraction increased to 65%
+at the beginning of
+<a href="https://csrc.nist.gov/projects/post-quantum-cryptography/round-2-submissions">round 2</a>.
+</p>
+<p>
+Out of the 56 speakers at NIST's round-1 conference,
+there was one speaker making the amazing claim
+that vectorization is a <i>bad</i> thing.
+The
+<a href="https://csrc.nist.gov/Presentations/2018/Lima">slides</a> say
+"We do not give a machine code implementation using SSE etc.
+We (and others) have found that using these extensions causes overall performance of
+cryptographic <b>systems</b> to slow down."
+(Emphasis in original.
+The speaker was Nigel Smart;
+the cover slide also lists
+Martin R. Albrecht,
+Yehuda Lindell,
+Emmanuela Orsini,
+Valery Osheter,
+Kenneth G. Paterson,
+and
+Guy Peer.)
+</p>
+<p>
+What the anti-vectorization people
+have "found" is simply the well-documented fact
+that CPU designers sometimes have to reduce their clock speeds
+to handle high-speed vectorized computations.
+See, e.g.,
+Intel's
+<a href="https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/performance-xeon-e5-v3-advanced-vector-extensions-paper.pdf">2014 white paper</a>
+"Optimizing Performance with Intel Advanced Vector Extensions",
+which discusses the big picture of interactions between clock speed and use of AVX.
+</p>
+<p>
+Vectorized software is in heavy use
+in practically every smartphone CPU, laptop CPU, and server CPU.
+Vectorization is a huge win
+<i>despite</i> sometimes needing lower clock speeds.
+But these anti-vectorization people
+don't even want to use 128-bit vectors
+("We do not give a machine code implementation using SSE etc.").
+They publish statements
+whose evident goal is to
+deter other people from writing and measuring vectorized code.
+Do they seriously believe
+that Intel and AMD and ARM have all screwed up by supporting vectorization?
+</p>
+<p>
+As discussed above,
+Intel deployed a new instruction set starting in 2011 to handle 256-bit vectors.
+For some time after this,
+the most important computations on typical machines
+weren't using 256-bit vector instructions,
+simply because the necessary software hadn't been written yet.
+If a CPU needed to run at lower clock speed to handle an occasional 256-bit computation,
+then the most important computations would run more slowly,
+producing a measurable performance loss.
+But this was merely a temporary side effect of
+Intel's suboptimal management of the transition to larger vectors.
+Adding 256-bit support to the most important computations
+is a huge win&mdash;again, this is <i>despite</i> clock speeds sometimes being lower.
+</p>
+<p>
+We're now seeing the same pattern repeat for Intel's new 512-bit vector instructions.
+Vlad Krasnov posted a
+<a href="https://blog.cloudflare.com/on-the-dangers-of-intels-frequency-scaling/">measurement</a>
+showing an occasional 512-bit computation
+producing an overall performance loss of 10%
+in a reasonable-sounding synthetic workload on an Intel Xeon Silver.
+The anti-vectors campaign
+views this measurement as a devastating indictment of 512-bit vectors;
+slides to the notion that one also shouldn't use 256-bit vectors;
+and slides beyond this to the notion that one shouldn't even use 128-bit vectors.
+</p>
+<p>
+What will happen when the most important computations
+are upgraded to use 512-bit vectors?
+Unless Intel botched their hardware design,
+the answer will be a performance win,
+despite the reduction in clock speed.
+As this clock-speed reduction increasingly becomes the norm,
+the supposed harms of upgrading other computations to use 512-bit vectors
+will disappear, while the performance benefits will remain.
+</p>
+<p>
+Because Intel never provided scalable vector instructions,
+the new ecosystem of software that can use Intel's 512-bit vectors
+is much smaller than the previous ecosystem of software that uses smaller vectors.
+Experience suggests that
+growth of the new ecosystem will produce
+a transition between two situations:
+</p>
+<ul>
+<li>
+  Short-term situation:
+  The new ecosystem is in its infancy,
+  and doesn't support the most important computations on typical machines
+  (even if the CPUs support 512-bit vectors).
+  Occasional users see big benefits from the new ecosystem,
+  but many users gain clock speed and performance by avoiding the new ecosystem.
+</li>
+<li>
+  Long-term situation:
+  The new ecosystem has grown,
+  and supports the most important computations on typical machines,
+  providing broad performance benefits whenever the CPU supports 512-bit vectors
+  (even if clock speeds are lower).
+  Avoiding the new ecosystem becomes increasingly silly.
+</li>
+</ul>
+<p>
+If you're a software developer,
+and you take the lead in adding support for 512-bit vector instructions
+(once you have a 512-bit CPU for testing),
+then you're giving extra choices to users who have 512-bit CPUs.
+Users then have the freedom to run your software
+in the mode that best supports their most important computations.
+Presumably this will be 512-bit mode in the not-too-distant future,
+and for some users it is already 512-bit mode today.
+</p>
+<p>
+You might run into an anti-vectors campaigner
+who wants to take this freedom away,
+and who tries to make you feel guilty for clock-speed reductions.
+According to the campaigner,
+<i>you</i> are singlehandedly responsible for slowing down
+every other application on the machine!
+But the reality is quite different.
+A single change of clock speed
+allows larger vectors in many different computations,
+and if this includes the most important computations for the users
+then overall there's a speedup.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2019.04.30 of the 20190430-vectorize.html web page.
+</font></body>
+</html>

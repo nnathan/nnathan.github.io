@@ -1,0 +1,981 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2015.11.20: Break a dozen secret keys, get a million more for free
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html accesskey=k><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><b>2015.11.20: Break a dozen secret keys, get a million more for free</b> Batch attacks are often much more cost-effective than single-target attacks. #batching #economics #keysizes #aes #ecc #rsa #dh #logjam</td></tr>
+<tr><td><a href=20150314-optimizing.html accesskey=j><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2015.11.20: Break a dozen secret keys, get a million more for free</h2>
+<p>
+[An in-depth blog post by Daniel J. Bernstein,
+crossposted between the
+<a href="http://ecrypt-eu.blogspot.de/">ECRYPT blog</a>
+and the
+<a href="http://blog.cr.yp.to">cr.yp.to blog</a>.]
+</p>
+<p>
+For many years NIST has officially claimed that
+AES-128 has "comparable strength" to 256-bit ECC,
+namely 128 "bits of security".
+Ten years ago,
+in a talk
+<a href="http://cr.yp.to/talks/2005.09.19/slides.pdf">"Is 2<sup>255</sup>−19 big enough?"</a>,
+I disputed this claim.
+The underlying attack algorithms had already been known for years,
+and it's not hard to see their impact on key-size selection;
+but somehow NIST hadn't gotten the memo,
+and still hasn't gotten it today.
+</p>
+<p>
+Here are the relevant quotes from my slides,
+plus some explanations:
+</p>
+<ul>
+<li>"Given H(k) = AES<sub>k</sub>(0), find k using ≈2<sup>127</sup> AES evaluations."
+  This is simply brute-force search:
+  at worst 2<sup>128</sup>, maybe 2<sup>126</sup> or smaller, on average 2<sup>127</sup>.
+  Actually,
+  the inner loop of brute-force search is slightly cheaper
+  than a normal AES evaluation,
+  since there are many ways to merge work across the AES evaluations for multiple inputs;
+  keep in mind this theme of merging work.
+</li>
+<li>"Given H(k[1]),H(k[2]),...,H(k[2<sup>40</sup>]),
+  find <i>all</i> k[i] using a <i>total</i> of ≈2<sup>127</sup> AES evaluations."
+  For example, sort the list of targets,
+  and look up each of the 2<sup>128</sup> possible H outputs in the sorted list.
+  Accessing such a large volume of data (the sorted list of 2<sup>40</sup> targets)
+  might sound like a performance problem,
+  but there's a fancier brute-force algorithm,
+  using Rivest's idea of "distinguished points",
+  that practically eliminates the communication costs;
+  see, for example, my paper
+  <a href="http://cr.yp.to/papers.html#bruteforce">"Understanding brute force"</a>.
+  This attack against a batch of targets
+  is much, much, much faster than attacking each target separately;
+  it's almost as fast as attacking a single key.
+</li>
+<li>"Or find <i>some</i> k[i] using ≈2<sup>87</sup> AES evaluations."
+  This is the same multi-target attack:
+  within 2<sup>88</sup> guesses it's already expected to find one key,
+  within 2<sup>98</sup> guesses it's expected to find about 1000 keys, etc.
+  What's scary here is that an attack with cost many orders of magnitude below 2<sup>128</sup>
+  is accomplishing a useful result against somebody using AES-128.
+</li>
+<li>"Given public key on 255-bit elliptic curve E, find secret key using ≈2<sup>127</sup> additions on E."
+  This is making the 255-bit ECC situation sound a lot like the AES-128 situation at first,
+  supporting NIST's claim.
+  But what happens when the attacker has multiple targets?
+</li>
+<li>"Given 2<sup>40</sup> public keys, find all secret keys using ≈2<sup>147</sup> additions on E."
+  This is a million times faster than finding each key separately;
+  on the other hand,
+  it's still much slower than finding a single targeted key.
+  The basic idea of this attack algorithm was first published in a
+  1999 paper by Escott&ndash;Sager&ndash;Selkirk&ndash;Tsapakidis,
+  and was improved in several subsequent papers;
+  see my paper
+  <a href="http://cr.yp.to/papers.html#cuberoot">"Computing small discrete logarithms faster"</a>
+  with Lange
+  for the history and the latest speedups.
+</li>
+<li>"Finding <i>some</i> key is as hard as finding first key: ≈2<sup>127</sup> additions."
+  This is what makes this multiple-target ECC attack
+  much less scary than the multiple-target AES attack.
+  If the attacker's resources are actually capable of carrying out 2<sup>100</sup> computations
+  then the 2<sup>40</sup>-target AES attack will break <i>thousands of AES keys</i>
+  while the ECC attack, unless it's astonishingly lucky, will break <i>zero ECC keys</i>.
+</li>
+<li>
+  "Bottom line: 128-bit AES keys are not comparable in security
+  to 255-bit elliptic-curve keys.
+  Is 2<sup>255</sup>−19 big enough? Yes.
+  Is 128-bit AES safe? Unclear."
+</li>
+</ul>
+<p>
+What the attacker hopes to find inside the AES attack is a <b>key collision</b>.
+This means that a key guessed by the attack matches a key chosen by a user.
+Any particular guessed key has chance only 1/2<sup>128</sup>
+of matching any particular user key,
+but the attack ends up merging costs across a batch of 2<sup>40</sup> user keys,
+amplifying the effectiveness of each guess by a factor 2<sup>40</sup>.
+A paper by
+<a href="http://cacr.uwaterloo.ca/%7Eajmeneze/anotherlook/papers/tightness.pdf">Chatterjee&ndash;Menezes&ndash;Sarkar</a>
+presents many more attacks along these lines,
+including a quite serious 80-bit collision attack on
+a version of HMAC that's fully compliant with the NIST HMAC standard:
+</p>
+<blockquote>
+After querying 2<sup>20</sup> users for the MAC of some fixed message m,
+the adversary would be able to determine the secret key
+of one of the 2<sup>20</sup> users
+after performing about 2<sup>60</sup> MAC operations.
+Since the work can be easily and effectively parallelized,
+the attack should be considered feasible today.
+</blockquote>
+<p>
+The single-key ECC attack also looks for key collisions,
+and on top of this exploits another attack tool
+called a "worst-case-to-average-case reduction",
+specifically a "random self-reduction".
+This extra attack tool
+expands the original user key (a curve point kP)
+into a pool of many modified user keys (points kP+rP, where r is chosen randomly by the attacker).
+Any collision between any of the guessed keys (points gP, where g is known to the attacker)
+and any of the modified user keys
+(i.e., any equation kP+rP = gP)
+immediately reveals the original user's secret key.
+Breaking 2<sup>40</sup> user keys in the same way needs 2<sup>40</sup> collisions,
+and this takes only 2<sup>20</sup> times as long as finding one collision.
+</p>
+<p>
+The number of modified user keys is now chosen by the attacker,
+rather than being naturally limited to the number of legitimate user keys.
+This sounds much more destructive than the AES-128 attack,
+and it <i>would</i> be much more destructive if we used 128-bit ECC:
+the attacker would expand the original key into 2<sup>64</sup> modified keys
+and find a collision after just 2<sup>64</sup> guessed keys,
+for a total attack cost on the scale of 2<sup>64</sup>.
+Rivest's "distinguished points" idea again eliminates
+issues regarding data volume, communication, parallelization, etc.;
+the classic paper on this topic is
+<a href="http://people.scs.carleton.ca/~paulv/papers/JoC97.pdf">"Parallel collision search with cryptanalytic applications"</a>
+by van Oorschot and Wiener.
+</p>
+<p>
+In 2007 NIST revised its
+<a href="http://csrc.nist.gov/publications/nistpubs/800-57/sp800-57-Part1-revised2%5FMar08-2007.pdf">"Recommendation for Key Management"</a>
+to prohibit use of 160-bit ECC after 2010:
+the minimum ECC key size allowed is 224 bits after 2010 (and 256 bits after 2030).
+Evidently NIST understands that a 2<sup>80</sup> attack breaking somebody's 160-bit ECC key
+is enough of a problem to warrant moving to larger ECC keys.
+But NIST is foolishly continuing to recommend AES-128 keys,
+even though
+a 2<sup>80</sup> attack will break somebody's AES-128 key
+out of a batch of 2<sup>48</sup> keys.
+</p>
+<p>
+The security section of my
+<a href="http://cr.yp.to/papers.html#curve25519">Curve25519 paper</a>
+includes a subsection "Batch discrete logarithms"
+that summarizes the cost of attacking multiple targets
+and concludes that Curve25519 is big enough:
+"The attacker is likely to wait for 2<sup>125</sup> additions before finding the first key ...
+Curve25519 is at a comfortable security level
+where finding the first key is, conjecturally, far out of reach,
+so the reduced cost of finding subsequent keys is not a threat.
+The attacker can perform only 2<sup>125</sup>ε additions for small ε,
+so the attacker's chance of success&mdash;of finding <i>any</i> keys&mdash;is
+only about ε<sup>2</sup>."
+The paper continues by comparing this to the cost of "brute-force search"
+for finding "a batch of u keys" or "finding some key" in a secret-key system such as AES.
+Ten years later this type of analysis is still missing from NIST's
+<a href="http://csrc.nist.gov/publications/nistpubs/800-57/sp800-57%5Fpart1%5Frev3%5Fgeneral.pdf">latest key-size recommendations</a>.
+</p>
+<p>
+<b>Cutting things too close: the "attacker economist" philosophy.</b>
+There are three common approaches to choosing cryptographic key sizes:
+</p>
+<ul>
+<li>The "attacker will probably fail" approach.
+  People taking this approach say things like this:
+  "We're designing this system so that the cost of breaking it
+  is larger than the resources available to the attacker."
+</li>
+<li>The "attacker will definitely fail" approach, producing larger key sizes.
+  I take this approach, and I say things like this:
+  "We're designing this system so that the attacker
+  has chance at most one in a billion of breaking it
+  using the available resources."
+</li>
+<li>The "attacker economist" approach, producing smaller key sizes.
+  People taking this approach say things like this:
+  "We don't need attacks to be infeasible; that would be overkill.
+  We're designing this system
+  so that the attacker's expected cost of carrying out an attack
+  exceeds the attacker's expected benefit from doing so."
+</li>
+</ul>
+<p>
+For some attacks,
+notably the number-field sieve (NFS) for integer factorization,
+the success probability jumps very quickly from 0 to 1
+as the cost increases past a particular threshold.
+It's then clear what the "attacker will probably fail" approach says,
+namely that the key size has to be chosen so that this threshold
+is beyond the attacker's resources.
+</p>
+<p>
+However,
+for many other attacks the success probability grows much more gradually,
+and then it's not clear what the "attacker will probably fail" approach means.
+If "the cost of breaking"
+is defined as the median cost
+then the "attacker will probably fail" approach
+ends up saying that the attacker has chance below 50% of breaking the system;
+but cryptographic users aren't happy to hear
+that they've been given a cryptographic system
+that the attacker can break with probability 40%.
+NIST seems to focus on the <i>average</i> cost
+("an algorithm that provides X bits of security would, on average,
+take 2<sup>X-1</sup> T units of time to attack"),
+and with this definition
+the attacker's success probability could be 60% or even larger.
+</p>
+<p>
+The "attacker economist" approach
+provides a rationale for focusing on averages.
+It views the attacker as rationally deciding whether to carry out attacks,
+saying "I will carry out this attack because its average benefit to me is larger than its average cost"
+or "I will skip this attack because its average benefit to me is smaller than its average cost".
+Of course, if the attacker carries out an attack of the second type,
+the attacker might still end up luckily gaining something
+(maybe the benefit turns out to be unusually large or the cost turns out to be unusually small),
+but after a long series of such attacks
+the attacker expects to lose.
+</p>
+<p>
+The attraction of the "attacker economist" approach
+is that it produces smaller key sizes.
+The attack cost is limited to min{B,C},
+where B is the attacker's benefit and C is the attacker's resources;
+for comparison,
+in the "attacker will definitely fail" approach,
+the attack cost is limited to C,
+which is usually much larger than min{B,C}.
+In other words,
+the "attacker economist" approach
+excludes not merely <i>infeasible</i> attacks,
+but also <i>uneconomical</i> attacks.
+</p>
+<p>
+There are, however, several problems with this approach.
+First,
+even if the attacker's expected cost
+obviously outweighs the attacker's expected benefit,
+sometimes the attacker goes ahead and carries out the attack anyway.
+The "attacker economist" approach
+assumes that rational attackers won't carry out uneconomical attacks,
+so users don't have to worry about such attacks;
+but attackers in the real world
+do not always act on the basis of rational economic analyses.
+The damage done by the attack,
+beyond its benefits to the attacker,
+is invisible to the "attacker economist" philosophy.
+</p>
+<p>
+Second,
+evaluating the attacker's benefit
+requires understanding all the consequences of, e.g., successfully forging a signature.
+How exactly is the signature being used?
+What exactly does the attacker gain from the forgery?
+What is the monetary value of this benefit?
+The answers are complicated and constantly changing;
+they have a dramatic dependence on the details
+of how cryptography is integrated into real applications.
+A single forgery might not sound so bad,
+but it might also allow the attacker to take complete control over a critical computer.
+Sure, we can tell cryptographic users
+that they should evaluate the consequences of the cryptography failing,
+and that they should limit the attacker's gain from a successful attack,
+but the reality is that nobody gets this right:
+people are constantly surprised by how much damage an attack can do.
+For comparison,
+there's at least some hope of accurately assessing the resources available to attackers
+and of building cryptographic systems that are <i>infeasible</i> to break.
+</p>
+<p>
+Third,
+even in situations where it's clear how much damage is caused by each forgery,
+"attacker economist" proponents
+are constantly overestimating the attacker's <i>cost per forgery</i>.
+The typical process here might sound reasonable at first:
+take what everybody says is the state-of-the-art forgery algorithm,
+and look at what everybody says is the cost of that algorithm.
+The problem is that the algorithm designers are
+practically always optimizing and reporting costs in a metric
+that's different from, and much larger than, the cost per forgery.
+Specifically,
+the usual metric is the cost of forging <i>one</i> message under <i>one</i> key,
+while the attacker is trying to forge <i>many</i> messages under <i>many</i> keys.
+</p>
+<p>
+<b>Some examples of difficulties for the "attacker economist" philosophy.</b>
+People typically say that NFS is the state-of-the-art algorithm for forging RSA signatures,
+and that NFS has cost somewhere around 2<sup>80</sup> for RSA-1024.
+However, NFS produces much more than a single forgery:
+it produces the RSA secret key.
+The attacker then uses this key for any number of forgeries.
+The cost per forgery is the cost of the usual signing algorithm
+plus a small fraction of 2<sup>80</sup>, depending on the number of forgeries.
+The cost of one forgery thus wildly overestimates
+the per-forgery cost of many forgeries under the same key.
+</p>
+<p>
+As another example,
+consider the
+<a href="https://tools.ietf.org/html/draft-krovetz-umac-00">first draft</a>
+of the UMAC RFC (October 2000),
+which claims that 64-bit UMAC tags are
+"appropriate for most security architectures and applications".
+This claim is backed by the following deceptive statement:
+"A 1/2<sup>60</sup> forging probability means that if an attacker could try out 2<sup>60</sup> MACs,
+then the attacker would probably get one right."
+The correct statement is that an attacker trying out 2<sup>60</sup> MACs
+would probably get at least 2<sup>58</sup> right.
+I had already pointed out this mistake as part of a
+<a href="http://cr.yp.to/antiforgery/hash127-20000321.pdf">paper</a>
+(see also the
+<a href="http://cr.yp.to/papers.html#hash127">latest version</a>)
+posted several months earlier:
+</p>
+<blockquote>
+Some writers claim that forgery probabilities around 1/2<sup>32</sup>
+are adequate for most applications.
+The attacker's cost of 2<sup>32</sup> forgery attempts,
+they say,
+is much larger than the attacker's benefit from forging a single message.
+Unfortunately,
+even if all attackers acted on the basis of
+rational economic analyses,
+this argument would be wrong,
+because it wildly underestimates the attacker's benefit.
+In a typical authentication system,
+as soon as the attacker is lucky enough
+to succeed at a few forgeries,
+he can immediately figure out enough secret information
+to let him forge messages of his choice.
+... It is crucial for the forgery probability
+to be so small that attackers have no hope.
+</blockquote>
+<p>
+Several years <a href="https://tools.ietf.org/html/draft-krovetz-umac-05">later</a>,
+after I <a href="http://permalink.gmane.org/gmane.ietf.irtf.cfrg/206">objected</a>,
+the UMAC authors tweaked their text as follows:
+"If an attacker could have N forgery attempts,
+then the attacker would have no more than N/2<sup>60</sup> probability
+of getting one or more of them right."
+The actual situation, when there are successful forgeries,
+is that the number of successful forgeries is very likely to be on the scale of N;
+describing this as "one or more" forgeries gives the reader a very wrong idea.
+</p>
+<p>
+So, okay, instead of looking at the cost of one forgery,
+we should look at the cost of breaking one key, right?
+No:
+the cost of breaking one key
+often wildly overestimates the per-key cost of breaking many keys.
+I'll again take an ECC example:
+people typically say that breaking 160-bit ECC costs 2<sup>80</sup>;
+but breaking a batch of a million 160-bit ECC keys costs a total of just 2<sup>90</sup>,
+i.e., 2<sup>70</sup> per key.
+</p>
+<p>
+Both of these mistakes&mdash;confusing the cost of one forgery with the cost per forgery,
+and confusing the cost of breaking one key with the cost per key&mdash;cause
+serious problems for the "attacker economist" approach.
+</p>
+<p>
+The situation is completely different
+if key sizes are chosen
+so that forging one message under one key is <i>infeasible</i>.
+Forging more messages is certainly no easier than forging one message,
+and is therefore also infeasible;
+the reduced cost per forgery doesn't matter.
+Of course,
+one still has to be careful to check whether attacking a batch
+increases the success probability of feasible attacks,
+exactly the AES-128 issue described at the start of this blog post.
+</p>
+<p>
+<b>Can an attacker actually carry out 2<sup>80</sup> or 2<sup>90</sup> or 2<sup>100</sup> operations?</b>
+Here are some back-of-the-envelope numbers
+that help put attack possibilities into perspective.
+Mass-market GPUs use state-of-the-art chip technology,
+are optimized for floating-point operations,
+and perform about 2<sup>58</sup> floating-point multiplications per watt-year.
+The number of floating-point multiplications that the attacker can carry out in a year
+with this technology is limited by the number of watts available:
+</p>
+<ul>
+<li>2<sup>26</sup> watts (2<sup>84</sup> mults/year): the power substation for
+<a href="https://en.wikipedia.org/wiki/Utah%5FData%5FCenter">one of NSA's computer centers</a>.
+<li>2<sup>30</sup> watts (2<sup>88</sup> mults/year): the power available to a botnet that has broken into millions of computers around the Internet.
+<li>2<sup>44</sup> watts (2<sup>102</sup> mults/year): the power actually used <a href="https://en.wikipedia.org/wiki/World%5Fenergy%5Fconsumption">by the human race</a> at this instant.
+<li>2<sup>56</sup> watts (2<sup>114</sup> mults/year): the power that the Earth's surface receives from the Sun.
+<li>2<sup>57</sup> watts (2<sup>115</sup> mults/year): the power that the Earth's atmosphere
+<a href="https://en.wikipedia.org/wiki/Solar%5Fconstant">receives from the Sun</a>.
+</ul>
+<p>
+Of course,
+the operations in a typical cryptanalytic attack
+are more complicated than floating-point multiplications.
+On the other hand,
+serious attackers can build special-purpose chips streamlined for their attacks,
+and computer technology continues to improve.
+There's no substitute for detailed analyses of actual attack costs,
+such as papers at the various
+<a href="http://sharcs.org">SHARCS</a> workshops.
+</p>
+<p>
+Anyway,
+the overall scale of these numbers explains
+why cryptographers distinguish between 2<sup>80</sup> security and 2<sup>128</sup> security.
+2<sup>80</sup> might sound like a big number,
+but it's not that big compared to the 2<sup>55</sup> nanoseconds in a year.
+Serious attackers today have enough computer equipment
+to be performing more than 2<sup>25</sup> useful operations each nanosecond,
+for a total of more than 2<sup>80</sup> useful operations in a year.
+On the other hand, this is still much, much, much smaller than 2<sup>128</sup>.
+</p>
+<p>
+<b>Batch factorization.</b>
+Suppose that someone ignores my advice
+and deploys a system providing "2<sup>80</sup> security".
+Probably the security claim is based on
+an attack algorithm that was optimized for breaking a single key.
+How much better can the attacker do by attacking a large batch of keys, say 2<sup>20</sup> keys?
+</p>
+<p>
+Earlier I explained how well batch algorithms do
+for guessing secret cipher keys and for breaking ECC.
+Here are the results for 80-bit cipher keys and 160-bit ECC keys:
+</p>
+<table border>
+<tr>
+  <th>Attack cost</th>
+  <th>Average number of keys found out of 2<sup>20</sup> secret 80-bit cipher keys</th>
+  <th>Average number of keys found out of 2<sup>20</sup> secret 160-bit ECC keys</th>
+</tr>
+<tr><td>2<sup>50</sup></td><td>1/2<sup>10</sup></td><td>1/2<sup>60</sup></td></tr>
+<tr><td>2<sup>60</sup></td><td>1</td><td>1/2<sup>40</sup></td></tr>
+<tr><td>2<sup>70</sup></td><td>2<sup>10</sup></td><td>1/2<sup>20</sup></td></tr>
+<tr><td>2<sup>80</sup></td><td>2<sup>20</sup></td><td>1</td></tr>
+<tr><td>2<sup>90</sup></td><td>overkill</td><td>2<sup>20</sup></td></tr>
+<tr><td>2<sup>100</sup></td><td>overkill</td><td>overkill</td></tr>
+</table>
+<p>
+But what about RSA?
+</p>
+<p>
+RSA is vulnerable to a sophisticated attack strategy called <b>combining congruences</b>.
+The basic idea of combining congruences isn't hard to explain,
+but there's a massive literature introducing
+an apparently neverending series of speedups to the basic idea
+and combining these speedups in all sorts of tricky ways.
+The state-of-the-art algorithms have so many adjustable knobs and hard-to-analyze traps
+that there's no consensus on how they will perform
+beyond the range of academic experiments.
+</p>
+<p>
+If you want to know how big your RSA key needs to be for, say, 2<sup>128</sup> security,
+you might ask the summary site
+<a href="http://www.keylength.com/en/compare/">http://www.keylength.com/en/compare/</a>,
+which collects recommendations from several sources.
+These recommendations range from 2048 bits to 6974 bits.
+What's the right answer?
+</p>
+<p>
+I mentioned earlier that people typically report security around 2<sup>80</sup> for RSA-1024.
+What exactly does this 2<sup>80</sup> mean?
+Shamir and Tromer
+<a href="http://www.cs.tau.ac.il/~tromer/papers/cbtwirl.pdf">wrote in 2003</a>
+that "it appears possible to break a 1024-bit RSA key in one year
+using a device whose cost is about $10M (previous predictions were in the trillions of dollars)";
+Franke, Kleinjung, Paar, Pelzl, Priplata, and Stahlke
+<a href="http://link.springer.com/content/pdf/10.1007/11545262%5F9.pdf">wrote in 2005</a>
+that there were "concerns about the feasibility" of the Shamir&ndash;Tromer design
+and presented a different design costing twenty times as much.
+What's the right answer?
+</p>
+<p>
+The only real consensus is that the number of "operations" in NFS
+scales asymptotically as L<sup>1.901...+o(1)</sup>, where
+</p>
+<ul>
+<li>L is exp((log N)<sup>1/3</sup> (log log N)<sup>2/3</sup>);
+<li>N is the RSA modulus being factored; and
+<li>o(1) is something that converges to 0 as N increases.
+</ul>
+<p>
+The difference between o(1) and 0 is important.
+The L<sup>1.901...+o(1)</sup> formula can't be safely used to predict cost for any particular size of N,
+and can't be safely used to extrapolate from one size of N to another.
+If someone finds a new algorithm replacing 1.901... with, say, 1.8,
+then that algorithm might be worse for every size of N relevant to cryptography.
+However,
+there will be <i>some</i> size of N where the new algorithm is faster,
+and maybe that size <i>is</i> small enough to be relevant to cryptography,
+so obviously the performance of the new algorithm has to be explored in detail. 
+</p>
+<p>
+In a 1993 paper,
+Coppersmith introduced a variant of NFS
+that uses only L<sup>1.638...+o(1)</sup> "operations" to factor N,
+after a precomputation that uses L<sup>2.006...+o(1)</sup> "operations".
+The precomputation doesn't depend on the target N;
+it depends only on roughly how big N is.
+Coppersmith described the precomputation as the construction of a "factorization factory"
+that can then be applied to any target.
+If you have a batch of (say) L<sup>0.5+o(1)</sup> targets N,
+then the factory-construction cost is negligible,
+and the total number of "operations" in Coppersmith's algorithm
+is L<sup>1.638...+o(1)</sup> per target.
+</p>
+<p>
+I've been writing "operations" in quotes here
+because this is counting random access <tt>x[i]=j</tt> as a single "operation",
+no matter how large the array <tt>x</tt> is:
+bigger than cache, bigger than DRAM, bigger than your 2TB disk, etc.
+This metric does a poor job of predicting real-world algorithm performance.
+Any attacker who can afford a gigantic storage array
+will also invest in many parallel processing elements (such as GPUs),
+and will find that parallel computations are much less expensive than random access to storage.
+</p>
+<p>
+In a
+<a href="http://cr.yp.to/papers.html#nfscircuit">2001 paper</a>,
+I reoptimized NFS "sieving" and "linear algebra" for a realistic circuit model of computation,
+and concluded that the cost of single-target NFS actually scales as L<sup>1.976...+o(1)</sup>.
+In a
+<a href="http://cr.yp.to/papers.html#batchnfs">2014 paper</a>,
+Lange and I reoptimized Coppersmith's ideas for a realistic circuit model of computation,
+and concluded that the cost per integer of factoring L<sup>0.5+o(1)</sup> integers
+actually scales as L<sup>1.704...+o(1)</sup>.
+It turns out that Coppersmith's data flow,
+first precomputing a "factory" and then applying the "factory" to one target N at a time,
+isn't realistic:
+our new "batch NFS" algorithm scraps Coppersmith's "factory"
+and handles a large batch of targets simultaneously.
+</p>
+<p>
+Let me again emphasize that these exponents
+don't say anything about any particular size of N.
+What's clear is merely that batching reduces cost <i>for sufficiently large N</i>,
+i.e., all N past some cutoff;
+it isn't clear what the cutoff is,
+and it isn't clear what the actual cost reduction is for any specific size.
+Lange and I have started digging into
+the more subtle question of what this means for
+the huge pile of 1024-bit keys that attackers have been collecting.
+</p>
+<p>
+<b>More examples of difficulties for the "attacker economist" philosophy.</b>
+"It makes no sense for an adversary to spend (say) <dollarsign>$</dollarsign>10 million breaking a key
+if recovering the key will only net (say) $10 thousand,"
+<a href="http://www.emc.com/emc-plus/rsa-labs/historical/a-cost-based-security-analysis-key-lengths.htm">Silverman</a>
+wrote in 2000.
+"There are many applications for which 768 bits is more than adequate."
+</p>
+<p>
+Silverman estimated that spending $10 million
+on 4300 "500-MIPS machines" with "4.4 Gbytes per machine"
+would let the attacker factor a 768-bit key in "about 670 months",
+i.e., 56 years,
+i.e., 2<sup>71.7</sup> instructions.
+Silverman predicted
+"a date of 2019 for breaking such a key by public effort."
+</p>
+<p>
+There's one important point that Silverman got right:
+accessing large volumes of memory is expensive.
+But what does this mean for an algorithm that was optimized for the number of "operations",
+counting (expensive) memory access as one "operation"
+and also counting (cheap) arithmetic as one "operation"?
+Silverman emphasized the expense of the memory access,
+apparently not realizing the possibility of reoptimizing algorithms for actual cost.
+Silverman also got many other important details wrong.
+</p>
+<p>
+The factorization of the RSA-768 challenge was in fact publicly announced in 2009,
+ten years earlier than Silverman's "2019" prediction.
+The <a href="https://eprint.iacr.org/2010/006.pdf">paper</a>
+reported that the factorization had taken two years on "many hundreds of machines";
+that it would have taken about 1500 core-years on 2.2GHz Opterons with 2GB of RAM,
+i.e., 2<sup>66.5</sup> cycles;
+and that
+"it is not unreasonable to expect that 1024-bit RSA moduli can be factored well within
+the next decade by an academic effort such as ours".
+</p>
+<p>
+Of course,
+any serious attacker can be presumed to have built
+efficient special-purpose hardware tuned for integer factorization,
+while an "academic effort" does not have this luxury.
+Why does Silverman define security by the costs of a "public effort",
+if this is overstating the costs incurred by the actual attackers?
+</p>
+<p>
+Furthermore,
+if 768 bits are beyond the cutoff for batch NFS,
+then the attacker can factor many 768-bit keys more cost-effectively than factoring just one.
+As I said before,
+it isn't known yet what the cutoff actually is,
+so one can't justifiably claim that there's a cost advantage,
+but one also can't justifiably claim that there <i>isn't</i> a cost advantage.
+As Lange and I wrote in our paper on batch NFS:
+</p>
+<blockquote>
+   Users comparing the value of an RSA key to the cost of an attack
+   machine need to know the <i>per-key</i> cost of batch NFS.
+   This has not been seriously studied.
+   What the literature has actually studied in detail
+   is the cost of NFS attacking <i>one key at a time</i>;
+   this is not the same question.
+</blockquote>
+<p>
+Why was Silverman comparing the costs and benefits of "breaking a key"
+if the actual job facing the attacker is to break <i>many</i> keys?
+There's an implicit assumption that each key has to be attacked separately;
+batch algorithms challenge this assumption.
+</p>
+<p>
+Now let's move up from 768-bit keys to 1024-bit keys.
+Silverman claimed that it would require
+"at least 27 years to reach a point where 1024-bit keys are vulnerable to a public effort"
+and specifically predicted a date of "around 2037" for factoring a 1024-bit key.
+Since the time from Silverman's paper to the public RSA-768 factorization
+was only half of what Silverman had predicted,
+and the people announcing that factorization had said that it was
+"not unreasonable to expect" a public RSA-1024 factorization before 2020,
+one would think that anyone quoting Silverman's 1024-bit predictions
+would have some serious explaining to do.
+But Silverman's "around 2037" was repeated&mdash;even bumped to "around 2040"&mdash;in a
+<a href="http://iang.org/ssl/grigg-gutmann-cryptographic-numerology.pdf">2011 paper by Grigg and Gutmann</a>:
+</p>
+<blockquote>
+[Silverman estimated in 2000 that]
+a single 1,024-bit key 
+could be factored by around 2040. 
+That’s a massive effort for one key, 
+with every one of the millions of 
+other 1,024-bit keys in use today 
+still being safe until the same effort gets applied to them, as well.
+</blockquote>
+<p>
+Grigg and Gutmann don't mention Silverman's "public effort" hypothesis;
+don't discuss the advantages of special-purpose hardware;
+don't discuss the problems with Silverman's extrapolation methodology;
+don't mention Silverman's highly inaccurate 768-bit extrapolation;
+and don't mention that Silverman's 1024-bit extrapolation has been disputed.
+But what I find particularly interesting in the Grigg&ndash;Gutmann quote
+is the leap from one key to many keys,
+ignoring the possibility of more cost-effective batch attacks.
+Even if it's true that factoring a 1024-bit key
+is a "massive effort" that won't happen before 2040,
+there's no justification for the claim that factoring N keys
+will require N times the effort.
+</p>
+<p>
+To summarize,
+here's what's actually known about the per-key cost of breaking RSA keys:
+"It's complicated."
+</p>
+<p>
+<b>Batch non-elliptic discrete logs.</b>
+What's even more complicated
+is the cost of solving the classic discrete-logarithm problem.
+I'm not talking about elliptic curves here:
+I'm talking about discrete logs in the multiplicative group of a finite field.
+I'll focus on the simple case of a prime field,
+exactly the problem of finding a secret key given a public key in the original DH system.
+</p>
+<p>
+In the literature on combining congruences,
+there is a long history of speedup ideas being adapted from factorization algorithms
+to "index calculus" discrete-log algorithms (and occasionally vice versa).
+NFS is no exception.
+A 1992 paper by Gordon explained how to use NFS to compute discrete logs mod a prime
+in L<sup>2.080...+o(1)</sup> "operations";
+a 1993 paper by Schirokauer reduced 2.080... to 1.922...;
+a 2003 paper by Matyukhin reduced 1.922... to 1.901...,
+the same exponent as factorization.
+</p>
+<p>
+Typical index-calculus algorithms have two stages.
+The first stage takes the prime as input and computes discrete logs of many small numbers.
+The second stage takes a target as an extra input and computes the discrete log of that target.
+The usual picture before NFS was that
+the second stage was much faster than the first stage.
+For NFS this picture was restored in a 2003 paper by Joux and Lercier.
+A 2006 paper by Commeine and Semaev improved and analyzed the Joux&ndash;Lercier idea,
+obtaining exponent 1.901... for the prime and exponent just 1.442... for each target.
+If the attacker is targeting a batch of L<sup>0.5+o(1)</sup> discrete logs modulo the same prime
+then the cost of each discrete log with the Commeine&ndash;Semaev algorithm
+is just L<sup>1.442...+o(1)</sup>, much faster than factorization.
+</p>
+<p>
+Furthermore,
+the first stage handles the prime p very similarly to how NFS factors N,
+and it's easy to see that Coppersmith's precomputation ideas are also applicable here.
+<a href="https://tel.archives-ouvertes.fr/tel-00925228/file/these%5Favec%5Fresume.pdf">Barbulescu's thesis</a>
+in 2013 presented a discrete-log algorithm using the following number of "operations":
+</p>
+<ul>
+<li>L<sup>2.006...+o(1)</sup> for precomputation depending only on the rough size of p.
+<li>L<sup>1.638...+o(1)</sup> to compute discrete logs of many small numbers mod p.
+<li>L<sup>1.231...+o(1)</sup>, improving on the Commeine&ndash;Semaev algorithm,
+to compute the discrete log of a particular target.
+</ul>
+<p>
+The techniques in my 2014 "Batch NFS" paper with Lange,
+replacing "operations" with a realistic cost metric,
+should be combinable with the batch version of this algorithm.
+In other words,
+computing a batch of many discrete logs mod many primes
+should cost much less than handling each discrete log separately.
+Of course, as in the case of integer factorization,
+figuring out the costs for (say) 1024-bit primes
+is a harder problem than figuring out the asymptotic cost exponents.
+</p>
+<p>
+<b>The Logjam attack.</b>
+A <a href="https://weakdh.org">paper this year</a>
+from Adrian, Bhargavan, Durumeric, Gaudry, Green, Halderman, Heninger, Springall,
+Thomé, Valenta, VanderSloot, Wustrow, Zanella-Béguelin, and Zimmermann
+reports an attack called "Logjam" allowing man-in-the-middle attackers
+to "compromise connections to over 7% of Top Million HTTPS sites".
+The attack combines several unnecessary features of HTTPS:
+</p>
+<ul>
+<li>Real-world clients often support non-elliptic "DHE"
+  along with, or instead of, elliptic "ECDHE".
+  It would be interesting to trace the reasons for this:
+  for example, were people worried about ECC patents?
+</li>
+<li>DHE allows the server to choose primes as small as it wants:
+  1024 bits or even smaller.
+  This is obviously a concession to efficiency.
+</li>
+<li>There's also a separate "DHE-EXPORT" option,
+  limited to 512-bit primes and often supported by real-world servers.
+  It's clear that this is attributable entirely to
+  the U.S. government's efforts last century
+  to impose weak cryptography upon the general public.
+</li>
+<li>Neither the client nor the server will notice
+  if a man-in-the-middle attacker replaces the client's DHE request with DHE-EXPORT:
+  the server and client will both send 512-bit ephemeral public keys.
+  <a href="http://www.metzdowd.com/pipermail/cryptography/2015-October/026764.html">Gutmann has claimed</a> that this is a downgrade attack against
+  "broken implementations" and "bad programming",
+  but it's actually a flaw in the TLS protocol specification.
+</li>
+</ul>
+<p>
+The attacker now computes the server's 512-bit discrete log,
+and easily fools the client into thinking that the attacker is the server.
+</p>
+<p>
+Obstacle:
+If computing a 512-bit discrete log takes too long,
+the client will give up on the connection,
+and the attack will fail.
+Grigg and Gutmann say that breaking a "dinky 512-bit key" will take "months" or "weeks";
+maybe they were talking about RSA,
+but everyone says that 512-bit discrete-log keys are at least as hard to break as 512-bit RSA keys,
+right?
+</p>
+<p>
+Solution:
+The Logjam paper reports 512-bit discrete-log computations "in about a minute",
+and it's clear that this can be improved with more hardware.
+"An adversary who performs a large precomputation
+for a prime p can then quickly calculate arbitrary discrete logs
+in that group,
+amortizing the cost over all targets that share this parameter,"
+the paper says.
+"Although this fact is well known among mathematical cryptographers,
+it seems to have been lost among practitioners deploying cryptosystems."
+</p>
+<p>
+There are clearly many different ways that the attack could have been prevented.
+I'll focus on three responses that involve changing the cryptographic primitives:
+</p>
+<ul>
+<li>In the server, generate (and regenerate as frequently as possible)
+site-specific DHE and DHE-EXPORT primes.
+In other words,
+blame the success of the attack on the fact that some widely distributed primes
+were reused for a huge number of connections.
+</li>
+<li>In the client, require a larger minimum size for DHE (and disable DHE-EXPORT).
+In other words,
+blame the success of the attack on the fact that the primes were too small.
+</li>
+<li>In the client and the server, disable DHE (and DHE-EXPORT) in favor of ECDHE.
+In other words,
+blame the success of the attack on the fact that people were using non-elliptic DH instead of elliptic DH.
+</li>
+</ul>
+<p>
+From a security perspective,
+the first response misses the point.
+Yes, there's a batch attack against multiple discrete logs for the same prime,
+but there are also batch attacks against many other cryptographic systems.
+What we actually need to know is whether attacks are feasible;
+there's no substitute for quantitative analysis of attacks against particular systems.
+The superficial statement "primes are shared" is a poor predictor of "batch attacks exist",
+and "batch attacks exist" is a poor predictor of "attacks are feasible".
+</p>
+<p>
+The second response sounds much more reasonable from a security perspective,
+but security ends up being compromised by performance problems.
+The Logjam paper found that 84% of servers in 2015 used a "1024-bit or smaller group",
+despite NIST's recommendation to move up to 2048-bit groups by 2010;
+if it weren't for performance problems
+then nobody would ever have been using 1024-bit groups in the first place.
+</p>
+<p>
+The third response produces a reasonable level of security:
+ECDHE, as actually implemented, doesn't allow any small groups.
+Properly implementing ECDHE with NIST P-256 isn't easy,
+but all of the critical pitfalls here are eliminated by
+<a href="http://cr.yp.to/talks.html#2015.06.11">next-generation ECC</a>.
+The performance of NIST P-256 is already acceptable for many sites,
+and I expect the performance of next-generation ECC to be acceptable for almost all sites.
+</p>
+<p>
+One can mix and match responses:
+for example, use ECDHE with a server-specific elliptic curve.
+But it's better to use ECDHE with a larger shared curve.
+Compared to a server-specific curve,
+a larger shared curve
+saves bandwidth;
+in most situations ends up saving CPU time;
+and has larger benefits against all known attacks.
+</p>
+<p>
+<b>Are we accurately simulating the attacker?</b>
+Experts have publicly proposed and analyzed a huge number of ideas
+for attacking the problem of computing an elliptic-curve discrete logarithm.
+For most elliptic curves
+these ideas have produced only marginal improvements:
+the best attacks publicly known today against "conservative" elliptic curves
+(NIST P-256, Curve25519, etc.)
+aren't much better than the best attacks
+that were publicly known at the dawn of ECC thirty years ago.
+Is it safe to conclude that no much better algorithm exists,
+and in particular that the attacker doesn't know a much better algorithm?
+</p>
+<p>
+Maybe, maybe not.
+Maybe the public search for a better algorithm hasn't been sufficiently comprehensive,
+or it happened to wander off in the wrong directions.
+Maybe there's a much better algorithm lurking just beyond the public search,
+an algorithm that required too big a leap for anyone to find.
+Maybe the attacker has hired smarter people,
+or searched longer,
+or simply gotten lucky.
+</p>
+<p>
+The same risk is even more obvious for some other famous problems.
+For example,
+the problem of factoring a given 1024-bit RSA modulus
+is an amazingly productive research topic
+with a long and continuing history of public improvements.
+Very few experts are willing to point to a factorization algorithm and say
+"I bet this factorization algorithm is within a factor 2 of the best possible".
+</p>
+<p>
+Of course,
+we try hard to minimize the risk for cryptographic users.
+We focus efforts on a small number of cryptanalytic problems,
+and we advertise these problems to a huge community of algorithm designers.
+We aim for overkill in studying every conceivable solution to these problems.
+We track how thoroughly these problems have actually been studied,
+and we track the remaining prospects for improvement.
+We direct users towards the problems with the strongest track records.
+</p>
+<p>
+But what happens if <b>the algorithmic problems facing the attackers
+aren't actually the algorithmic problems we're studying</b>?
+In particular, what happens if the attack problems
+are <i>easier</i> than the problems we're studying?
+</p>
+<p>
+Maybe we're starting from the wrong cost metric for algorithms.
+For example,
+maybe we're using the oversimplified "operations" cost metric
+that I mentioned before,
+counting random access to a large array as a single "operation"
+when in fact it's much more expensive than an arithmetic operation.
+(Sometimes people say that counting "operations" is an underestimate of actual cost
+and is therefore safe;
+but this is part of what went wrong with the Silverman predictions.)
+Maybe we're optimizing algorithms for mass-market easy-to-program Intel CPUs,
+while the attacker is optimizing for special-purpose chips
+with much more parallelism and with fancy networks on chip.
+Maybe the attacker has a quantum computer,
+making some operations feasible
+while we normally think of those operations as being insanely expensive.
+</p>
+<p>
+Or maybe we're setting our cost limits too low.
+Maybe we're studying the problem of setting public factorization records
+using academic computer clusters,
+while the attacker is studying the problem of factoring 1024-bit keys as quickly as possible
+using billion-dollar clusters.
+</p>
+<p>
+Or maybe,
+in an effort to advertise attractively simple problems,
+we've oversimplified the problem of attacking the actual cryptosystem.
+Maybe we're studying the problem of recovering a signature key
+while the attacker is studying the actual problem of forging signatures.
+Maybe we're studying the problem of attacking <i>one</i> key
+while the attacker is studying the actual problem of attacking a large <i>batch</i> of keys.
+This oversimplification is surprisingly common,
+and is exactly the reason for this blog post.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2015.11.20 of the 20151120-batchattacks.html web page.
+</font></body>
+</html>

@@ -1,0 +1,551 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2017.11.05: Reconstructing ROCA
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html accesskey=k><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><b>2017.11.05: Reconstructing ROCA</b> A case study of how quickly an attack can be developed from a limited disclosure. #infineon #roca #rsa</td></tr>
+<tr><td><a href=20171017-collisions.html accesskey=j><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2017.11.05: Reconstructing ROCA</h2>
+<p>
+[Authors of this blog post, in alphabetical order:
+<a href="https://cr.yp.to/djb.html">Daniel J. Bernstein</a>
+and
+<a href="https://hyperelliptic.org/tanja">Tanja Lange</a>.]
+</p>
+<p>
+Nemec, Sýs, Švenda, Klinec, and Matyáš
+<a href="https://crocs.fi.muni.cz/public/papers/rsa%1Fccs17">announced</a>
+on 16 October that
+<a href="https://arstechnica.com/information-technology/2017/10/crypto-failure-cripples-millions-of-high-security-keys-750k-estonian-ids/">millions</a>
+of supposedly high-security RSA public keys
+from a popular Infineon
+<a href="https://www.infineon.com/cms/en/product/promopages/rsa-update/rsa-background">software library</a>
+("v1.02.013")
+were actually vulnerable to low-cost attacks.
+Specifically,
+Infineon's 1024-bit keys take "less than 3 CPU-months"
+to factor "on a single core of a common recent CPU",
+and half as much time on average.
+Infineon's 2048-bit keys take less than "100 CPU-years" to factor.
+On an Intel Haswell running at only 3GHz (similar to Amazon's "c4" cores),
+the 2048-bit keys take "140.8 CPU-years" to factor.
+</p>
+<p>
+The news said
+"To give people time to change keys,
+the paper describing the factorization method
+isn't being published until it's presented at the conference."
+The authors of the paper
+included in their announcement
+only limited information about their factorization method.
+</p>
+<p>
+We decided to see whether we could reconstruct the attack
+from this limited information,
+rather than waiting for the paper to be released.
+We figured out the main ideas within a day.
+Within a week we sent the authors our own attack software,
+running even faster than theirs.
+We certainly weren't working full time on this during the week.
+</p>
+<p>
+We emphasize that this work was not independent
+of what the paper authors did,
+and the fact that we were able to reconstruct the attack so quickly
+should not be viewed as criticism of the merits of the paper.
+We were starting from some information released by the authors.
+What we are saying is that, from a security perspective,
+this information was in fact the critical information in the paper.
+Here are some questions to think about:
+</p>
+<ul>
+  <li>Presumably, after seeing the 16 October announcement,
+      some users managed to replace their RSA signature keys
+      before the paper was released.
+      Were these users safe against serious attackers on 17 October?</li>
+  <li>Did delaying the release of the paper for two weeks make users <i>think</i> they were safer than they actually were?</li>
+  <li>RSA is used not just for signatures but also for encryption.
+      Once a ciphertext has been sent and recorded by an attacker,
+      replacing the key doesn't protect the ciphertext.
+      What was the impact of the delay on the amount of
+      private user data encrypted under weak keys?</li>
+  <li>Overall, did delaying the release of the paper <i>help</i> security, or <i>hurt</i> security?</li>
+  <li>The authors notified Infineon at the beginning of February 2017.
+      It seems that Infineon negotiated nine months of delay
+      before the paper was posted.
+      Did this much larger delay <i>help</i> security, or <i>hurt</i> security?</li>
+  <li>ISO maintains a standard for prime generation
+      (ISO/IEC 18032:2005)
+      that isn't strict enough to prohibit what Infineon was doing.
+      ISO wasn't told the attack details,
+      and wasn't asked to fix the standard,
+      until this month.
+      Did this delay <i>help</i> security, or <i>hurt</i> security?</li>
+</ul>
+<p>
+An
+<a href="https://crocs.fi.muni.cz/%5Fmedia/public/papers/usenixsec16%5F1mrsakeys%5Ftrfimu%5F201603.pdf">August 2016 paper</a>
+by Švenda, Nemec, Sekan, Kvašňovský,
+Formánek, Komárek, and Matyáš
+had already pointed out that Infineon keys
+were visibly non-random; see Table 6 in the paper.
+Attackers could already have figured out
+the whole attack from these details.
+Or attackers could have looked at Infineon keys on their own
+and found the same information.
+Our best guess is that serious attackers
+found the Infineon vulnerability years ago
+and have been quietly exploiting it since then.
+</p>
+<p>
+<b>Costs of an attack.</b>
+We are deeply concerned by the statement
+<a href="https://id.ee/index.php?id=38066">"Large-scale vote fraud is not conceivable due to the considerable cost and computing power necessary"</a>
+regarding the Estonian ID cards used for e-voting.
+This statement appears to be based on the claim that
+breaking all 750000 ID cards would cost
+<a href="http://news.err.ee/631683/survey-attitudes-toward-e-voting-unaffected-by-id-card-security-risk">60 billion Euros</a>,
+which in turn is based on the claim that
+breaking one card would cost 80000 Euros.
+Actual attack costs are thousands of times lower,
+for several reasons:
+</p>
+<ul>
+  <li><b>10x improvement:</b>
+      "Large-scale vote fraud" does not require breaking
+      <i>all</i> of the ID cards;
+      10% already buys massive influence.</li>
+  <li><b>More than 4x improvement:</b>
+      It seems that 80000 EUR was the cost of a preliminary algorithm
+      reported by the authors.
+      The authors subsequently reported that a faster algorithm
+      uses 40000 EUR worst-case
+      and, more to the point, 20000 EUR on average.
+      We have already beaten this,
+      and we expect further research attention
+      to produce further improvements.</li>
+  <li><b>More than 10x improvement:</b>
+      20000 EUR is a cost using <i>rented</i> computer equipment.
+      Serious attackers reduce costs by an order of magnitude
+      by <i>purchasing</i> computer equipment.
+      Concretely, 20000 EUR buys 20 computers,
+      each with 8-core CPUs,
+      completing an average factorization in roughly 4 months;
+      and the cost of a computer is amortized across
+      years of calculations.</li>
+  <li><b>More than 10x improvement:</b>
+      20000 EUR is a cost using <i>general-purpose CPUs</i>.
+      There is extensive literature studying
+      the cost reductions achievable
+      with other types of chips such as GPUs, FPGAs, and ASICs.
+      Our assessment is that
+      this factorization algorithm is reasonably well suited
+      to take advantage of such chips.</li>
+</ul>
+<p>
+We are happy to see Estonia finally
+<a href="https://medium.com/e-residency-blog/digital-id-cards-will-only-work-with-new-certificates-from-midnight-tonight-6e4db59658b8">blocking</a>
+the Infineon keys starting 3 November,
+but tremendous damage could already have been done.
+</p>
+<p>
+<b>Certification.</b>
+Infineon
+<a href="https://www.infineon.com/cms/en/product/promopages/rsa-update/rsa-background">says</a>
+that its "Fast Prime" function was
+"certified by the BSI
+(Federal Office for Information Security) in Germany.
+No mathematical weaknesses were known,
+nor have been discovered during the certification processes."
+The Estonian authorities
+<a href="https://id.ee/index.php?id=38066">say</a>
+that compliance with "security requirements"
+has been
+"certified by the competent German and French certification bodies".
+There are several BSI certifications,
+ANSSI certifications, and so on
+for security systems that include Infineon's library v1.02.013:
+see, e.g., the
+<a href="https://www.commoncriteriaportal.org/files/epfiles/0782V2a%5Fpdf.pdf">BSI certification report for Infineon Security Controller M7892 B11</a>
+based on tests by TÜV Informationstechnik GmbH.
+</p>
+<p>
+It seems that the prime-generation algorithm
+used by Infineon was never subjected to public review.
+It also seems that this failure
+was <i>encouraged</i> by the certification process.
+As stated in the paper:
+</p>
+<blockquote>
+The certification process counter-intuitively "rewards"
+the secrecy of design by additional
+certification "points"
+when an implementation is difficult
+for potential attackers to obtain&mdash;thus favoring
+security by obscurity.
+Relevant certification bodies might want to
+reconsider such an approach in favor of
+open implementations and specifications.
+Secrecy may increase the dificulty of spotting a flaw
+(above the capability of some attackers)
+but may also increase the impacts of the flaw
+due to the later discovery thereof.
+</blockquote>
+<p>
+Did BSI never ask Infineon to justify its prime-generation algorithm?
+Or did Infineon supply a justification
+with flaws that BSI failed to detect?
+Apparently Hanno Böck asked BSI for comments on this incident and
+<a href="https://www.golem.de/news/infineon-bsi-zertifiziert-unsichere-verschluesselung-1710-130716.html">didn't receive an answer</a>.
+What is the value of certification
+if such weaknesses are not caught?
+</p>
+<h3>The reconstruction process</h3>
+<p>
+The rest of this blog post dives into the details
+of (1) what information was released
+and (2) our process of reconstructing an attack from this information.
+</p>
+<p>
+<b>Divisors in residue classes.</b>
+As part of their 16 October announcement,
+the paper authors posted a tool for checking whether a key is generated by Infineon's library.
+We inspected the source code of the tool
+to see that an Infineon key N has a limited set of remainders modulo various small primes.
+For example, N is guaranteed to be 1 or 10 modulo 11,
+and 1 or 10 or 26 modulo 37,
+whereas properly generated RSA keys are equally distributed across 10 different possibilities modulo 11
+and 36 different possibilities modulo 37.
+</p>
+<p>
+The numbers 1, 10, 26 modulo 37 are exactly the powers of 10 modulo 37.
+How could Infineon be generating primes p and q so that the product N = pq is a power of 10 modulo 37?
+The simplest explanation is that each of p and q
+is generated as a power of 10 modulo 37,
+forcing the product N = pq to be a power of 10 modulo 37.
+Similar comments apply when 37 is replaced by various other possibilities.
+</p>
+<p>
+Inspecting examples of Infineon primes p and q,
+rather than public keys N,
+would have immediately shown that this explanation is in fact correct.
+The 2016 paper mentioned above
+already stated that the primes were limited in the same way as N.
+We hadn't seen that paper,
+and we weren't looking at any secret keys,
+but we were using Occam's Razor to make reasonable guesses.
+</p>
+<p>
+This type of information about p and q is important
+because the literature already explains a polynomial-time algorithm to find
+a prime divisor of N in a specified arithmetic progression u, u+v, u+2v, u+3v, etc.,
+assuming that gcd{v,N} = 1 and that v ≥ N<sup>1/4</sup>.
+For v ≥ N<sup>1/2</sup> this is an easy exercise.
+For v ≥ N<sup>1/3</sup> this goes back to a classic 1984 paper
+<a href="http://www.ams.org/journals/mcom/1984-42-165/S0025-5718-1984-0726007-1/S0025-5718-1984-0726007-1.pdf">"Divisors in residue classes"</a>
+by Lenstra.
+For v ≥ N<sup>1/4</sup> this is a result of Coppersmith, Howgrave-Graham, and Nagaraj,
+presented in 
+<a href="https://cr.yp.to/bib/1998/howgrave-graham.pdf">Howgrave-Graham's thesis</a> in 1998
+and in a paper
+<a href="http://www.ams.org/journals/mcom/2008-77-261/S0025-5718-07-02007-8/home.html">"Divisors in residue classes, constructively"</a>.
+The N<sup>1/4</sup> is a soft cutoff:
+one can go down to N<sup>1/4</sup>/poly(N), although the time goes up correspondingly.
+</p>
+<p>
+This isn't a complete discussion of the history.
+The underlying algorithmic idea
+was developed through a series of papers by many people aiming at various applications;
+see the survey paper
+<a href="https://cr.yp.to/papers.html#smallheight">"Reducing lattice bases to find small-height values of univariate polynomials"</a>
+for more information.
+Perhaps the idea should be called "extended linearization" ("XL"),
+recognizing its similarity to
+a technique introduced by Lazard in 1979
+for solving equations in many variables over a field;
+the name XL for this technique goes back to a 2000 paper by Courtois, Klimov, Patarin, and Shamir.
+But this name isn't standard outside the multivariate context.
+People instead typically say that they're using "Coppersmith's method",
+even if they're actually using, e.g., Lenstra's algorithm.
+</p>
+<p>
+Internally,
+these algorithms perform lattice-basis reduction.
+There are various parameters such as the dimension of the lattice
+and the largest power of N that is used in creating the lattice.
+Larger lattice dimensions use more time for reduction
+but handle smaller values of v.
+</p>
+<p>
+Nemec, Sýs, Švenda, Klinec, and Matyáš
+had announced their paper title as
+"The Return of Coppersmith's Attack: Practical Factorization of Widely Used RSA Moduli".
+This sounded consistent with the idea
+that the primes are in fact known or guessed modulo some v.
+</p>
+<p>
+<b>Random powers modulo primes.</b>
+It's normal to generate large random primes
+by generating large random integers and testing them for primality.
+It's also normal to double the success chance per integer, saving half of the randomness,
+by generating large <i>odd</i> random integers and testing them for primality.
+One can go further in this direction,
+for example saving 77% of the original randomness as follows:
+</p>
+<ul>
+  <li>Decide that p mod 2 is 1.</li>
+  <li>Choose randomly what p mod 3 will be, either 1 or 2.</li>
+  <li>Choose randomly what p mod 5 will be, either 1 or 2 or 3 or 4.</li>
+  <li>Choose randomly what p mod 7 will be, either 1 or 2 or 3 or 4 or 5 or 6.</li>
+  <li>Reconstruct p mod 210 by the "Chinese Remainder Theorem" ("CRT"). There are 2*4*6 = 48 different possibilities at this point.
+      These are exactly the 48 integers between 0 and 210
+      coprime to 210,
+      i.e., not divisible by 2 or 3 or 5 or 7.</li>
+  <li>Add a large random multiple of 210 to obtain p.</li>
+  <li>Check whether p is in fact prime.</li>
+</ul>
+<p>
+One can replace 2*3*5*7 by an even larger product of primes.
+Beware that at some point this breaks down:
+for example, if the goal is to generate a 1024-bit prime,
+then one can't use the product 2*3*5*7*...*997 of all primes below 1000.
+(This product is nearly 2<sup>1380</sup>,
+so p mod the product is almost certainly above 2<sup>1300</sup>.)
+</p>
+<p>
+There is an extensive literature on generating sequences of random numbers.
+Lehmer in 1949
+<a href="https://archive.org/details/proceedings%5Fof%5Fa%5Fsecond%5Fsymposium%5Fon%5Flarge-scale%5F">suggested</a>
+generating a sequence of 8-digit random numbers
+by multiplying an initial number repeatedly by 23 modulo 10<sup>8</sup>+1.
+What would happen if Infineon generated a sequence of possibilities for p mod 11
+as, e.g., powers of 2 mod 11?
+This isn't inherently a problem: 2 is a generator mod 11,
+meaning that 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 are powers of 2 mod 11.
+</p>
+<p>
+What would happen if Infineon instead generated a sequence of possibilities for p mod 11
+as powers of 10 mod 11?
+Suddenly there would be only two possibilities:
+the only powers of 10 mod 11 are 1 and 10,
+matching what Infineon seemed to be doing.
+This could even be a deliberate weakness with plausible deniability:
+"Oh, sorry, nobody warned us that 2 mod 11 was okay
+and 10 mod 11 wasn't."
+</p>
+<p>
+We wrote down
+<a href="20171105-infineon1.txt">details of our observations so far</a>,
+and
+<a href="https://twitter.com/hyperelliptic/status/920070462247522304">tweeted</a>
+a hash of the details:
+</p>
+<blockquote>
+   Had fun reverse engineering
+   https://github.com/crocs-muni/roca/blob/master/roca/detect.py w/ @hashbreaker
+   SHA256: 01463fbab8a8f9e345cd3f2201556a26d2f81b03cf2b8760643148b9a01255a6
+</blockquote>
+<p>
+<b>Random powers modulo products of primes.</b>
+The next day we sent <a href="20171105-infineon2.txt">email to the paper authors</a>
+with the details and also with a simpler guess for what Infineon was doing.
+The simpler guess was that,
+instead of computing separate powers modulo 3, 5, 7, ...
+Infineon was computing a power of a single number g modulo the product L = 2*3*5*7*...
+This would save Infineon the CRT effort,
+and would have the same basic effect of guaranteeing that the resulting integers
+are coprime to L, i.e., not divisible by any of the primes dividing L.
+This would also force all output keys to be 1 or 10 modulo 11
+if g happened to be 10 modulo 11.
+</p>
+<p>
+This guess would also mean that Infineon
+was limiting the set of keys it could generate.
+Specifically,
+a standard number-theory exercise says that,
+if L is divisible by two different odd primes,
+then it's impossible to find an integer g such that all integers coprime to L are powers of g.
+For example, no matter what g you choose,
+there are at most 12 different powers of g modulo 210;
+recall that CRT was producing 48 different possibilities.
+</p>
+<p>
+A related algorithm
+<a href="https://www.iacr.org/workshops/ches/ches2006/presentations/Marc%20Joye.pdf">"GenPrime"</a>
+was published by Joye and Paillier in 2006.
+The Joye&ndash;Paillier generator, like Lehmer's generator,
+<i>starts from a new random number r coprime to L</i>
+and then multiplies repeatedly by a constant g modulo L,
+obtaining r times a power of g.
+This can produce any number modulo L,
+and produces only a slight bias in the resulting primes.
+The guess was that Infineon was oversimplifying
+and generating merely a power of g;
+this produces far fewer numbers modulo L.
+</p>
+<p>
+The authors wrote back promptly,
+confirming that this guess was correct
+but not revealing more details.
+</p>
+<p>
+<b>First attack.</b>
+We were busy with other things
+but came back to this reverse-engineering on 20 October.
+We downloaded a pile of PGP keys
+and extracted the 2048-bit keys that survived all the tests announced by the authors,
+presumably Infineon-generated keys.
+We tried these keys modulo further small primes,
+finding, for example, that N mod 331 was always 1 or 330.
+We then tried these keys modulo products of small primes,
+for example finding that N mod 2*11*37*97*331
+was always 1, 65537, 4878941, 8942297, 14367385, or 24016035.
+These are exactly the powers of 65537 modulo 2*11*37*97*331.
+For comparison,
+there were 2 possibilities for N mod 11,
+3 for N mod 37,
+6 for N mod 97,
+and 2 for N mod 331,
+so if these possibilities had been independent
+then there would have been 72 possibilities for N mod 2*11*37*97*331.
+</p>
+<p>
+Further computations were consistent with the guess
+that p and q were being generated as powers of 65537 modulo L,
+where L was either the product of all primes through 691,
+or the product of all primes through 701.
+</p>
+<p>
+A simple attack strategy at this point
+is to try all powers of 65537 modulo L,
+and apply one of the "divisors in residue classes" algorithms to each possibility.
+L is beyond the N<sup>1/4</sup> cutoff mentioned above, even beyond the N<sup>1/3</sup> cutoff:
+the two possibilities for L are roughly 2<sup>960</sup> and 2<sup>970</sup>,
+whereas N<sup>1/4</sup> is roughly 2<sup>512</sup>.
+</p>
+<p>
+This comparison of sizes shows that knowing p mod L
+is much more information than necessary.
+One can thus replace L by something smaller.
+If p is a power of 65537 modulo L
+then it is also a power of 65537 modulo v
+for any divisor v of L,
+and the "divisors in residue classes" algorithms
+efficiently find p from this power if v is above N<sup>1/4</sup>.
+</p>
+<p>
+The number of powers to try is the order of 65537 modulo v,
+and one can reduce v to save time in trying powers.
+(The analysis of orders is similar to the analysis of a standard factorization method,
+the "p-1 method".)
+On the other hand, as v drops down towards N<sup>1/4</sup>,
+the required lattice dimension increases steeply.
+We presumed that L includes 701,
+checked the orders and basis-reduction time for some possibilities for v,
+and then took v as the product of all primes r through 701
+such that the order of 65537 modulo r divides
+2<sup>7</sup>*3<sup>3</sup>*5<sup>2</sup>*7*11*13*17*19*23.
+We wrote an attack script using the
+<a href="https://sagemath.org">Sage</a> computer-algebra system,
+and sent
+<a href="20171105-infineon3.txt">the script and a description</a>
+by email to the authors.
+We <a href="https://twitter.com/hashbreaker/status/921550323994517504">tweeted</a>
+a hash of this email:
+</p>
+<blockquote>
+   More exploration with @hyperelliptic has now produced working attack code:
+   3f5ba89d705a1059683c4c406dcda87f8af73f37cf0202cc74b875fcc28b3cb6
+</blockquote>
+<p>
+The authors confirmed that our attack script worked on real Infineon keys.
+They also confirmed that L did in fact include 701.
+We were already assuming 701 in our script,
+and we would have already been sure about it
+if we had seen some examples of Infineon secret keys
+(for example, by putting some computer time
+into factoring some public keys).
+Anyway, covering both possibilities in the script wouldn't have been much extra effort.
+</p>
+<p>
+<b>Second attack.</b>
+Finally, we put some effort into speeding up our script,
+stopping when we had something faster than what the paper authors had announced.
+We sent the
+<a href="20171105-infineon4.txt">details</a> by email to the authors
+and <a href="https://twitter.com/hashbreaker/status/922229745454022656">tweeted</a> a hash:
+</p>
+<blockquote>
+   Yup. Our 2048bit attack using @sagemath is now 5-25% faster than ROCA blog.
+   3fd6a53a3b6362248ac10de4a8108df3c839a7193a96d0991c6675990599d917
+</blockquote>
+<p>
+The "Yup" here was in response to a 
+<a href="https://twitter.com/graham%5Fsteel/status/920177917329625088">tweet by Graham Steel</a>
+regarding our first tweet:
+</p>
+<blockquote>
+   I guess that was inevitable...
+   will they have a faster version of the attack before the paper is even released?
+</blockquote>
+<p>
+The biggest speedup from our first version to our second was "chaining".
+The authors also helpfully pointed out to us
+that the 2016 paper
+had observed a narrower range of p and q for Infineon
+than what we had been assuming;
+this provided an additional speedup.
+As noted above,
+we see many possibilities for further speedups beyond what we implemented.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2017.11.05 of the 20171105-infineon.html web page.
+</font></body>
+</html>

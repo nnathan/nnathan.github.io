@@ -1,0 +1,499 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2015.02.18: Follow-You Printing
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html accesskey=k><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><b>2015.02.18: Follow-You Printing</b> How Equitrac's marketing department misrepresents and interferes with your work. #equitrac #followyouprinting #dilbert #officespaceprinter</td></tr>
+<tr><td><a href=20140602-saber.html accesskey=j><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2015.02.18: Follow-You Printing</h2>
+<p>
+Technische Universiteit Eindhoven
+removed all of its old printers earlier this year,
+and installed new printers featuring "Follow-You Printing".
+Here's the user experience printing a document with Follow-You Printing
+(after various one-time steps such as telling your computer
+how to talk to the printing system):
+</p>
+<ol>
+<li>
+  On your computer, click "Print".
+</li>
+<li>
+  Wait long enough for the document to upload.
+</li>
+<li>
+  Go to the printer room.
+</li>
+<li>
+  Pick up your printout?
+  No: the printout isn't there, and won't be there unless you take action.
+  Swipe your ID card.
+</li>
+<li>
+  The printer is now contacting a login server.
+  Wait for the screen to change.
+  No, you can't type ahead.
+</li>
+<li>
+  Push "Follow-You Printing".
+</li>
+<li>
+  The printer is now contacting a server that has your document.
+  Wait for the screen to change.
+</li>
+<li>
+  Push "Select All".
+</li>
+<li>
+  Wait for the start button to change from red to blue.
+</li>
+<li>
+  Push the start button.
+  The printer is now starting to process your document.
+</li>
+<li>
+  Push the Access button to log out.
+</li>
+<li>
+  Make sure that the screen changes to ask for a user name and password.
+</li>
+<li>
+  Unless you enjoy further exposure to printer fumes,
+  go back to your office.
+</li>
+<li>
+  Wait long enough for the printing to finish.
+</li>
+<li>
+  Go back to the printer room.
+</li>
+<li>
+  Pick up the document.
+</li>
+<li>
+  Go back to your office.
+</li>
+</ol>
+<p>
+For comparison, here's the
+user experience printing a document with a sane printing system:
+</p>
+<ol>
+<li>
+  On your computer, click "Print".
+</li>
+<li>
+  Wait long enough for the document to upload and for the printing to finish.
+</li>
+<li>
+  Go to the printer room.
+</li>
+<li>
+  Pick up the document.
+</li>
+<li>
+  Go back to your office.
+</li>
+</ol>
+<p>
+The university's announcement of Follow-You Printing
+included two advertisements:
+</p>
+<ul>
+<li>
+  The ability
+  "to print on any printer on campus".
+  How is this new?
+  I recall one time that a printer failed and so I printed on another printer down the hall;
+  I don't recall any trouble doing this.
+</li>
+<li>
+  The ability to avoid exposure of "confidential documents".
+  Sure, there were occasions when I told my computer to wait a minute before printing
+  (which I realize many people don't know how to do),
+  and wondered whether anyone was sniffing the network.
+</li>
+</ul>
+<p>
+No matter what the merits of these corner cases might be,
+they obviously don't justify slowing down the normal case,
+and people don't enjoy having their time wasted.
+So there were complaints,
+and meetings,
+and more complaints,
+and the start of an online
+<a href="http://www.ipetitions.com/petition/enable-direct-printing-on-our-new-mfps">petition</a>
+for the managers to turn on the "Direct Printing" option.
+But the university didn't budge.
+A faculty member, obviously puzzled,
+reported that he "got essentially nowhere" in a meeting with the relevant authority:
+"The university is not planning on changing this.
+Even though it is a simple question of enabling the choice in the software&mdash;it’s not
+more complicated than that."
+</p>
+<p>
+I would like to think it's this simple:
+as Napoléon allegedly said,
+"N’attribuez jamais à la malveillance ce qui s’explique très bien par l’incompétence".
+Unfortunately,
+there's ample evidence of what's actually going on here,
+and it's <i>not</i> adequately explained by incompetence.
+</p>
+<p>
+<b>The marketing.</b>
+<a href="http://www.equitrac.com/">Equitrac</a>, now owned by Nuance,
+advertises itself as providing
+<a href="http://www.nuance.com/for-business/by-product/equitrac/index.htm">"the world's most popular print management software"</a>,
+and in particular providing Follow-You Printing.
+Equitrac says that its software is
+"the leading pay-for-print solution for colleges, universities and school districts"
+and is deployed in "more than 10% of the Global 500 companies".
+</p>
+<p>
+Equitrac's online case studies include quotes
+from managers with serious-sounding titles:
+Chief Information Officer,
+Technology Director,
+Senior Systems Engineer,
+Program Administrator for Media Services,
+Finance Director,
+etc.
+Equitrac's advertising is clearly aimed at such people,
+telling them about
+"cost control"
+and "maximum savings"
+and "complete accountability"
+and "a reduced burden on IT"
+and "a smaller hit on corporate budgets".
+</p>
+<p>
+Equitrac says, for example,
+that the University of St. Thomas
+dropped from 
+<a href="http://www.nuanceequitrac.com/downloads/2554-UST%5FCase%5FStudy.pdf">"2.5 to 1.3 million printed pages in one semester"</a>
+after deploying "Equitrac Express".
+Maybe some of the reduction can be explained by general societal trends,
+but presumably most of the reduction comes from
+replacing a students-print-for-free policy
+("non-tracked free use of computer lab printers")
+with a students-pay-for-printouts policy
+("a print quota of 400 pages per semester,
+with output over that charged to the student at 10¢ per page").
+</p>
+<p>
+Okay. What does this have to do with Follow-You Printing?
+</p>
+<p>
+Equitrac claims that Follow-You Printing
+<a href="http://www.nuanceequitrac.com/printing-less-with-no-user-impact-the-magic-of-follow-you-printing/">"can reduce printed output by 10-20% on average"</a>.
+Even better, Equitrac claims that this reduction happens "with no impact to users";
+that it happens without the users "ever knowing it or consciously changing their behavior".
+</p>
+<p>
+Obviously we, the users, are quite aware of the <i>annoyance</i> of Follow-You Printing,
+but this doesn't imply that we're aware of the reduction in our print volume,
+so it doesn't directly contradict what Equitrac is saying.
+Let's look more closely
+at what Equitrac would like the CIO
+to believe about our printing habits
+and about the impact of Follow-You Printing.
+</p>
+<p>
+<b>Myth: The volume of paper in the recycling bin demonstrated that our printing was wasteful.</b>
+Equitrac thinks that
+<a href="http://www.equitrac.com/downloads/Steps%5Fto%5FGreener%5FPrinting.pdf">"looking at the piles of paper in the recycling bin"</a>
+proves that our printing was "unnecessary".
+Specifically,
+Equitrac claims that recycling bins are
+<a href="http://files.sharpusa.com/Downloads/ForBusiness/DocumentSystems/MFPsPrinters/SoftwareApplications/cop%5Fdow%5FEquitrac%5FExp%5Fbro.pdf">"full of wasted paper, unused prints and multiple copies of the same document"</a>.
+Equitrac also claims that these bins
+send a "message" of
+"we know that you are going to print stuff you don’t need, so here’s a place to put it".
+In its
+<a href="http://www.nuance.com/ucmprod/groups/imaging/@web-enus/documents/collateral/nc%5F021825.pdf">Peirce College case study</a>,
+Equitrac claims that there was "an estimated waste factor of 30&ndash;50%"
+based on "the amount of paper left in recycling bins and on paper trays".
+</p>
+<p>
+Reality:
+As a scientist,
+I spend a considerable fraction of my time skimming scientific papers,
+and of course the screen is much faster for this than a printout.
+However,
+sometimes I go through a paper in depth,
+and in these cases I find it noticeably faster and noticeably more reliable
+to read (and take notes on) a printout.
+Some of these printouts have long-lasting value,
+but for most printouts there comes a point
+when I'm reasonably sure that I won't look at the printout again.
+I'll often reuse blank spots as scrap paper,
+but if it becomes clear that a printout is no longer worth keeping
+then I'll recycle it.
+</p>
+<p>
+Does the presence of this printout in a recycling bin
+mean that the printout was "unused", and that the printing was "wasted" and "unnecessary"?
+Of course not.
+The printout was important for me:
+I needed the printout to do my job efficiently.
+The entire impact that I can see from Follow-You Printing,
+and from Equitrac in general,
+is to make my job more difficult.
+I hope that writing this blog post will save others from the same fate.
+</p>
+<p>
+These self-printed documents aren't my entire contribution to the recycling bin:
+I also recycle documents that I receive through the mail
+and that I wasn't responsible for printing in the first place.
+Often <i>these</i> documents aren't useful,
+and occasionally I go to the effort of actively telling the senders
+that they really shouldn't be sending me physical mail.
+But almost all of these documents (at least by volume)
+are professional or semi-professional mass mailings,
+obviously not the sort of thing that would be stopped
+by a CIO burying work printers in the tar pit of Follow-You Printing.
+</p>
+<p>
+Maybe the CIO
+stores everything he ever successfully printed
+(including all his incoming email?) in his filing cabinet.
+Maybe he doesn't recycle anything other than mistaken printouts.
+Maybe he assumes that everyone else shares his printing habits.
+When Equitrac claims that recycling bins are
+"full of wasted paper, unused prints and multiple copies of the same document",
+maybe he believes them.
+Why else would Equitrac put this sort of garbage into their advertising?
+</p>
+<p>
+<b>Myth: The destruction of documents by Follow-You Printing demonstrates that our printing was wasteful.</b>
+Equitrac paints a picture of several reasons for our flood of "unused prints":
+"a newer version was printed,
+the user got distracted and forgot about the document,
+the user realized they didn't need to print it, etc."
+Equitrac claims that
+Follow-You Printing provides
+<a href="http://www.nuance.com/for-business/by-product/equitrac/Equitrac-Express-%2D-Case-Study-%2D-Peirce-College.pdf">"reduction"</a> of such "waste"
+via "expiration on jobs sent to the Equitrac print queue".
+As a concrete example,
+Liverpool John Moores University
+found that "up to 25% of jobs" on "many devices" using Follow-You Printing
+were never actually retrieved (i.e., actually printed) by the user;
+Equitrac says that it has "heard many more stories in the 10&ndash;20% range".
+Equitrac quotes the LJMU Senior Systems Engineer
+as saying that LJMU saved "£80,000 per year"
+from "4.5 million unprinted pages" eliminated by
+"Equitrac’s automatic erasing of unreleased print jobs".
+</p>
+<p>
+Reality:
+Eindhoven switched only very recently to Follow-You Printing,
+and my job there is only 20% time,
+but I already have enough experience with Follow-You Printing
+to clearly see its impact.
+</p>
+<p>
+Last week I printed several important documents
+before a short trip to a meeting in Germany.
+As a direct result of the time consumed by Follow-You Printing,
+I <i>almost</i> ran out of time to finish printing
+the documents before catching the train.
+If I hadn't started the printing far enough in advance
+then it's entirely possible that, after clicking Print,
+I would have realized the futility of
+trying to extract my documents out of Follow-You Printing in the time available,
+and I wouldn't have bothered going to the printer.
+I would have wasted time on the trip compensating for
+the lack of the printouts that I needed.
+</p>
+<p>
+Equitrac would have marked this as a successful reduction in printing costs
+("without your users ever knowing it").
+Equitrac would have described my un-retrieved printouts as "waste"
+avoided by the Follow-You Printing system.
+No, damn it, it's <i>not</i> waste.
+The core of the Equitrac message, "didn't need to print it",
+is simply wrong.
+We agree on the result from the printer's perspective,
+namely a printout not happening,
+but Equitrac incorrectly describes this as a good thing,
+when in fact it's a perfect illustration
+of what's wrong with the Follow-You Printing system.
+</p>
+<p>
+Equitrac doesn't say
+"We turn printing into such an annoying, time-consuming experience
+that we sometimes succeed in saving you money
+by stopping your users from collecting the printouts they need."
+Equitrac says that printouts are skipped because
+"a newer version was printed,
+the user got distracted and forgot about the document,
+the user realized they didn't need to print it, etc."
+Nowhere, as far as I can tell,
+does Equitrac even acknowledge the <i>possibility</i>
+that the documents destroyed by Follow-You Printing
+are documents that we actually needed to print.
+</p>
+<p>
+Furthermore,
+now that I know that Follow-You Printing is in place,
+I find myself somewhat more casual about clicking Print:
+after all, I can decide later to skip printing the document!
+If in fact I don't pick up this document,
+then Equitrac assumes that
+the document would have been a "wasted" printout without Follow-You Printing;
+Equitrac reports the deletion to managers as "waste reduction",
+and advertises how much it's reducing carbon emissions.
+But this is all wrong.
+Without Follow-You Printing,
+I would have skipped clicking Print in the first place.
+</p>
+<p>
+<b>The fantasy world of the CIO.</b>
+The reason that Equitrac's bogus advertising is important
+is that
+<i>CIOs make decisions on the basis of bogus advertising</i>.
+Here's what the CIO thinks of you after listening to Equitrac:
+</p>
+<ul>
+<li>
+  Your printing is amazingly wasteful.
+  You're constantly printing old versions
+  where you haven't even picked them up before printing newer versions;
+  printing documents and then realizing a moment later that you don't need them;
+  and printing documents that you care about so little that you <i>forget</i> about them.
+  I bet that at this instant
+  you're thinking of a printout that you could have skipped!
+</li>
+<li>
+  You're filling recycling bins
+  with wasted paper, unused prints, and multiple copies of the same document.
+</li>
+<li>
+  By controlling your bad behavior,
+  Follow-You Printing will reduce the organization's printing costs
+  by an impressive 10&ndash;20%.
+  This is an important part of a grand plan
+  to reduce the organization's printing costs by 50%.
+</li>
+</ul>
+<p>
+It should be obvious what the same CIO will be thinking
+if you complain that Follow-You Printing consumes your time:
+</p>
+<ul>
+<li>
+  You don't even understand these important cost issues.
+  Go focus on your job and leave the financial decisions to the experts.
+</li>
+<li>
+  Equitrac's tools are already collecting data
+  indisputably showing that many print jobs
+  haven't been retrieved from the printers.
+  Every one of those jobs is a print job
+  that obviously didn't need to happen.
+</li>
+<li>
+  The fact that Follow-You Printing
+  forces you to take more time to print
+  is exactly the point:
+  it gives you an opportunity to consider how wasteful your printing is,
+  and to avoid some of this waste.
+</li>
+<li>
+  You're a typical low-level employee,
+  complaining about every little annoyance.
+  You'll get used to it.
+</li>
+</ul>
+<p>
+What makes your complaints ineffective
+is that you aren't even recognizing, let alone responding to,
+the core Equitrac messages&mdash;"didn't need to print it" and "cost control".
+</p>
+<p>
+What the CIO needs to hear is that the Equitrac advertising is wrong.
+The reality is that we <i>do</i> need to print it,
+and Follow-You Printing is interfering with this.
+Follow-You Printing's real strategy to save money
+is to take the worst moments for a printing delay,
+the moments when we really need to print something in a rush,
+and to destroy those printouts.
+</p>
+<p>
+As for "cost control":
+Follow-You Printing costs the organization money for every printout,
+because it takes away time that we should be putting into our jobs.
+On occasion Follow-You Printing forces us to abandon a printout that we need,
+saving a little bit of money but costing us even more time.
+My current estimate is that the costs every year
+add up to several hours for the average person:
+certainly more than an hour.
+For comparison,
+a savings of "£80,000 per year"
+(under highly questionable assumptions; see above)
+might sound impressive,
+but that's at a university with 27000 people and a yearly budget above £100,000,000.
+Would you sacrifice hours of your time to save under £3?
+</p>
+<p>
+Sometimes managers think that
+they can get away with reducing costs by imposing burdens on existing employees.
+However,
+small stories of an unsupportive work environment
+end up having a large effect on the organization's efforts
+to attract and retain top personnel,
+and ultimately this ends up costing the organization much more than its printing budget.
+The bottom line is that
+replacing direct printing with Equitrac Follow-You Printing is a mistake.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2015.02.18 of the 20150218-printing.html web page.
+</font></body>
+</html>

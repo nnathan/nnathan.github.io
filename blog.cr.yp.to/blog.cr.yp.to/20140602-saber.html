@@ -1,0 +1,1333 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2014.06.02: The Saber cluster
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html accesskey=k><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><b>2014.06.02: The Saber cluster</b> How we built a cluster capable of computing 3000000000000000000000 multiplications per year for just 50000 EUR. #nvidia #linux #howto</td></tr>
+<tr><td><a href=20140517-insns.html accesskey=j><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><a href=20140411-nist.html><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2014.06.02: The Saber cluster</h2>
+<p>
+<a href="saber-fullsize/saber.jpg"><img class=pic50 src="saber-thumb/saber.jpg"></a>
+Saber is a powerful new computer cluster
+in the 
+<a href="http://eindhoven.cr.yp.to">Cryptographic Implementations</a> group
+in the Discrete Mathematics section
+of the Department of Mathematics and Computer Science
+at Technische Universiteit Eindhoven.
+Saber is also the Spanish word for "knowledge".
+</p>
+<p>
+Saber consists of 24 servers featuring 48 high-end graphics cards.
+The university started by purchasing 2 test servers
+with slightly different components,
+and then in December 2013 purchased components for the remaining 22 servers
+from <a href="http://4launch.nl">4Launch</a>.
+I'm happy to recommend 4Launch
+to other people purchasing computer parts in and around the Netherlands.
+Computers were assembled by
+Tanja Lange (6.25),
+Chitchanok Chuengsatiansup (5),
+Andreas Hülsing (3.25),
+Christine van Vredendaal (3),
+Tung Chou (2),
+and me (4.5).
+Initial configuration and installation were by
+Tung Chou (8),
+Christine van Vredendaal (3),
+Tanja Lange (2),
+Jan Willem Knopper (2),
+Chitchanok Chuengsatiansup (1),
+and me (8).
+</p>
+<h2>Infrastructure</h2>
+<p>
+The servers are connected by a D-Link DGS-1210-48 switch.
+The 48 ports on this switch leave room for future expansion.
+</p>
+<p>
+The servers occupy three metal wire racks
+purchased from <a href="http://bigdug.co.uk">BigDug</a>
+(3x CS1266, 3x CXL126, 3x CCS).
+I'm pretty sure that the original manufacturer is
+<a href="http://chinarack.net">Dong Guan Lijin Storage Equipment Company</a>.
+Each rack has 4 casters (2 with brakes)
+holding 4 1800mm corner poles (each shipped as two half-height pieces),
+which in turn hold 5 adjustable 1220mm x 610mm wire shelves.
+The casters are rated for 80kg each,
+and the shelves in each rack weigh about 40kg,
+so each rack can hold 280kg.
+(Each shelf is rated for 250kg uniformly distributed.)
+One advantage of wire shelves over solid shelves
+is that wire shelves don't block air flow;
+another advantage is that wire shelves allow cables, twist ties, etc. to be attached anywhere.
+</p>
+<p>
+Each rack has 8 servers (about 160kg in total):
+3 servers on shelf 1,
+2 servers on shelf 2, and
+3 servers on shelf 3,
+spaced so that air can flow freely up from the top fan on each server.
+The corner poles have a notch every inch (2.54cm) for placing the shelves.
+Shelf 2 is 21 inches higher than shelf 1;
+shelf 3 is 21 inches higher than shelf 2;
+shelf 4 is 21 inches higher than shelf 3;
+shelf 5, the top of the rack, is 6 inches higher than shelf 4.
+One rack has the switch on shelf 4.
+Shelf 5 is for future expansion.
+The racks were assembled by
+Tung Chou,
+Chitchanok Chuengsatiansup,
+Tanja Lange,
+and me.
+</p>
+<p>
+The cluster is powered by 6 16A 230V circuits,
+balanced between three power phases.
+Each rack has 2 circuits, with 4 servers on each circuit.
+</p>
+<h2>Components</h2>
+<p>
+<a href="http://www.megatokyo.com/strip/70"><img class=pic50 src=megatokyo.com/strips/0070.gif></a>
+Here are the parts of one server.
+I've listed US prices from early March 2014
+to give an idea of how the costs are divided among components.
+The infrastructure mentioned above adds only a few percent to the total cost.
+</p>
+<p>
+<b>Graphics cards: 2x Asus 90YV04H0-M0NA00 "GTX780-DC2OC-3GD5" (2x $520 from NewEgg).</b>
+3-year warranty from Asus.
+These aren't supposed to draw more than 250 watts each,
+but online I've seen measurements of them drawing 268 watts.
+</p>
+<p>
+These graphics cards contain most of the computational power of Saber.
+Each card has a 0.889GHz GK110 GPU
+containing 2304 single-precision multipliers.
+(NVIDIA misleadingly refers to these multipliers as "cores"
+even though it arranges the multipliers into larger units
+that sensible people would call cores.
+For comparison,
+each Intel Haswell core contains 16 single-precision multipliers,
+and each 2-core AMD Piledriver module contains 16 single-precision multipliers.)
+One GPU performs almost 2<sup>41</sup> multiplications per second;
+48 GPUs perform almost 1.5*2<sup>46</sup> multiplications per second,
+while consuming about 12000 watts;
+in a year 48 GPUs perform about 1.3*2<sup>71</sup> multiplications
+while consuming about 12000 watt-years (380 gigajoules) of electricity.
+</p>
+<p>
+There are several manufacturers of cards containing the same NVIDIA GK110 GPU.
+These Asus cards have impressive heat sinks (marketing name: "Direct Copper II")
+and are reported to run at lower temperatures than other cards
+even though they are clocked slightly higher from the factory.
+</p>
+<p>
+<b>CPU: AMD FD8350FRHKBOX ($200 from NewEgg).</b>
+FX-8350 Vishera 4.0GHz CPU, Socket AM3+.
+Four Piledriver modules, each with 2 cores.
+3-year warranty from AMD.
+125 watts.
+</p>
+<p>
+One of the test servers used an Intel CPU,
+specifically the Xeon E3-1275 v3 (Haswell) on an Asus P9D WS motherboard.
+It's not a bad machine, and for some tasks it's faster than the FX-8350;
+but the Xeon E3-1275 v3 is $150 more expensive than the FX-8350,
+and the motherboard is $60 more expensive than the motherboard below.
+This is more than a 15% increase in the cost of non-GPU components,
+and it certainly doesn't produce a 15% increase
+in the overall performance of those components.
+There are Intel CPUs and motherboards at lower costs,
+but as far as I know none of those support ECC.
+(Intel also keeps changing its ECC interfaces,
+and this test server will need an OS upgrade
+before the OS can monitor the hardware ECC,
+whereas AMD has maintained the same ECC interface for years.)
+</p>
+<p>
+<b>Motherboard: Asus SABERTOOTH 990FX R2.0 ($180 from NewEgg).</b>
+Socket AM3+ motherboard, 4 DIMM slots, AMD 990FX chipset.
+5-year warranty from Asus.
+Maybe 50 watts?
+</p>
+<p>
+<b>RAM: Kingston KVR16E11K4/32 ($381 from NewEgg).</b>
+This is a pack of 4 DIMMs (same as 4 copies of KVR16E11/8 except for the packaging).
+Each DIMM has 8GB unbuffered ECC RAM, for a total of 32GB.
+Lifetime warranty from Kingston.
+4*2.9 watts.
+</p>
+<p>
+<b>Hard drives: Western Digital WD20EURX ($100 from NewEgg) and Seagate ST2000VM003 ($100 from NewEgg).</b>
+These are two 2TB SATA drives.
+3-year warranties from Western Digital and Seagate respectively.
+Estimated 15-watt spinup and 24-watt spinup respectively;
+once spun up, 4.4-watt "average" and 5-watt "average" respectively.
+</p>
+<p>
+Both of these are sold as "video surveillance recording" drives,
+evidently optimized for long continuous use rather than for fast seeks.
+I use the two disks to store 2TB in RAID1,
+and I use two different manufacturers on the theory that
+the two drives will then be less likely to fail simultaneously.
+3TB drives are now slightly less expensive per byte,
+but they have considerably worse OS support (they need GPT rather than MBR),
+and I don't expect 2TB to really limit the applicability of the cluster.
+</p>
+<p>
+<b>Case: Antec 0-761345-15924-1 "Nine Hundred Two v3" ($134 from some random store).</b>
+Four fans included.
+3-year warranty from Antec.
+</p>
+<p>
+<b>Extra fans: 2x Antec 0-761345-75120-9 "Tricool 120mm" (2*$7 from Amazon).</b>
+1-year warranty from Antec.
+</p>
+<p>
+One of these is to install, one to keep as spare.
+Antec 0-761345-75121-6 "Tricool 120mm DBB"
+has double ball bearings and presumably would last longer.
+</p>
+<p>
+<b>Power supply: Seasonic P-1000 ($279 from Amazon).</b>
+1000-watt power supply.
+7-year warranty from Seasonic.
+</p>
+<p>
+A computer that draws N watts from its power supply
+will draw more than N watts from the wall,
+because the power supply itself consumes power.
+More efficient power supplies consume less power, generate less heat,
+and hopefully last longer.
+This particular power supply is more than 90% efficient at typical loads.
+</p>
+<p>
+It's easy to argue that 850 watts would have been sufficient.
+I don't currently plan to add any components,
+and I'm pretty sure that the existing components
+can't draw more than 800 watts from the power supply (i.e., 890 from the wall)
+if I don't overclock the graphics cards.
+It's also not clear that the temperature limits on the graphics cards
+will allow noticeable amounts of overclocking,
+despite the Asus heat sinks.
+Furthermore,
+lower clock speeds are probably better for longevity.
+</p>
+<h2>Computer assembly</h2>
+<p>
+<a href="http://megatokyo.com/strip/650"><img class=pic50 src=megatokyo.com/strips/0650.gif></a>
+Here are the steps that we used to assemble one server.
+Caveat lector:
+I'm not going to explain basic electrical and physical protections,
+either for you or for the components.
+On the other hand,
+<a href="http://megatokyo.com">MegaTokyo</a> has some useful advice.
+</p>
+<p class=clear>
+<a href="http://megatokyo.com/strip/653"><img class=pic50 src=megatokyo.com/strips/0653.gif></a>
+</p>
+<p class=clear>
+<b>Starting on the case.</b>
+<a href="saber-fullsize/case-outerplastic.jpg"><img class=pic30 src="saber-thumb/case-outerplastic.jpg"></a>
+Take the case out of its box.
+Remove and discard plastic wrap from the window side.
+</p>
+<p class=clear>
+<a href="saber-fullsize/case-windowside.jpg"><img class=pic30 src="saber-thumb/case-windowside.jpg"></a>
+Unscrew the side and put the side down.
+</p>
+<p class=clear>
+<a href="saber-fullsize/case-innerplastic.jpg"><img class=pic30 src="saber-thumb/case-innerplastic.jpg"></a>
+Remove and discard inner plastic wrap from the side.
+</p>
+<p class=clear>
+<a href="saber-fullsize/fan-1.jpg"><img class=pic30 src="saber-thumb/fan-1.jpg"></a>
+<b>Extra case fan.</b>
+Take an extra fan out of its box.
+The fan comes with a bag of screws; put these screws in your box of spare parts.
+Move the fan-control switch from L to H.
+Push the fan into the fan slot inside the window side of the case,
+making sure to orient the fan cable as shown in the picture.
+Make sure the fan is lined up with all four stilts.
+</p>
+<p class=clear>
+<a href="saber-fullsize/fan-2.jpg"><img class=pic30 src="saber-thumb/fan-2.jpg"></a>
+Keep pushing until both fan holders click into place.
+</p>
+<p class=clear>
+Put the window side somewhere else; you won't need it for a while.
+Also unscrew the non-window side and put that somewhere else.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-1.jpg"><img class=pic30 src="saber-thumb/cage1-1.jpg"></a>
+<b>First drive cage.</b>
+There are two drive cages,
+each occupying three slots at the front of the case.
+Unscrew the higher drive cage (eight thumbscrews)
+and gently push the cage out of the front of the case;
+don't let it drop.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-2.jpg"><img class=pic30 src="saber-thumb/cage1-2.jpg"></a>
+The drive cage has a front segment (holding a fan),
+a large middle segment, and a back segment.
+Find the metal tabs on the middle segment that hold the fan cable in place.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-3.jpg"><img class=pic30 src="saber-thumb/cage1-3.jpg"></a>
+Unfold the tabs;
+I use a screwdriver to unfold the tabs partially
+and then raise them to 90 degrees by hand.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-4.jpg"><img class=pic30 src="saber-thumb/cage1-4.jpg"></a>
+Gently separate the fan cable from the back (this needs some sliding)
+and middle segments.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-5.jpg"><img class=pic30 src="saber-thumb/cage1-5.jpg"></a>
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-6.jpg"><img class=pic30 src="saber-thumb/cage1-6.jpg"></a>
+Unhook the front segment from the middle segment;
+this often takes some wiggling but does not require much force.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage1-7.jpg"><img class=pic30 src="saber-thumb/cage1-7.jpg"></a>
+Put the middle and back segments into a spare-parts box;
+what will go back into the case later is just the fan.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage2-1.jpg"><img class=pic30 src="saber-thumb/cage2-1.jpg"></a>
+<b>Second drive cage.</b>
+There is a white box (containing many screws) inside the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage2-2.jpg"><img class=pic30 src="saber-thumb/cage2-2.jpg"></a>
+Unscrew this box from the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cage2-3.jpg"><img class=pic30 src="saber-thumb/cage2-3.jpg"></a>
+Unscrew the cage from the case (another eight thumbscrews).
+Gently push the cage and box out of the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/twistties-1.jpg"><img class=pic30 src="saber-thumb/twistties-1.jpg"></a>
+Remove the cables inside the case from the white plastic loop that contains them;
+if the loop is not solidly glued to the case,
+simply remove it and discard it.
+Also remove any further twist ties from the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/twistties-2.jpg"><img class=pic30 src="saber-thumb/twistties-2.jpg"></a>
+</p>
+<p class=clear>
+<a href="saber-fullsize/twistties-3.jpg"><img class=pic30 src="saber-thumb/twistties-3.jpg"></a>
+</p>
+<p class=clear>
+<a href="saber-fullsize/twistties-4.jpg"><img class=pic30 src="saber-thumb/twistties-4.jpg"></a>
+</p>
+<p class=clear>
+<b>Other front slots.</b>
+The three remaining front slots in the case
+are occupied by separate slot covers.
+Unscrew these covers.
+</p>
+<p class=clear>
+<a href="saber-fullsize/six-standoffs.jpg"><img class=pic30 src="saber-thumb/six-standoffs.jpg"></a>
+<b>Motherboard standoffs.</b>
+Put the case on its side and gently pull cables out of the way.
+The motherboard will screw into nine brass standoffs that screw into the case.
+Normally six of these standoffs are already installed in the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/different-screws.jpg"><img class=pic30 src="saber-thumb/different-screws.jpg"></a>
+Check that these standoffs are tight.
+Find the remaining standoffs and screws in the white box.
+Beware that the screws have threads with two different pitches
+(distances between the threads):
+</p>
+<ul>
+<li>The long screws (for the hard drives) have a large pitch and a flat top.
+You'll use eight of these screws later.
+<li>Two long screws have a rounded top.
+You won't use these; put them in your spare-parts box.
+<li>Four of the short screws also have a large pitch
+and the same heads as the screws on the case slots.
+You'll use all four of these for the motherboard.
+<li>Several more short screws also have a large pitch
+and smaller heads with a flat top.
+You'll use five of these for the motherboard.
+<li>Many more short screws have a small pitch.
+You won't use these now.
+</ul>
+<p class=clear>
+<a href="saber-fullsize/nine-standoffs.jpg"><img class=pic30 src="saber-thumb/nine-standoffs.jpg"></a>
+Double-check that you can screw the nine short screws that you've selected
+into the uninstalled standoffs.
+Take them out of the standoffs and
+install the standoffs into the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/ram-1.jpg"><img class=pic30 src="saber-thumb/ram-1.jpg"></a>
+<b>RAM.</b>
+Remove the motherboard from its box.
+Rest it flat on the outside of the box, or on some other piece of cardboard.
+There are four DIMM slots on the motherboard,
+each with a white tab at one end.
+(The other end has just a slot, not a tab;
+this is one of very few things that I don't like about this motherboard.)
+Remove and discard the very thin flexible plastic protector from the Asus logo.
+</p>
+<p class=clear>
+<a href="saber-fullsize/ram-2.jpg"><img class=pic30 src="saber-thumb/ram-2.jpg"></a>
+Flip the tabs open.
+</p>
+<p class=clear>
+<a href="saber-fullsize/ram-3.jpg"><img class=pic30 src="saber-thumb/ram-3.jpg"></a>
+Slide a DIMM into one of the slots,
+making sure that the notch at the bottom of the DIMM is properly aligned.
+</p>
+<p class=clear>
+<a href="saber-fullsize/ram-4.jpg"><img class=pic30 src="saber-thumb/ram-4.jpg"></a>
+Push gently straight down on the DIMM until you meet resistance;
+the DIMM is close to seated at this point.
+Push slightly harder straight down on the non-tab end of the DIMM
+until you hear a click.
+Then push straight down on the tab end
+until the tab clicks into place.
+</p>
+<p class=clear>
+<a href="saber-fullsize/ram-5.jpg"><img class=pic30 src="saber-thumb/ram-5.jpg"></a>
+Repeat for the other DIMMs.
+</p>
+<p class=clear>
+<b>CPU.</b>
+<a href="saber-fullsize/cpu-1.jpg"><img class=pic30 src="saber-thumb/cpu-1.jpg"></a>
+The CPU socket has a metal lever.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cpu-2.jpg"><img class=pic30 src="saber-thumb/cpu-2.jpg"></a>
+Raise this lever to vertical.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cpu-3.jpg"><img class=pic30 src="saber-thumb/cpu-3.jpg"></a>
+Place the CPU gently into the socket,
+with the triangles at matching corners;
+this does not require any force.
+Look at all sides of the CPU to make sure the CPU is flat, all the way in the socket.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cpu-4.jpg"><img class=pic30 src="saber-thumb/cpu-4.jpg"></a>
+Put the lever back into place.
+</p>
+<p class=clear>
+<a href="saber-fullsize/heatsink-1.jpg"><img class=pic30 src="saber-thumb/heatsink-1.jpg"></a>
+<b>CPU heat sink and fan.</b>
+Remove the plastic cover from the CPU heat sink.
+</p>
+<p class=clear>
+<a href="saber-fullsize/heatsink-2.jpg"><img class=pic30 src="saber-thumb/heatsink-2.jpg"></a>
+Don't touch the gray material (thermal pad).
+Check that the thermal pad is evenly covering
+a centered square of almost the same size as the CPU.
+Place the heat sink on top of the CPU,
+with fan cable towards the top of the motherboard
+(meaning the side that will end up at the top once the computer is done;
+this is the same side closest to the DIMM tabs).
+Hook the silvery metal that slides through the heat sink
+into place towards the top of the motherboard;
+this might require unhooking the silvery metal at the bottom.
+</p>
+<p class=clear>
+<a href="saber-fullsize/heatsink-3.jpg"><img class=pic30 src="saber-thumb/heatsink-3.jpg"></a>
+Hook the other end of the silvery metal into place at the bottom;
+this requires some force,
+and requires the black lever pointing in the correct direction.
+</p>
+<p class=clear>
+<a href="saber-fullsize/heatsink-4.jpg"><img class=pic30 src="saber-thumb/heatsink-4.jpg"></a>
+Once both sides are hooked, rotate the lever to the opposite position;
+this does not require quite as much force.
+</p>
+<p class=clear>
+<a href="saber-fullsize/heatsink-5.jpg"><img class=pic30 src="saber-thumb/heatsink-5.jpg"></a>
+Plug in the fan cable.
+</p>
+<p class=clear>
+<a href="saber-fullsize/motherboard-1.jpg"><img class=pic30 src="saber-thumb/motherboard-1.jpg"></a>
+<b>Motherboard.</b>
+Push the motherboard I/O shield into the case
+so that the holes will align with the plugs in the motherboard.
+The cover needs to latch at all four corners;
+this requires some force.
+I use the back end of a screwdriver to push
+so that my fingers stay away from sharp edges at the back of the case.
+I start with the top of the I/O shield (corner of the case)
+and finish with the bottom (audio plugs).
+There is an audible thump when a corner latches,
+but beware that latching one corner can push another corner out of place.
+</p>
+<p class=clear>
+<a href="saber-fullsize/motherboard-3.jpg"><img class=pic30 src="saber-thumb/motherboard-3.jpg"></a>
+Unscrew and remove the second (counting from the top),
+third, fifth, and sixth slots from the case.
+There are many sharp edges here; be careful not to slice your fingers.
+When I took pictures I did this after the next step
+(putting the motherboard into the case),
+but doing it before is better.
+</p>
+<p class=clear>
+<a href="saber-fullsize/motherboard-2.jpg"><img class=pic30 src="saber-thumb/motherboard-2.jpg"></a>
+Pick up the motherboard by the built-in heat sinks (which are solidly attached),
+not by the CPU heat sink.
+Gently lower the motherboard into place inside the case,
+and slide it into the I/O shield.
+You should be able to see the standoffs through the screw holes in the motherboard,
+and when you slide the motherboard into the I/O shield
+the screw holes should line up perfectly with the standoffs,
+although if you stop pushing the motherboard towards the I/O shield
+then the foam in the I/O shield might push back a bit.
+</p>
+<p class=clear>
+Use the nine screws you selected before to attach the motherboard to the standoffs,
+without tightening.
+Then tighten all nine screws.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cables-1.jpg"><img class=pic30 src="saber-thumb/cables-1.jpg"></a>
+<b>Cables.</b>
+Most of the cables inside the case are long enough
+to run through the non-window side of the case,
+except for the audio (AAFP) cable.
+Run this cable in front of the motherboard
+past the SATA bank
+(it will end up below the two graphics cards);
+turn it near the bottom of the motherboard;
+and plug it in.
+</p>
+<p class=clear>
+Plug in the USB cables as follows:
+</p>
+<ul>
+<li>Find the two USB jacks on the motherboard.
+Remove the plastic caps on the jacks, and put them in your spare-parts box.
+<li>Find the USB cable that's actually two connected cables.
+Plug its USB 2.0 connector into the motherboard's USB jack on the right.
+<li>Find the other USB cable (single cable).
+Plug its USB 2.0 connector into the small beige USB extender
+(which comes in a separate plastic bag)
+and then plug the extender into the motherboard's USB jack on the left.
+</ul>
+<p class=clear>
+<a href="saber-fullsize/cables-2.jpg"><img class=pic30 src="saber-thumb/cables-2.jpg"></a>
+Plug the reset/power/HDD cables into the small white reset/power/HDD extender;
+the "RESET SW" and "POWER SW" and "H.D.D. LED" labels
+should be on the same side as the corresponding labels on the extender,
+and the black cables should line up with "ground" on the extender.
+Plug the extender into the motherboard.
+</p>
+<p class=clear>
+<a href="saber-fullsize/cables-3.jpg"><img class=pic30 src="saber-thumb/cables-3.jpg"></a>
+Also plug in two SATA data cables.
+I normally use the contents of one SATA data-cable bag,
+with one cable from a straight connector (motherboard end) to a right-angle connector,
+and the other cable from a straight connector to a straight connector.
+</p>
+<p class=clear>
+There are two fan cables inside the case,
+one for the top fan and one for the rear fan.
+Attach these cables to the motherboard.
+There are several open fan connectors on the motherboard:
+CHA FAN1, CHA FAN2, CHA FAN3, CHA FAN4, and CPU OPT.
+For these two fans
+I use the fan connectors closer to the motherboard I/O shield.
+The fan connectors have four pins,
+while these cables use only three;
+there's a slot on each connector forcing the cable to attach to the correct three pins.
+(These three pins provide power and report fan speed to the motherboard.
+The other pin is used for the CPU fan
+and allows the motherboard to control the speed of that fan.)
+</p>
+<p class=clear>
+<a href="saber-fullsize/gpu-1.jpg"><img class=pic30 src="saber-thumb/gpu-1.jpg"></a>
+<b>Graphics cards.</b>
+The motherboard has four PCI Express slots,
+two beige and two brown.
+Open the two beige slots by pushing their levers down.
+Remove all plastic covers from one graphics card
+(I removed five hard blue plastic caps and one flexible plastic sheet).
+Plug this graphics card into the top PCI Express slot;
+don't squeeze any cables.
+</p>
+<p class=clear>
+<a href="saber-fullsize/gpu-2.jpg"><img class=pic30 src="saber-thumb/gpu-2.jpg"></a>
+Screw the graphics card into the case.
+Similarly plug the second card in and screw it in.
+</p>
+<p class=clear>
+<b>Power supply.</b>
+Plug power cables into the power supply.
+You'll need the following cables:
+</p>
+<ul>
+<li>The motherboard cable.
+<b>Warning:</b> These pictures show
+only one of the two M/B plugged into the power supply;
+both need to be plugged in.
+<li>The CPU cable. There are two choices here;
+I use the cable with a 6x2 connector to the power supply
+(plugged into PCIE/CPU at the top right corner)
+and a 4x2 connector on the CPU side.
+<li>Two PCI Express cables.
+These each plug into a 6x2 connector on the bottom row of the power supply.
+<li>One SATA cable.
+There are two choices here;
+it's important to use the longer cable with three SATA connectors
+instead of the shorter cable with two SATA connectors.
+<li>One fan power cable (power connectors with four round pins).
+There are again two choices here;
+to save space I use the shorter cable with two four-round-pin power connectors.
+(This cable will be used for the side fan.
+It's possible to instead plug the side fan into the motherboard,
+which has the advantage of allowing the motherboard to monitor the side fan
+but the disadvantage of making the side a little more difficult to attach.)
+</ul>
+<p class=clear>
+<a href="saber-fullsize/powersupply-1.jpg"><img class=pic30 src="saber-thumb/powersupply-1.jpg"></a>
+Make sure that each cable has solidly clicked into place.
+</p>
+<p class=clear>
+Put the power supply into the corner of the case while holding cables as follows:
+</p>
+<ul>
+<li>Through the front of the case (where you removed the drive cages):
+the motherboard power cable, the CPU power cable, and the SATA power cable.
+<li>Through the side of the case (where you're looking at the motherboard):
+the fan power cable and the PCI Express power cables.
+<li>Out of the way of the power supply so that they aren't squeezed:
+the USB cables plugged into the motherboard.
+(But don't push these cables so far up that they hit the graphics card.)
+</ul>
+<p class=clear>
+<a href="saber-fullsize/powersupply-2.jpg"><img class=pic30 src="saber-thumb/powersupply-2.jpg"></a>
+</p>
+<p class=clear>
+<a href="saber-fullsize/powersupply-3.jpg"><img class=pic30 src="saber-thumb/powersupply-3.jpg"></a>
+Take a pair of PCI Express power cables
+connected to the same position in the power supply,
+and attach those power cables to the bottom graphics card.
+Each cable has a 4x2 connector separated into a 3x2 and a 1x2;
+the graphics card needs one 4x2 and one 3x2.
+(This particular power supply is "single rail"
+so mixing cables from different positions would be safe,
+but taking cables from the same position is better practice.)
+Repeat with the other graphics card.
+</p>
+<p class=clear>
+Tuck the PCI Express cables away at the bottom of the case.
+</p>
+<p class=clear>
+<a href="saber-fullsize/powersupply-4.jpg"><img class=pic30 src="saber-thumb/powersupply-4.jpg"></a>
+Plug the CPU power cable into the motherboard.
+I thread this cable through the CPU fan cable to keep the CPU fan cable
+out of the top case fan;
+you can also add a twist tie at this point to be sure.
+</p>
+<p class=clear>
+<a href="saber-fullsize/powersupply-5.jpg"><img class=pic30 src="saber-thumb/powersupply-5.jpg"></a>
+Plug the motherboard power cable into the motherboard.
+</p>
+<p class=clear>
+There are still two power cables unattached at this point:
+the SATA power cables and the fan power cable.
+Rotate the computer back onto its feet,
+being careful not to squeeze these cables.
+Use four screws to screw the power supply into the case,
+after sliding the power supply at the bottom of the case
+so that screw holes are aligned.
+</p>
+<p class=clear>
+<a href="saber-fullsize/drives-1.jpg"><img class=pic30 src="saber-thumb/drives-1.jpg"></a>
+<b>Hard drives.</b>
+Slide the hard drives into the top and bottom slots of the remaining drive cage,
+making sure that the SATA connectors are visible out the back of the cage.
+Use eight long screws to screw the hard drives into the cage.
+</p>
+<p class=clear>
+<a href="saber-fullsize/drives-2.jpg"><img class=pic30 src="saber-thumb/drives-2.jpg"></a>
+Put the drive cage at the front of the case (front meaning,
+as always, the side where you removed the drive cages earlier).
+Don't push on the blue button sticking out of the cage.
+Plug one SATA data cable into each drive;
+I use the right-angle connector for the bottom drive.
+Plug one SATA power cable into each drive;
+I typically use the last of the three connectors (farthest from the power supply)
+for the bottom drive and the next connector for the top drive.
+</p>
+<p class=clear>
+<a href="saber-fullsize/drives-3.jpg"><img class=pic30 src="saber-thumb/drives-3.jpg"></a>
+Funnel the fan cable from the drive cage into the case
+and hold that cable with your left hand.
+Use your right hand to
+slide the drive cage into the top three slots in the case.
+If you meet any resistance,
+figure out which cables are in the way,
+get them out of the way, and try again.
+</p>
+<p class=clear>
+<a href="saber-fullsize/drives-4.jpg"><img class=pic30 src="saber-thumb/drives-4.jpg"></a>
+Screw the drive cage into place, but don't tighten the screws yet;
+I use four thumbscrews on each side.
+Slide the fan into the next three slots in the case,
+again funneling the fan cable into the case.
+Screw the fan into place, but don't tighten the screws yet;
+I use two thumbscrews on each side.
+Fill the three remaining slots.
+(I put the air gap at the bottom but don't know if this is best.)
+</p>
+<p class=clear>
+Tighten all the screws.
+</p>
+<p class=clear>
+<b>Remaining fan cables.</b>
+Put the case on its side.
+There are two unattached fan cables,
+one from the drive cage and one from the fan below the drive cage.
+Attach these two fan cables to the motherboard
+using any two out of the remaining three fan connectors on the motherboard.
+</p>
+<p class=clear>
+<a href="saber-fullsize/window-attach.jpg"><img class=pic30 src="saber-thumb/window-attach.jpg"></a>
+<b>Closing the case.</b>
+Put the case on its feet.
+Attach the fan on the side window to a power connector.
+Check that all cables are plugged in
+and that everything is screwed into place.
+</p>
+<p class=clear>
+Add twist ties to keep cables in reasonable positions.
+Close the window side of the case;
+if the cables are in reasonable positions
+then this won't require any force.
+Close the other side of the case.
+</p>
+<h2>Creating an installation USB stick</h2>
+<p>
+After downloading ubuntu-13.10-server-amd64.iso to my laptop
+I created a bootable USB stick as follows.
+There's also a usb-creator-gtk command,
+but in my experience it's somewhat flaky.
+</p>
+<pre>
+     DEVICE=sdb
+     ISO=ubuntu-13.10-server-amd64.iso
+
+     cat /sys/block/$DEVICE/device/{vendor,model}
+     # check that this matches the USB stick; $DEVICE will be wiped
+
+     parted -s /dev/$DEVICE mklabel msdos
+     ( echo '0,,c,*'; echo ';'; echo ';'; echo ';' ) | sfdisk /dev/$DEVICE
+     partprobe
+     sleep 1
+     mkfs.vfat /dev/${DEVICE}1
+     fsck.msdos /dev/${DEVICE}1
+     dd if=/usr/lib/syslinux/mbr.bin of=/dev/$DEVICE
+     syslinux /dev/${DEVICE}1
+
+     mkdir -p /root/usb /root/iso
+     mount -t vfat /dev/${DEVICE}1 /root/usb
+     mount -o ro,loop "$ISO" /root/iso
+     time rsync -ah /root/iso/ /root/usb/
+     mv /root/usb/isolinux /root/usb/syslinux
+     mv /root/usb/syslinux/isolinux.cfg /root/usb/syslinux/syslinux.cfg
+
+     umount /root/iso
+     umount /root/usb
+     rmdir /root/iso /root/usb
+     parted /dev/$DEVICE set 1 boot on
+</pre>
+<h2>First boot: BIOS configuration</h2>
+<p>
+Back to the new computer.
+Double-check that the case is safely closed,
+with no cables sticking out anywhere that you might touch them.
+Plug
+a USB keyboard into a USB 3.0 connector (blue) at the back of the computer.
+(There's a 
+<a href="https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1244176">bug</a>
+in the Ubuntu server installation
+that prevents installation using keyboards plugged in via USB 2.0 connectors.)
+Plug a monitor into the top DVI slot.
+(This slot works smoothly with the BIOS and with the OS installation.)
+Plug the AC power cable that came with the power supply
+into the computer and the wall.
+Flip the power switch from 0 to 1.
+</p>
+<p>
+Turn the computer on by pushing the large round power button on the front,
+while watching the CPU fan through the side of the case.
+If the CPU fan doesn't spin up, or if there are any weird noises:
+</p>
+<ul>
+<li>
+Turn power off by pushing the big power button for at least four seconds.
+(The CPU, with heat sink attached, won't overheat in four seconds.)
+<li>
+Unplug power, and wait for all motherboard lights to go off,
+including the last pesky little green light at the bottom right of the motherboard.
+<li>
+Open the case, figure out which cables need to be moved or plugged in, and try again.
+</ul>
+<p>
+Also check that the other fans (two front, one top, one back, one side) are spinning.
+Increase speed 
+by moving the switches on the back of the case from L to H
+and by rotating the blue buttons on the front of the case to the right.
+</p>
+<p>
+<a href="saber-fullsize/bios-1.jpg"><img class=pic30 src="saber-thumb/bios-1.jpg"></a>
+Now check the monitor.
+The monitor should show an Asus boot screen.
+</p>
+<p class=clear>
+Press Del to enter BIOS Setup.
+Select Advanced, and then Advanced again,
+to switch from the EZ screen to the Advanced screen.
+Use Monitor to watch the CPU temperature
+(which will increase slightly as the computer runs; around 40 C is normal)
+and the fan speeds
+(around 700 for the top fan,
+around 1900 for the two front fans,
+around 1900 for the rear fan,
+and 2400 or more for the CPU fan).
+Select the following options:
+</p>
+<ul>
+<li>Advanced/North Bridge/Memory Configuration/ECC Mode: Enabled.
+(This might be set already but should be double-checked.)
+<li>Advanced/APM/Restore AC Power Loss: Last State.
+(If power is lost and then comes back, the machine will automatically reboot.)
+<li>Boot/Fast Boot: Disabled.
+(More startup checks.)
+<li>Boot/Full Screen Logo: Disabled.
+(More startup information automatically displayed on screen.)
+<li>Boot/Setup Mode: Advanced Mode.
+<li>Boot/Secure Boot/OS Type: Other OS.
+(Allow booting operating systems without Microsoft signatures.)
+</ul>
+<p>
+Also insert Ubuntu 13.10 server installation USB stick.
+Push F10 to save the BIOS options and reboot.
+After reboot,
+press Del again to reenter BIOS Setup.
+</p>
+<h2>Second boot: Ubuntu installation</h2>
+<p class=clear>
+<a href="saber-fullsize/bios-2.jpg"><img class=pic30 src="saber-thumb/bios-2.jpg"></a>
+Plug the computer into the Internet (I use NAT on my laptop) via Ethernet.
+Make sure that you've booted into BIOS Setup.
+Select Boot/Boot Override/JetFlash Transcend 4GB (or whatever your USB stick is),
+<i>not</i> the UEFI version.
+If you accidentally select the UEFI version,
+or skip BIOS Setup and automatically boot into the UEFI version,
+simply reboot and try again.
+If you didn't insert the USB stick before booting,
+simply insert it and try again.
+</p>
+<p class=clear>
+"Language: English."
+Press Enter.
+</p>
+<p>
+"Install Ubuntu Server."
+Press Enter.
+</p>
+<p>
+"Select a language: English."
+Press Enter.
+</p>
+<p>
+"Select your location: United States."
+Choose appropriately.
+</p>
+<p>
+"Configure locales: United States."
+Press Enter.
+</p>
+<p>
+"Configure the keyboard: Detect keyboard layout? No"
+Press Enter.
+</p>
+<p>
+"Configure the keyboard: English (US)."
+Press Enter.
+</p>
+<p>
+"Configure the keyboard: Keyboard layout."
+Choose appropriately.
+</p>
+<p>
+"Configure the network: Hostname:"
+Type host name.
+(If network configuration fails because you didn't plug in a network cable,
+don't try reconfiguring it; the reconfiguration runs into installation bugs.
+Plug in a network cable, reboot, enter BIOS again, boot non-UEFI again,
+and restart the installation.)
+</p>
+<p>
+"Set up users and passwords: Full name for the new user:"
+Type name and press Enter.
+</p>
+<p>
+"Set up users and passwords: Username for your account:"
+Adjust as desired and press Enter.
+</p>
+<p>
+"Set up users and passwords: Choose a password for the new user:"
+Type password and press Enter.
+Type password again and press Enter.
+</p>
+<p>
+"Set up users and passwords: Encrypt your home directory? No"
+Press Enter.
+</p>
+<p>
+"Configure the clock: Is this time zone correct? Yes"
+Press Enter.
+</p>
+<p>
+"Partition disks"
+Select "Manual".
+</p>
+<p>
+"Partition disks: This is an overview"
+Select "sda".
+</p>
+<p>
+"Partition disks: Create new empty partition table on this device?"
+Select "Yes".
+</p>
+<p>
+"Partition disks: This is an overview"
+Select first "FREE SPACE".
+</p>
+<p>
+"Partition disks: How to use this free space: Create a new partition"
+Press Enter.
+</p>
+<p>
+"Partition disks: New partition size:"
+Delete suggested size, type "98%", and press Enter.
+</p>
+<p>
+"Partition disks: Type for the new partition: Primary"
+Press Enter.
+</p>
+<p>
+"Partition disks: Location for the new partition: Beginning"
+Press Enter.
+</p>
+<p>
+"Partition disks: Partition settings: Use as"
+Press Enter.
+</p>
+<p>
+"Partition disks: How to use this partition:"
+Select "physical volume for RAID".
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Bootable flag:".
+</p>
+<p>
+"Partition disks: Partition settings: Bootable flag: on"
+Select "Done setting up the partition".
+</p>
+<p>
+"Partition disks: This is an overview"
+Select first "FREE SPACE".
+</p>
+<p>
+"Partition disks: How to use this free space: Create a new partition"
+Press Enter.
+</p>
+<p>
+"Partition disks: New partition size: 40.0 GB"
+Press Enter.
+</p>
+<p>
+"Partition disks: Type for the new partition: Logical"
+Select "Primary".
+</p>
+<p>
+"Partition disks: Partition settings: Use as"
+Press Enter.
+</p>
+<p>
+"Partition disks: How to use this partition: physical volume for RAID"
+Press Enter.
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Done setting up the partition".
+</p>
+<p>
+Repeat for "sdb".
+</p>
+<p>
+"Partition disks: This is an overview"
+Double-check configuration:
+</p>
+<ul>
+<li>sda #1 primary 2.0 TB B K raid
+<li>sda #2 primary 40.0 GB K raid
+<li>sdb #1 primary 2.0 TB B K raid
+<li>sdb #2 primary 40.0 GB K raid
+</ul>
+<p>
+Select "Configure software RAID".
+</p>
+<p>
+"Partition disks: Write the changes to the storage devices and configure RAID?"
+Select "Yes".
+</p>
+<p>
+"Partition disks: Software RAID configuration actions: Create MD device"
+Press Enter.
+</p>
+<p>
+"Partition disks: Software RAID device type:"
+Select "RAID1".
+</p>
+<p>
+"Partition disks: Number of active devices for the RAID1 array: 2"
+Press Enter.
+</p>
+<p>
+"Partition disks: Number of spare devices for the RAID1 array: 0"
+Press Enter.
+</p>
+<p>
+"Partition disks: Active devices for the RAID1 array:"
+Select "/dev/sda1" and "/dev/sdb1" and then "Continue".
+</p>
+<p>
+"Partition disks: Software RAID configuration actions: Create MD device"
+Press Enter.
+</p>
+<p>
+"Partition disks: Software RAID device type: RAID1"
+Press Enter.
+</p>
+<p>
+"Partition disks: Number of active devices for the RAID1 array: 2"
+Press Enter.
+</p>
+<p>
+"Partition disks: Number of spare devices for the RAID1 array: 0"
+Press Enter.
+</p>
+<p>
+"Partition disks: Active devices for the RAID1 array:"
+Select "/dev/sda2" and "/dev/sdb2" and then "Continue".
+</p>
+<p>
+"Partition disks: Software RAID configuration actions"
+Select "Finish".
+</p>
+<p>
+"Partition disks: This is an overview"
+Select "#1 2.0 TB" (under "RAID1 device #0").
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Use as".
+</p>
+<p>
+"Partition disks: How to use this partition:"
+Select "Ext3 journaling file system".
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Mount point".
+</p>
+<p>
+"Partition disks: Mount point for this partition:"
+Select "/ - the root file system".
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Mount options".
+</p>
+<p>
+"Partition disks: Mount options:"
+Select "noatime" and then "Continue".
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Done setting up the partition".
+</p>
+<p>
+"Partition disks: This is an overview"
+Select "#1 40.0 GB" (under "RAID1 device #1").
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Use as".
+</p>
+<p>
+"Partition disks: How to use this partition:"
+Select "swap area".
+</p>
+<p>
+"Partition disks: Partition settings:"
+Select "Done setting up the partition".
+</p>
+<p>
+"Partition disks: This is an overview"
+Double-check configuration:
+</p>
+<ul>
+<li>RAID1 #0: #1 2.0 TB F ext3 /
+<li>RAID1 #0: 512.0 B unusable (don't worry if this doesn't appear)
+<li>RAID1 #1: #1 40.0 GB f swap swap
+<li>RAID1 #1: 512.0 B unusable (don't worry if this doesn't appear)
+<li>sda: #1 primary 2.0 TB B K raid
+<li>sda: #2 primary 40.0 GB K raid
+<li>sdb: #1 primary 2.0 TB B K raid
+<li>sdb: #2 primary 40.0 GB K raid
+</ul>
+<p>
+Select "Finish partitioning and write changes to disk."
+</p>
+<p>
+"Partition disks: Do you want to boot your system if your RAID becomes degraded?"
+Select "Yes".
+</p>
+<p>
+"Partition disks: Write the changes to disks?"
+Select "Yes".
+</p>
+<p>
+"Partitions formatting: Creating ext3 file system for / in partition #1 of RAID1 device #0..."
+[roughly 10 minutes]
+"Installing the system..."
+[roughly 1 minute]
+"Configure the package manager: HTTP proxy information"
+Press Enter.
+</p>
+<p>
+"Select and install software"
+[roughly 2 minutes]
+"Configuring tasksel: No automatic updates"
+Press Enter.
+</p>
+<p>
+"Choose software to install:"
+Select "OpenSSH server" and then "Continue".
+</p>
+<p>
+"Select and install software"
+[roughly 5 minutes]
+"Installing GRUB boot loader"
+[a few seconds]
+"Install the GRUB boot loader on a hard disk:
+Install the GRUB boot loader to the master boot record? Yes"
+Press Enter.
+</p>
+<p>
+"Finish the installation: Installation complete: Continue"
+It's good practice (although not essential)
+to let the computer sit running
+for several hours at this point
+so that it can finish synchronizing the RAID disks.
+When this is done,
+the blue disk-access light on the front of the computer
+will turn off and stay off.
+Then press Enter.
+When screen goes black, quickly remove USB stick.
+</p>
+<h2>Third boot: post-installation configuration</h2>
+<p>
+After reboot the system is running an ssh server,
+so I log in from my laptop.
+</p>
+<pre>
+     aptitude purge \
+       network-manager network-manager-gnome \
+       avahi-daemon libnss-mdns avahi-utils telepathy-salut \
+       apt-xapian-index mlocate \
+       -y
+     update-rc.d ondemand disable
+     # core Ubuntu drivers are too old for GTX 780 so use xorg-edgers:
+     add-apt-repository ppa:xorg-edgers/ppa
+     # press Enter
+     aptitude update
+     aptitude dist-upgrade -y
+     aptitude install \
+       ntp acpi lm-sensors git subversion unison vim openssh-server \
+       build-essential clang m4 gcc-multilib valgrind libssl-dev \
+       libcr-dev mpich2 mpich2-doc gcc-4.6 g++-4.6 gfortran gfortran-4.6 \
+       libX11-dev libglu1-mesa libXi-dev libXmu-dev freeglut3-dev dc \
+       -y
+     # NVIDIA tools can't handle gcc 4.8 so switch to gcc 4.6:
+     update-alternatives &#45;-install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40
+     update-alternatives &#45;-install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60
+     update-alternatives &#45;-install /usr/bin/g++ g++ /usr/bin/g++-4.8 40
+     update-alternatives &#45;-install /usr/bin/g++ g++ /usr/bin/g++-4.6 60
+     update-alternatives &#45;-install /usr/bin/gfortran gfortran /usr/bin/gfortran-4.8 40
+     update-alternatives &#45;-install /usr/bin/gfortran gfortran /usr/bin/gfortran-4.6 60
+     chmod 755 /etc/rc.local
+     # xorg-edgers doesn't have nvidia-latest so select driver manually:
+     aptitude install \
+       nvidia-331 nvidia-cuda-doc nvidia-cuda-dev nvidia-cuda-gdb \
+       -y
+     # and default libopencl is broken so switch to a backup:
+     aptitude remove nvidia-libopencl1-331
+     aptitude install ocl-icd-opencl-dev nvidia-cuda-toolkit -y
+     
+     vi /etc/rc.local
+     # add to /etc/rc.local before "exit 0":
+     # set +e
+     # mknod /dev/nvidia0 c 195 0; chmod 666 /dev/nvidia0
+     # mknod /dev/nvidia1 c 195 1; chmod 666 /dev/nvidia1
+     # modprobe nvidia&#95;331
+     reboot
+</pre>
+<p>
+Log in again.
+</p>
+<pre>
+     nvidia-smi
+     # should show two graphics cards
+
+     wget http://wili.cc/blog/entries/gpu-burn/gpu&#95;burn-0.4.tar.gz
+     mkdir gpu&#95;burn
+     cd gpu&#95;burn
+     tar -xf ../gpu&#95;burn-0.4.tar.gz
+     nvcc -arch=compute&#95;13 -ptx compare.cu -o compare.ptx
+     g++ -O3 -c gpu&#95;burn-drv.cpp
+     g++ -O3 -o gpu&#95;burn gpu&#95;burn-drv.o -lcuda -lcublas -lcudart -o gpu&#95;burn
+     ./gpu&#95;burn 600
+</pre>
+<p>
+I also went through my usual server-configuration routine:
+adding various extra packages,
+setting up a better login mechanism,
+telling the system not to start sshd,
+etc.
+There are also many choices of
+cluster filesystems and queueing systems,
+and maybe I'll say more about those in subsequent blog posts.
+</p>
+<h2>Subsequent issues</h2>
+<p>
+A subsequent xorg-edgers upgrade
+turned out to break CUDA programs.
+First step of the fix:
+</p>
+<pre>
+     aptitude install nvidia-331-uvm
+</pre>
+<p>
+This failed (on 2014.04.11 and on 2014.05.01 and on 2014.06.02),
+producing the error message
+"Error! Application of patch buildfix&#95;kernel&#95;3.12.patch failed",
+because of a bug in the nvidia-331-uvm package.
+Second step, to fix the bug, replace the contents of
+/usr/src/nvidia-331-uvm-331.*/patches/buildfix&#95;kernel&#95;3.12.patch
+with the following:
+</p>
+<pre>
+     diff &#45;-git a/nvidia&#95;uvm&#95;linux.h b/nvidia&#95;uvm&#95;linux.h
+     index e2b4620..0a38cbc 100644
+     &#45;&#45;- a/nvidia&#95;uvm&#95;linux.h
+     +++ b/nvidia&#95;uvm&#95;linux.h
+     @@ -389,11 +389,17 @@ typedef void irqreturn&#95;t;
+      // not require the RCU's read lock on current->cred.
+      //
+      //
+     +#ifdef CONFIG&#95;UIDGID&#95;STRICT&#95;TYPE&#95;CHECKS
+     +#define NV&#95;KUID&#95;TO&#95;UID(value) (&#95;&#95;kuid&#95;val(value))
+     +#else
+     +#define NV&#95;KUID&#95;TO&#95;UID(value) (value)
+     +#endif
+     +
+      #if defined(NV&#95;TASK&#95;STRUCT&#95;HAS&#95;CRED)
+     -#define NV&#95;CURRENT&#95;EUID() (&#95;&#95;kuid&#95;val(current->cred->euid))
+     +#define NV&#95;CURRENT&#95;EUID() NV&#95;KUID&#95;TO&#95;UID(&#95;&#95;kuid&#95;val(current->cred->euid))
+      #else
+     -#define NV&#95;CURRENT&#95;EUID() (&#95;&#95;kuid&#95;val(current->euid))
+     +#define NV&#95;CURRENT&#95;EUID() NV&#95;KUID&#95;TO&#95;UID(&#95;&#95;kuid&#95;val(current->euid))
+      #endif
+      
+      #if !defined(NV&#95;KUID&#95;T&#95;PRESENT)
+</pre>
+<p>
+Third step, to finish fixing the failure:
+</p>
+<pre>
+     dpkg-reconfigure nvidia-331-uvm
+</pre>
+<p>
+Fourth step: Add two more lines to /etc/rc.local:
+</p>
+<pre>
+     mknod /dev/nvidia-uvm c 251 0; chmod 666 /dev/nvidia-uvm
+     modprobe nvidia-331-uvm
+</pre>
+<p>
+Fifth step: Reboot.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2014.06.02 of the 20140602-saber.html web page.
+</font></body>
+</html>

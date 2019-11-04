@@ -1,0 +1,241 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2014.05.17: Some small suggestions for the Intel instruction set
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html accesskey=k><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><b>2014.05.17: Some small suggestions for the Intel instruction set</b> Low-cost changes to CPU architecture would make cryptography much safer and much faster. #constanttimecommitment #vmul53 #vcarry #pipelinedocumentation</td></tr>
+<tr><td><a href=20140411-nist.html accesskey=j><b>2014.04.11: NIST's cryptographic standardization process</b></a></td></tr>
+<tr><td><a href=20140323-ecdsa.html><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2014.05.17: Some small suggestions for the Intel instruction set</h2>
+<p>
+Programmers trying to make crypto run fast
+often say things like
+"Why can't the CPU designer just add a 128-bit multiplication instruction?"
+Sometimes these questions turn into academic papers
+analyzing the cycle counts
+that would be obtained from various instruction-set extensions.
+What's missing from most of these questions and papers
+is the CPU designer's perspective:
+the new instructions cost chip area,
+and are competing with many other suggestions
+for productive ways to use the same chip area.
+</p>
+<p>
+Intel <i>has</i> been willing to spend <i>small</i> amounts of chip area
+on instruction-set extensions
+that provide a sufficiently large benefit to cryptography:
+consider MULX, ADCX, ADOX, PCLMULQDQ, and the AES instructions.
+I have a few small suggestions for further tweaks
+that would cost very little chip area and that would have big benefits for crypto.
+Similar suggestions apply to other chip manufacturers.
+</p>
+<p>
+<b>Promise input protection.</b>
+Hey, Intel, remember all the circuitry that you've devoted to
+making sure that unprivileged processes
+can't read secret cryptographic keys out of OS kernel memory and other users' processes?
+Do you realize that
+the same secrets are being exposed
+through cache-timing attacks, branch-timing attacks, etc.?
+Do you enjoy seeing quotes such as
+"The researchers suggest that Bitcoin users ...
+refrain from using a computer equipped with an Intel processor"
+in a March 2014
+<a href="http://www.mobilecommerceinsider.com/topics/mobilecommerceinsider/articles/372827-cryptology-attack-shows-bitco-and-openssl-weakness.htm">news report</a>
+with a title of "Cryptology Attack Shows Bitcoin and OpenSSL Weakness"?
+</p>
+<p>
+Apparently you <i>do</i> realize that there's a problem here:
+your
+<a href="http://software.intel.com/sites/default/files/article/165683/aes-wp-2012-09-22-v01.pdf">AES-NI white paper</a>
+discusses timing attacks in detail and says
+"The AES instructions are designed to mitigate
+all of the known timing and cache side channel leakage of sensitive data
+(from Ring 3 spy processes)."
+But this didn't do anything to stop the Bitcoin attack
+or the <a href="http://www.isg.rhul.ac.uk/tls/Lucky13.html">Lucky Thirteen</a>
+timing attack against TLS.
+There's much more to cryptography than just AES,
+and you're not going to embed all that cryptography into your chips in the foreseeable future.
+</p>
+<p>
+I'm a coauthor of a new cryptographic library,
+<a href="http://nacl.cr.yp.to">NaCl</a>,
+that systematically avoids leaking secret data
+into load addresses, store addresses, and branch conditions.
+But this library is relying critically on <i>observations</i> of CPU behavior.
+We would much rather rely on <i>promises</i> made by the CPU manufacturer.
+</p>
+<p>
+This brings me to my first suggestion:
+Please specify that various instructions keep various inputs secret,
+avoiding all data flow from those inputs
+to instruction timing, cache addresses, the branch unit, etc.
+Right now this isn't part of the specified architecture;
+it's a microarchitectural decision that could change in the next CPU.
+</p>
+<p>
+For example,
+CMOV seems to keep its condition bit secret on various Intel CPUs today.
+Are you willing to commit to this for CMOV from a register?
+What about CMOV from memory?
+Or do you want to keep open
+the option of having CMOV from memory
+look at its condition bit and skip the load?
+What about multiplications:
+are you willing to commit to multiplication taking constant time,
+or do you want the option of PowerPC-style early aborts
+for multiplications by integers with many top 0 bits?
+Surely you're at least willing to promise secrecy
+for <i>vector</i> operations within registers,
+and for vector loads and stores;
+we can build safe cryptographic software from those operations
+even if you aren't willing to commit to anything else.
+</p>
+<p>
+This tweak to the documented instruction set doesn't cost any chip area.
+The worst case is that today you promise secrecy for, e.g., the MUL inputs,
+and then realize in several years that you
+really want to make a faster variable-time multiplier;
+the commitment would then force you to add a new MULABORT instruction
+rather than violating the secrecy of the MUL instruction.
+Of course, if you <i>don't</i> make any commitments,
+then programmers have no choice but to rely on observations of CPU behavior;
+many of those programmers will assume constant-time MUL,
+and if you switch to variable-time MUL
+then you will be <i>breaking cryptographic security</i>.
+</p>
+<p>
+<b>Expose the 53-bit multiplier.</b>
+Chitchanok Chuengsatiansup, Tanja Lange, Peter Schwabe, and I
+have set
+<a href="http://eprint.iacr.org/2014/134">speed records for
+high-security public-key cryptography</a>
+on Sandy Bridge etc.
+using Intel's impressive vectorized floating-point units.
+What's crazy about this is that
+we're limited to multiplying integers of about 25 bits,
+putting roughly 3/4 of the multiplier area to waste.
+Why?
+Because the multiplier insists on
+rounding its low output bits rather than giving them back to the programmer.
+Why?
+Because the multiplier is buried inside the floating-point unit.
+</p>
+<p>
+So please include a vectorized 53-bit integer multiplier.
+Here's a reasonable design:
+VMUL53 r0,r1,r2,r3
+computes the product of r0 and r1,
+each between −(2<sup>53</sup>−1) and 2<sup>53</sup>−1,
+and returns the product as r2+2<sup>53</sup>*r3.
+Each of r0,r1,r2,r3 is stored as a signed 64-bit integer.
+Of course,
+the 128-bit vector instruction would compute 2 products in parallel,
+and the 256-bit vector instruction would compute 4 products in parallel.
+A 53-bit multiplier producing a full 106-bit product
+won't be much larger than a 53-bit multiplier
+producing a correctly rounded 53-bit floating-point result.
+</p>
+<p>
+I realize that this is likely to need two execution uops
+to handle the data flow (first write r2, then write r3).
+Surely each of your uops will still have enough inputs and outputs
+to handle multiply-accumulate,
+so with two uops you should be able to handle an accumulating version VMAD53,
+adding separately to each of r2 and r3.
+</p>
+<p>
+<b>Allow fast carries.</b>
+Please include a vectorized instruction VCARRY imm,r0,r1
+that reads registers r0,r1,
+computes r0-2<sup>imm</sup>floor(r0/2<sup>imm</sup>+1/2),r1+floor(r0/2<sup>imm</sup>+1/2),
+and writes r0,r1.
+Most important is VCARRYQ working on signed 64-bit lanes;
+second is VCARRYD working on signed 32-bit lanes.
+</p>
+<p>
+Most of the hardware cost of this instruction
+is the cost of the barrel shifter that you already have for VPSRLQ and VPSRLD.
+With slight extra effort you can also support VUCARRY,
+an unsigned version that uses floor(...) instead of floor(...+1/2),
+but if I had to pick just one I'd pick VCARRY rather than VUCARRY.
+</p>
+<p>
+Right now simulating VUCARRY takes three instructions (shift, add, mask)
+using an extra register and an extra constant (the mask);
+simulating VCARRY is even more expensive.
+What we do today
+(again, to take advantage of the huge chip area devoted to floating-point arithmetic)
+is simulate a floating-point version of VCARRY,
+but with VMUL53 this won't be necessary.
+</p>
+<p>
+<b>Document the damn pipelines.</b>
+These days I spend more time optimizing code for ARM chips than for Intel chips.
+The real reason for this isn't any sort of assessment of current or future importance.
+The real reason is that ARM publishes
+the detailed pipeline documentation that I need,
+so squeezing out every last cycle for ARM is <i>fun</i>,
+while Intel hides the pipeline documentation,
+so squeezing out every last cycle for Intel is <i>painful</i>.
+I have no idea what Intel <i>thinks</i> it's accomplishing by hiding this information;
+what Intel is <i>actually</i> accomplishing is giving its competitors a performance boost.
+</p>
+<p>
+Please document your pipelines properly.
+Okay, okay, I admit that this isn't a change to the instruction set,
+but it's similar to my other suggestions
+in that it's something you could do to drastically improve crypto performance
+for your chips without a serious sacrifice in chip area.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2014.05.18 of the 20140517-insns.html web page.
+</font></body>
+</html>

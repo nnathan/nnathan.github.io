@@ -1,0 +1,246 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+cr.yp.to: 
+2014.04.11: NIST's cryptographic standardization process
+</title>
+</head>
+<body>
+<h1>The cr.yp.to <a href="index.html" accesskey=i>blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><a href=20191024-eddsa.html><b>2019.10.24: Why EdDSA held up better than ECDSA against Minerva</b></a></td></tr>
+<tr><td><a href=20190430-vectorize.html><b>2019.04.30: An introduction to vectorization</b></a></td></tr>
+<tr><td><a href=20171105-infineon.html><b>2017.11.05: Reconstructing ROCA</b></a></td></tr>
+<tr><td><a href=20171017-collisions.html><b>2017.10.17: Quantum algorithms to find collisions</b></a></td></tr>
+<tr><td><a href=20170723-random.html><b>2017.07.23: Fast-key-erasure random-number generators</b></a></td></tr>
+<tr><td><a href=20170719-pqbench.html><b>2017.07.19: Benchmarking post-quantum cryptography</b></a></td></tr>
+<tr><td><a href=20161030-pqnist.html><b>2016.10.30: Some challenges in post-quantum standardization</b></a></td></tr>
+<tr><td><a href=20160607-dueprocess.html><b>2016.06.07: The death of due process</b></a></td></tr>
+<tr><td><a href=20160516-quantum.html><b>2016.05.16: Security fraud in Europe's "Quantum Manifesto"</b></a></td></tr>
+<tr><td><a href=20160315-jefferson.html><b>2016.03.15: Thomas Jefferson and Apple versus the FBI</b></a></td></tr>
+<tr><td><a href=20151120-batchattacks.html><b>2015.11.20: Break a dozen secret keys, get a million more for free</b></a></td></tr>
+<tr><td><a href=20150314-optimizing.html><b>2015.03.14: The death of optimizing compilers</b></a></td></tr>
+<tr><td><a href=20150218-printing.html><b>2015.02.18: Follow-You Printing</b></a></td></tr>
+<tr><td><a href=20140602-saber.html><b>2014.06.02: The Saber cluster</b></a></td></tr>
+<tr><td><a href=20140517-insns.html accesskey=k><b>2014.05.17: Some small suggestions for the Intel instruction set</b></a></td></tr>
+<tr><td><b>2014.04.11: NIST's cryptographic standardization process</b> The first step towards improvement is to admit previous failures. #standardization #nist #des #dsa #dualec #nsa</td></tr>
+<tr><td><a href=20140323-ecdsa.html accesskey=j><b>2014.03.23: How to design an elliptic-curve signature system</b></a></td></tr>
+<tr><td><a href=20140213-ideal.html><b>2014.02.13: A subfield-logarithm attack against ideal lattices</b></a></td></tr>
+<tr><td><a href=20140205-entropy.html><b>2014.02.05: Entropy Attacks!</b></a></td></tr>
+</table></div><hr>
+<h2>2014.04.11: NIST's cryptographic standardization process</h2>
+<p>
+NIST's cryptographic standards
+have been drawing
+<a href="https://eprint.iacr.org/2012/438">objections</a>
+<a href="http://www.ecc-brainpool.org/download/Domain-parameters.pdf">from</a>
+<a href="https://eprint.iacr.org/2003/070">the</a>
+<a href="https://groups.google.com/forum/message/raw?msg=sci.crypt/mFMukSsORmI/FpbHDQ6hM%5FMJ">cryptographic</a>
+<a href="https://w2.eff.org/Privacy/Crypto/Crypto%5Fmisc/DESCracker/HTML/19980716%5Feff%5Fdes%5Ffaq.html">community</a>
+<a href="http://people.csail.mit.edu/rivest/pubs/RHAL92.pdf">for</a>
+<a href="http://www-ee.stanford.edu/%7Ehellman/publications/27.pdf">decades</a>.
+In 2013,
+NIST finally understood
+that one of its standards had been deliberately
+<a href="https://projectbullrun.org/dual-ec/vulnerability.html">sabotaged</a>,
+and initiated a
+"review of its cryptographic standards development process".
+</p>
+<p>
+In February 2014, NIST released a draft report entitled
+<a href="http://csrc.nist.gov/publications/drafts/nistir-7977/nistir%5F7977%5Fdraft.pdf">"NIST
+cryptographic standards and guidelines development process"</a>.
+NIST requested comments by 18 April 2014, a week from now,
+by email to crypto-review@nist.gov.
+Today I sent NIST the comments shown below (starting "Dear Sirs").
+</p>
+<p>
+Disclosure: I've received three grants from NIST,
+most recently a "Cryptographic competitions" grant.
+I don't think this is biasing my comments in favor of NIST,
+but you can decide for yourself.
+</p>
+<hr>
+<p>
+Dear Sirs:
+</p>
+<p>
+Two independent public studies in early 2006, one by Gjøsteen and one by
+Schoenmakers and Sidorenko, showed clearly and indisputably that NIST's
+proposed Dual EC PRNG flunked the well-established definition of PRNG
+security. (I'm writing "NIST's" because, at the time, NIST was failing
+to properly attribute Dual EC to NSA.)
+</p>
+<p>
+Did NIST drop this cryptographically unsound PRNG? No. NIST went ahead
+and standardized it.
+</p>
+<p>
+Shumow and Ferguson in 2007 demonstrated that whoever had generated the
+Dual EC constants could easily have put a back door into Dual EC.
+Schneier wrote an essay saying that "both NIST and the NSA have some
+explaining to do" and recommending "not to use Dual&#95;EC&#95;DRBG under any
+circumstances." The consensus of the public cryptographic community was
+the Dual EC was dead and buried, never to be seen again.
+</p>
+<p>
+Did NIST withdraw the standard? No. NIST continued to maintain and
+promote the standard. NIST issued 73 validation certificates for Dual EC
+implementations between July 2008 and March 2014.
+</p>
+<p>
+News reports in September 2013 indicated that Dual EC did in fact
+contain a back door generated by NSA. Presumably this back door, a
+78-digit secret number, is also known to many other organizations that
+have penetrated NSA's internal security. AP reported in June 2013 that
+half a million contractors have Top Secret clearance; other reports show
+that NSA makes heavy use of off-the-shelf hardware and software; I could
+keep listing reasons to question how well NSA keeps secrets, but I don't
+think that this is a matter of dispute.
+</p>
+<p>
+Finally NIST took steps to withdraw the standard. NIST's "Cryptographic
+Standards and Guidelines Development Process" draft now acknowledges
+"security concerns" in the standard. But the big problem here is not the
+lack of security in this particular standard; the big problem here is
+the lack of attention to security in NIST's standardization process.
+</p>
+<p>
+Does the draft acknowledge that NIST's standardization process is
+vulnerable to sabotage? Does the draft propose mechanisms that would
+protect the process against sabotage? No, and no. Instead the draft
+tries to convince the reader that NIST develops "the most secure and
+trusted cryptographic standards" and that these standards provide
+"high-quality, cost-effective security mechanisms."
+</p>
+<p>
+Dual EC is not the only troublesome example of a NIST cryptographic
+standard. The DES key size was widely criticized from the outset, for
+example, but NIST continued to promote DES for two decades, making the
+inevitable upgrade vastly more expensive than it should have been. As
+another example, DSA was widely criticized for many more reasons, is
+still promoted by NIST, and is responsible for a seemingly neverending
+series of security problems in deployed systems. The complete failure of
+ECDSA signature security in the PlayStation 3 was caused by exactly the
+DSA/ECDSA misfeature that two decades earlier Rivest had objected to as
+giving the "poor user ... enough rope with which to hang
+himself&mdash;something a standard should not do."
+</p>
+<p>
+Does the draft acknowledge that for many years NIST was ignoring
+security feedback from the cryptographic community? Does the draft
+propose mechanisms to prevent NIST from promoting insecure cryptographic
+standards? No, and again no.
+</p>
+<p>
+Even worse, in the past decade NIST has been rushing so many
+cryptographic standards out the door that the quality of review has
+obviously been compromised. Putting together one good standard, SHA-3,
+involved 200 cryptographers around the world and took years of sustained
+public effort, but during the same period NIST also published FIPS 186-3
+(signatures), FIPS 198-1 (message authentication), SP 800-38E (disk
+encryption), SP 800-38F (key wrapping), SP 800-56C (key derivation), SP
+800-57 (key management), SP 800-67 (block encryption), SP 800-108 (key
+derivation), SP 800-131A (key lengths), SP 800-133 (key generation), and
+SP 800-152 (key management), not to mention related protocol documents
+such as SP 800-81r1. Why should these NIST publications be trusted? Who
+has actually reviewed the security of these cryptographic mechanisms,
+and how comprehensive was the review?
+</p>
+<p>
+I don't mean to suggest that public review during this period was
+focused entirely on SHA-3. For example, the cryptographic community
+caught a severe security flaw in EAX Prime, and a less severe but still
+troublesome flaw in the security "proofs" for GCM. One can view EAX
+Prime as a success story, where the flaw was caught early enough to stop
+NIST's standardization process. However, GCM is a failure story, where
+NIST standardization came years before the flaw was discovered. Is this
+because the discovery of the GCM flaw had been waiting for some critical
+scientific advance? No. It is because NIST keeps biting off more than it
+can chew, churning out so many proposed cryptographic standards that the
+time required for proper security review simply does not exist.
+</p>
+<p>
+Let me now comment on some of the things that the draft does say.
+</p>
+<p>
+The draft claims that, to be "widely adopted," standards must "be robust
+and have the confidence of the cryptographic community." The unfortunate
+reality is that NIST standardization has, time and time again, prompted
+wide adoption of algorithms that were not actually robust and that had
+received serious objections from the cryptographic community, such as
+DES and DSA. NIST standardization misled the implementors and users into
+thinking that these algorithms were particularly safe. The cryptographic
+community does have confidence in AES and SHA-3, thanks to the focused
+competitions that produced those standards, but very few of NIST's
+standards are produced by such competitions.
+</p>
+<p>
+The draft lists "Transparency" as the first principle guiding NIST's
+standardization processes, but later states that NIST is "statutorily
+required to consult with the NSA on standards." Is there any statutory
+requirement for NIST to take <i>secret</i> input from NSA? NIST might be able
+to regain some public trust by adopting a policy of recording and
+immediately publishing all communication between NIST and NSA. This
+would not stop NSA from paying third parties to pass messages to NIST,
+but NIST could issue regulations requiring financial disclosures, and
+in any case the basic policy would be a useful first step towards true
+transparency.
+</p>
+<p>
+The draft also states "Continuous improvement" as a guiding principle,
+claiming that "the cryptographic community is encouraged to identify
+weaknesses, vulnerabilities, or other deficiencies in cryptographic
+functions specified in NIST publications." But actions speak louder than
+words. After NIST ignored serious objections to DES, ignored serious
+objections to DSA, and ignored serious objections to Dual EC, why should
+cryptographers believe that NIST is actually interested in feedback? If
+NIST's procedures have changed recently, why doesn't the draft say so?
+</p>
+<p>
+I'm also troubled by security feedback being labeled as a reason for
+"improvement." Given the reckless pace at which NIST has been publishing
+cryptographic standards, it's hardly a surprise that those standards
+have "weaknesses" and need "improvement." How can NIST believe that this
+innocent-until-proven-guilty approach to cryptographic standardization
+is producing "the most secure and trusted cryptographic standards"? NIST
+should delay standardization to wait for clear evidence of adequate
+public review, and should abort standardization if the public review
+does not produce a solid consensus on security.
+</p>
+<p>
+When I heard about this draft I assumed that NIST had engaged in (1) an
+honest retrospective review of known security flaws in NIST standards
+and (2) an honest analysis of ways in which those flaws could have been
+avoided by modifications in NIST's standardization process. The current
+draft is, unfortunately, very far from this, and as a result is very
+difficult to take seriously.
+</p>
+<hr><font size=1><b>Version:</b>
+This is version 2014.04.11 of the 20140411-nist.html web page.
+</font></body>
+</html>

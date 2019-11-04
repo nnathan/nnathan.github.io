@@ -1,0 +1,28 @@
+Subject: RSA
+From: Tanja Lange <tanja@hyperelliptic.org>
+Date: Tue, 17 Oct 2017 16:35:25 +0200
+To: Petr Svenda <svenda@fi.muni.cz>
+Cc: "D. J. Bernstein" <djb@cr.yp.to>
+
+Dear Petr,
+First of all, congrats to you and your co-authors on finding this vulnerability
+and attacking it. Awesome! How did you think about checking the moduli modulo
+small primes? Did you know they were using the power generator?
+
+Of course Dan and I are curious whether we reconstructed the same attack
+from seeing your test and Graham's tweet made me realize that I don't
+know exactly how you solve it (we didn't reverse engineer the timings to
+figure out the implementation ;-) ).
+
+Please find attached the file with our short description of which we
+tweeted the sha256sum last night. If I were to guess what their source
+code does it will have L as the product of all small primes and compute
+g^random mod L and then add a random multiple of L. We used CRT and l_i
+in our writeup but don't necessarily expect that to be part of the code.
+
+We're wondering about a few more inmplementation details but for now
+we would be curious to hear your feedback on whether we got things
+right.
+
+All the best
+       	Dan and Tanja
