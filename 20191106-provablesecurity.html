@@ -58,7 +58,9 @@ and
 implementing cryptography.
 Sorry to say,
 if you are here
-figuring out what is going on
+trying to figure out
+what is going on
+in class
 then you were probably bamboozled.
 <!-- on the marketing of cryptography courses -->
 Fear not,
@@ -89,8 +91,8 @@ lie at the heart of
 provable security.
 A security reduction
 is a "proof"
-stating an algorithm (or protocol)
-(virtually always linked to cryptography)
+stating an algorithm
+somehow related to cryptography
 provides a specific security guarantee.
 I like this excerpt from Joy of Cryptography
 which
@@ -188,8 +190,6 @@ publish security schemes.
 </p>
 
 <p>
-Ok,
-back to security reductions.
 Ostensibly,
 a security reduction
 communicates
@@ -213,64 +213,132 @@ to IND-CPA, a weaker security notion.
 As a student
 you will need to prove
 security reductions,
-that will make up
+which makes up
 most of your coursework.
-I'm going to finish
-with a simple tip
-for those who struggle
-with attacking a proof.
+In what follows
+I will show how
+to attack a securiy reduction.
 </p>
+<h3>Showing a security reduction</h3>
 <p>
 In case you aren't aware or didn't realise,
-most security reductions
-is proven
+we prove most security reductions
 using <i>proof by contradiction</i>.
+</p>
 
+<p>
 When you encounter
-<center>[Thing-Π is X-secure]
+[Thing-Π is X-secure]
 &rArr;
-[Thing-Π is Y-secure]</center>.
-
-First drop Thing-Π
-and rewrite as
-[X-security] &hArr; [Y-securty].
+[Thing-Π is Y-secure]
+drop Thing-Π so we have
+[X-security] &hArr; [Y-security].
+Don't worry,
+we will bring back Thing-Π
+in a cool minute.
+</p>
+<p>
 To simplify further
 we reword to say
 [<b>no</b> attack against X] &hArr; [<b>no</b> attack against Y].
-(By the way,
-we will bring back Thing-Π
-in a cool minute.)
+An attack is some violation of X or Y.
 
-Now apply the following transforms:
+Now apply the transforms:
 </p>
 <p>
 <ol>
-<li>Apply contrapositive rule
-(<b>P</b> &rArr; <b>Q</b>)
+<li>Contrapositive rule
+(P &rArr; Q)
 &hArr;
-(&not;<b>P</b> &rArr; &not;<b>Q</b>).
-</br>[<b>an</b> attack against Y]
+(&not;P &rArr; &not;Q):</br>
+[<b>an</b> attack against Y]
 &rArr;
 [<b>an</b> attack against X]</li>
-</br>
-<li>Apply material implication
-(<b>P</b> &rArr; <b>Q</b>)
+<li>Material implication
+(P &rArr; Q)
 &hArr;
-(<b>P</b>&or;&not;<b>Q</b>):
-</br>
-</br>[<b>an</b> attack against Y]
+(P &or; &not;Q):</br>
+[<b>an</b> attack against Y]
 <b>or</b>
 [<b>no</b> attack against X]</li>
 <li>Negate statement using De-Morgan's law
-&not;(<b>P</b> &or; <b>Q</b>)
+&not;(P &or; Q)
 &hArr;
-(&not;<b>P</b> &and; &not;<b>Q</b>)
+(&not;P &and; &not;Q):<br/>
+[<b>no</b> attack against Y]
+&and;
+[<b>an</b> attack against X]</li>
+</ol>
+<p>
+Here's a handy tip in life:
+when you prove implication
+<b>P</b>&rArr;<b>Q</b>
+using contradiction
+you should have on instant recall:
+<b>P</b> &and; &not;<b>Q</b>.
+That is,
+assume
+<b>P</b> to be true,
+using &not;<b>Q</b>
+show <b>P</b> is false,
+(the contradiction)
+which states
+<b>P</b>&and;&not;<b>Q</b> is false,
+and everything else
+is true.
+The setup
+for contradiction is easy.
+The hard part
+is showing the contradiction.
+</p>
+<p>
+Back to the proof.
+We have
 [<b>no</b> attack against Y]</li>
 &and;
-[<b>and</b> attack against X]</li>
-</br>
-</ol>
-
+[<b>an</b> attack against X]</li>.
+Let's put Thing-Π back.
+Now we have
+[<b>no</b> attack against Y for Thing-Π]</li>
+&and;
+[<b>an</b> attack against X for Thing-Π]</li>.
+<b>Now this
+is the detail
+you need to fill in</b>:
+you need to show
+an attack on X for Thing-Π
+can convert into
+an attack on Y.
+Then we contradict
+the assumption
+[<b>no</b> attack against Y for Thing-Π].
+Which means the entire statement is false.
+And this means
+the negation (3)
+is true.
+This truth propagates backwards
+to the original statement
+[Thing-Π is X-secure]
+&rArr;
+[Thing-Π is Y-secure],
+which we conclude is true.
+</p>
+<p>
+Note that attacking
+the proof
+directly
+can be futile.
+That is you first
+show the pair
+[Thing-Π is X-secure]
+and
+[Thing-Π is <b>not</b> Y-secure]
+is false,
+and
+show all remaining cases
+true.
+</p>
+<h3>Why do I care?</h3>
 <p>
 This probably sounds
 wonderful or pointless theory.
@@ -290,46 +358,69 @@ a gold standard.
 Students who put
 in the effort
 will probably come out
-feeling enlightened
+feeling
+(potentially a false sense of)
+enlightened
 and come to the same conclusion.
-Others believe
-that provable security is <a href=http://anotherlook.ca/>mental masturbation
+There is a divide among cryptographers
+on the value of provable security.
+Some argue
+provable security
+is <a href=http://anotherlook.ca/>mental masturbation
 with harmful side-effects</a>.
-And the foremost experts
-<a href=https://www.ams.org/notices/200711/tx071101454p.pdf>refuse</a> to allow critique
-of their dogma.
-Then there are the practitioners,
-also called applied cryptographers.
-Some
+Foremost experts
+in provable security
+ardently defend
+<a href=https://www.ams.org/notices/200711/tx071101454p.pdf>their dogma</a>
+from such critique.
+Then there are the practitioners
+who develop and provide cryptography in the hands of users.
+I like to call these people
+applied cryptographers.
+One applied cryptographer
+I know of
 <a href=https://www.tarsnap.com/crypto.html>
-don't bother</a>
-advertise using provable security jargon.
-Personally I view provable security
-as a decent benchmark that cryptographers
-should adhere to,
-but remains insufficient
-as a measure
-of security.
-<!-- footnote to say the definitions for security and privacy is surprisingly hard and adversaries are moving targets -->
+doesn't bother</a>
+advertising using provable security jargon.
+In the last decade
+I have noticed
+<!-- insert nacl link -->
+some cryptography libraries
+mention provable security.
+Personally I see provable security
+as a first benchmark that cryptographers
+must meet
+in cryptography implementations
+and shouldn't
+be an exclusive
+or reliable
+measure of security.
+<!-- footnote to say the definitions for security and privacy is hard and adversaries are moving targets -->
 </p>
-
-
 <p>
-So far
+Insofar
 I have given a
 superficial view
 to provable security.
+I omitted a lot of detail.
 I didn't even touch
 on <i>assumptions</i>
 which I consider
-the dark side of
+as the dark side
 provable security,
-and may be a subject
-of a later post.
+and will be a
+subject of a later
+post.
+</p>
+<p>
 I hope
 in the course of your studies,
-this inchoate introduction can
-will help fill in missing context.
+this inchoate introduction
+helps elucidate the gaps
+as to the <i>why</i> of
+provable security,
+and the general concensus
+on applicability.
 If none of it makes sense now,
 don't think too hard about it,
 and
