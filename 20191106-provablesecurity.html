@@ -36,7 +36,7 @@ lastninja.net:
 <tr><td><b>2019.11.06: An incomplete introduction to provable security.</b> #securityreductions #provablesecurity #cryptography #logic #mathematics</td></tr>
 </table></div><hr>
 <h2>
-2019.11.06: A brief introduction to provable security
+2019.11.06: An incomplete introduction to provable security
 </h2>
 <p>
 This post is primarily aimed
@@ -141,7 +141,7 @@ like
 ChaCha20-Poly1305.
 </p>
 <p>
-One can think
+One could think
 of
 [AES256-CTR-HMAC-SHA256
 is
@@ -210,12 +210,14 @@ Ostensibly,
 a security reduction
 communicates
 a set of related ideas:
+</p>
 <ul>
-<li> the security of Thing-Π which is Y-secure is X-secure
-<li> the security of Thing-Π with Y-security <i>reduces</i> to X-security
-<li> Thing-Π with Y-security is <i>at least as secure</i> as X-security
-<li> an attack on X is an attack on Y.
+<li> the security of Thing-Π which is Y-secure is X-secure</li>
+<li> the security of Thing-Π with Y-security <i>reduces</i> to X-security</li>
+<li> Thing-Π with Y-security is <i>at least as secure</i> as X-security</li>
+<li> an attack on X is an attack on Y</li>
 </ul>
+<p>
 For example,
 if someone says their encryption scheme
 is IND-CCA2 secure
@@ -224,51 +226,86 @@ it resists all attacks
 to IND-CPA, a weaker security notion.
 </p>
 <p>
-<!-- footnote about how my undergrad provable security course was a disappointment -->
-So I studied provable security
-and I wanted to provide a tip
-which is stupidly simple
-but I find helpful to the uninitiated.
+As a student
+you will need to prove
+security reductions,
+that will make up
+most of your coursework.
+I'm going to finish
+with a simple tip
+for those who struggle
+with attacking a proof.
 </p>
-
 <p>
-Incase you weren't aware or didn't realise,
+In case you aren't aware or didn't realise,
 most security reductions
-are proven
+is proven
 using <i>proof by contradiction</i>.
 
 When you encounter
 <center>[Thing-Π is X-secure]
 &rArr;
-[Thing-Π is Y-secure]</center>
-do the following:
+[Thing-Π is Y-secure]</center>.
 
+First drop Thing-Π
+and rewrite as
+[X-security] &hArr; [Y-securty].
+To simplify further
+we reword to say
+[<b>no</b> attack against X] &hArr; [<b>no</b> attack against Y].
+(By the way,
+we will bring back Thing-Π
+in a cool minute.)
+
+Now apply the following transforms:
 <ol>
-<li>rewrite in contrapositive:
-[Thing-Π is <b>not</b> Y-secure] &rArr; [Thing-Π is <b>not</b> X-secure]</li>
-<li>convert to material implication:
-[Thing-Π is Y-secure] <b>or</b> [Thing-Π is <b>not</b> X-secure]</li>
-<li>apply De-Morgan's law to negate the statement:
-[Thing-Π is Y-secure] <b>and</b> [Thing-Π is <b>not</b> X-secure]</li>
+<li>Apply contrapositive rule
+(<b>P</b> &rArr; <b>Q</b>)
+&hArr;
+(&not;<b>P</b> &rArr; &not;<b>Q</b>).
+</br>[<b>an</b> attack against Y]
+&rArr;
+[<b>an</b> attack against X]</li>
+</br>
+<li>Apply material implication
+(<b>P</b> &rArr; <b>Q</b>)
+&hArr;
+(<b>P</b>&or;&not;<b>Q</b>):
+</br>
+</br>[<b>an</b> attack against Y]
+<b>or</b>
+[<b>no</b> attack against X]</li>
+<li>Negate statement using De-Morgan's law
+&not;(<b>P</b> &or; <b>Q</b>)
+&hArr;
+(&not;<b>P</b> &and; &not;<b>Q</b>)
+[<b>no</b> attack against Y]</li>
+&and;
+[<b>and</b> attack against X]</li>
+</br>
 </ol>
 
 <p>
-There is
-so much more to say
-about provable security.
-I haven't even touched
+So far
+I have given a
+superficial view
+to provable security.
+I didn't even touch
 on <i>assumptions</i>
-which is what I consider
-the dark side of provable security.
-But I hope this is sufficient
-to mull over in the meantime.
-It is my hope,
-during the course of your studies,
+which I consider
+the dark side of
+provable security,
+and may be a subject
+of a later post.
+I hope
+in the course of your studies,
 this inchoate introduction can
-help fill in some missing context.
-If none of this makes sense,
-mull over it.
-<p>
+will help fill in missing context.
+If none of it makes sense now,
+don't think too hard about it,
+and
+prove everything you can.
+</p>
 
 <p>
 [1]:
@@ -279,16 +316,14 @@ I find the text is a gentler introduction
 compared to the quintessential textbook
 <a href=https://www.amazon.com/Introduction-Modern-Cryptography-Principles-Protocols/dp/1584885513>Introduction to Modern Cryptography</a>
 by Jonathan Katz &amp Yehuda Lindell.
-And it gets better.
-The Joy of Cryptography is free (Creative Commons)
-as part of the Oregon State University
-<a href=https://open.oregonstate.edu/textbooks/>Open Textbook Initiative</a>.
+And it gets better!
+The Joy of Cryptography costs nada (Creative Commons).
 
 I really have to give it to Mike,
 he's doing a commendable job
 breaking down the barriers of complexity
-to newcomers of provable security and cryptography,
-while not participating in the vile textbook industry.
+to newcomers of provable security and cryptography;
+while remaining conscientious to students' pockets.
 </p>
 <p>
 [2]:
