@@ -25,7 +25,7 @@ table tr{font-size:0.9em;line-height:1.6em}
 </style>
 <title>
 lastninja.net:
-2019.11.06: A brief primer to showing security reductions
+2019.11.06: An incomplete introduction to provable security.
 </title>
 </head>
 
@@ -33,19 +33,51 @@ lastninja.net:
 <h1>The lastninja.net <a href="index.html">blog</a></h1>
 <hr>
 <div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
-<tr><td><b>2019.11.06: A brief primer to showing security reductions</b> #securityreductions #provablesecurity #cryptography #logic</td></tr>
+<tr><td><b>2019.11.06: An incomplete introduction to provable security.</b> #securityreductions #provablesecurity #cryptography #logic #mathematics</td></tr>
 </table></div><hr>
 <h2>
 2019.11.06: A brief introduction to provable security
 </h2>
 <p>
 This post is primarily aimed
-to new students of cryptography
-who struggle with <a href=https://en.wikipedia.org/wiki/Provable_security>provable security</a>.
+to help uninitiated students
+taking a cryptography course
+and wondering what
+this <a href=https://en.wikipedia.org/wiki/Provable_security>provable security</a>
+stuff is all about.
+Sorry to say,
+you have probably
+been bamboozled.
+In any case,
+I hope to explain
+the virtues of
+provable security
+and
+give newcomers
+a simple tip
+for their homework
+problems.
 </p>
 <p>
-A security reduction is a proof
-that demonstrates [1][2][3]:
+Provable security is a subfield of security
+but mostly involves cryptography.
+Cryptography lives in the intersection
+of mathematics and computer science.
+This distinction is important.
+</p>
+<p>
+<i>Security reductions</i>
+lie at the heart of
+provable security.
+A security reduction
+is a "proof"
+stating an algorithm
+(usually involving cryptographic)
+makes a security claim.
+I like this excerpt
+from The Joy of Cryptography
+to describe the essence
+of security reductions:
 <blockquote>
 “<i>any</i> encryption scheme,
 when combined with this other thing
@@ -58,10 +90,10 @@ satisfies property Y”
 </p>
 <p>
 The syntax of
-these homework problems
-is typically in the form:
+a security reduction
+is in the form of a logical implication:
 <blockquote>
-show [Thing-Π is Y secure] &rArr; [Thing-Π is X secure]
+[Thing-Π is Y secure] &rArr; [Thing-Π is X secure]
 </blockquote>
 </p>
 <p>
@@ -79,9 +111,9 @@ at a concrete example:
 define Thing-Π
 as <i>any</i>
 encryption scheme
-using a block cipher
-in counter mode
-with Encrypt-then-MAC
+using randomised encryption
+with
+authentication
 </li>
 <li>replace (<i>instance</i>) Thing-Π with AES256-CTR-HMAC-SHA256</li>
 <li>replace Y with IND-CCA2</li>
@@ -106,7 +138,7 @@ We could have
 used
 something else
 like
-CHACHA20-POLY1305.
+ChaCha20-Poly1305.
 </p>
 <p>
 One can think
@@ -114,45 +146,127 @@ of
 [AES256-CTR-HMAC-SHA256
 is
 IND-CCA2 secure]
-as an <i>advertisement</i>.
+as an <i>advertisement</i>. <!-- add footnote: it is actually a security claim or security guarantee -->
 The "product"
+is the encryption scheme
 AES256-CTR-HMAC-SHA256
-has all the
+which has all the
 security features
 of IND-CCA2 security.
 Caveat emptor,
 provable security
 isn't a silver bullet
-on security claims,
+for security,
 as with all matters in life,
 it helps to maintain
 a healthy level <a href=http://anotherlook.ca/>of skepticism.</a>
-Of course,
-this is all theoretical,
-in practice
-<a href=https://www.tarsnap.com/crypto.html>nobody really advertises</a>
-their product
-relies on IND-CCA2 security.
+Provable security
+claims are helpful
+to cryptography practitioners
+and
+required by <a href=https://www.nist.gov/topics/cryptography>standard committees</a>
+which vet and
+publish security schemes.
+</p>
+
+<p>
+This probably sounds
+wonderful or pointless theory.
+At the
+end of the day
+you want to know
+"is the thing secure?"
+The provable security
+framework
+<i>helps</i> to answer
+the question
+by attempting to
+define security
+and
+then prove it.
+Some consider it
+a gold standard.
+Students who put
+in the effort
+will probably come out
+feeling enlightened
+and come to the same conclusion.
+Others believe
+that provable security
+<a href=http://anotherlook.ca/>is mental masturbation</a>.
+Some practitioners
+<a href=https://www.tarsnap.com/crypto.html>
+don't even bother</a>
+advertising provable security claims.
+Personally I think provable security
+makes a decent benchmark,
+but that simply cannot
+provide any guarantees.
+</p>
+<p>
+Ostensibly,
+a security reduction
+can communicate
+a set of related ideas:
 </p>
 <ul>
-<li> the security of Thing-Π (which is Y-secure) is X-secure
+<li> the security of Thing-Π which is Y-secure is X-secure
 <li> the security of Thing-Π with Y-security <i>reduces</i> to X-security
-<li> Thing-Π Y-security is <i>at least as secure</i> as X-security
-<li> a generic attack on security property X means an attack on any scheme satisfyin Y-security.
+<li> Thing-Π with Y-security is <i>at least as secure</i> as X-security
+<li> an attack on X is an attack on Y.
 </ul>
 For example,
-if someone says
-their encryption scheme
+if someone says their encryption scheme
 is IND-CCA2 secure
-then you can assume
+then you can say
 it resists all attacks
-to IND-CPA (a weaker security notion).
+to IND-CPA, a weaker security property.
 </p>
-<b>
-Proving a security reduction
-using proof by contradiction.
-</b>
+<p>
+There is
+so much more to say
+about provable security.
+I haven't even touched
+on <i>assumptions</i>
+which is what I consider
+the dark side of provable security.
+But I hope this is sufficient
+to mull over in the meantime.
+It is my hope,
+during the course of your studies,
+this inchoate introduction can
+help fill in some missing context.
+If none of this makes sense,
+mull over it.
+<p>
+<p>
+<!-- footnote about how my undergrad provable security course was a disappointment -->
+So I studied provable security
+and I wanted to provide a tip
+which is stupidly simple
+but I find helpful to the uninitiated.
+</p>
 
+<p>
+Incase you weren't aware or didn't realise,
+most security reductions
+are proven
+using <i>proof by contradiction</i>.
+
+When you encounter
+<center>[Thing-Π is X-secure]
+&rArr;
+[Thing-Π is Y-secure]</center>
+do the following:
+
+<ol>
+<li>rewrite in contrapositive:
+[Thing-Π is <b>not</b> Y-secure] &rArr; [Thing-Π is <b>not</b> X-secure]</li>
+<li>convert to material implication:
+[Thing-Π is Y-secure] <b>or</b> [Thing-Π is <b>not</b> X-secure]</li>
+<li>apply De-Morgan's law to negate the statement:
+[Thing-Π is Y-secure] <b>and</b> [Thing-Π is <b>not</b> X-secure]</li>
+</ol>
 
 <p>
 [1]:
