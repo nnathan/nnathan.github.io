@@ -1,0 +1,627 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+body{font-family:sans-serif}
+p{font-size:0.9em;line-height:1.6em}
+ul{font-size:0.9em;line-height:1.6em}
+ol{font-size:0.9em;line-height:1.6em}
+blockquote{font-size:0.9em;line-height:1.6em}
+pre{font-size:0.9em;line-height:1.6em}
+tt{font-size:1.2em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table a{text-decoration:none}
+table tr{font-size:0.9em;line-height:1.6em}
+.nav table tr{font-size:0.8em;line-height:1.6em}
+.invisible{display:none}
+.pic30left {float:left;width:30%;margin:0.2em}
+.pic30 {float:right;width:30%;margin:0.2em}
+.pic50 {float:right;width:50%;margin:0.2em}
+.clear {clear:both}
+</style>
+<title>
+lastninja.net:
+TBD: An incomplete introduction to provable security. (or maybe: What the hell is this provable security stuff?)
+</title>
+</head>
+
+<body>
+<h1>The lastninja.net <a href="index.html">blog</a></h1>
+<hr>
+<div class="nav"><table style="padding:0px;margin:0px" cellspacing=0 cellpadding=0>
+<tr><td><b>TBD: An incomplete introduction to provable security.</b> #securityreductions #provablesecurity #cryptography #logic #mathematics</td></tr>
+</table></div><hr>
+<h2>
+TBD: An incomplete introduction to provable security
+</h2>
+<p>
+This post is primarily aimed
+to help uninitiated students
+taking a cryptography course
+and wondering what
+this <a href=https://en.wikipedia.org/wiki/Provable_security>provable security</a>
+fuss is all about.
+You probably chose
+a course
+titled
+"Cryptography" or
+"Modern Cryptography" or
+"Applied Cryptography",
+and thought it
+had to do with
+learning about actual cryptographic algorithms
+and
+implementing cryptography.
+Sorry to say,
+if you are here
+trying to figure out
+what the hell is going on
+and
+start to think
+cryptography is all about
+proofs
+then you were probably bamboozled.
+<!-- on the marketing of cryptography courses -->
+Fear not,
+this post
+is to help
+fill in the gaps
+on the <i>why</i>
+of provable security
+and
+what value it provides.
+</p>
+<p>
+Provable security is a subfield of security
+which almost always
+combines cryptography
+in some way.
+Cryptography lives in the intersection
+of mathematics and computer science.
+This distinction is important
+and you will find cryptography
+courses in math and computer science departments
+is wildly different
+and use a completely different language.
+</p>
+<p>
+<i>Security reductions</i>
+lie at the heart of
+provable security.
+A security reduction
+is a "proof"
+stating an algorithm
+somehow related to cryptography
+provides a specific security guarantee.
+I like this excerpt from Joy of Cryptography
+which
+distills the essence
+of security reductions:
+<blockquote>
+“<i>any</i> encryption scheme,
+when combined with this other thing
+in this specific way,
+results in a system
+with security property X,
+as long as the encryption scheme
+satisfies property Y”
+</blockquote>
+</p>
+<p>
+The syntax of
+a security reduction
+is in the form of a logical implication:
+<blockquote>
+[Thing-Π is Y secure] &rArr; [Thing-Π is X secure]
+</blockquote>
+</p>
+<p>
+Thing-Π
+is actually a <i>placeholder</i>
+which can substituted
+with a real
+concrete implementation.
+</p>
+<p>
+Let's look
+at a concrete example:
+<ul>
+<li>
+define Thing-Π
+as <i>any</i>
+encryption scheme
+using randomised encryption
+with
+authentication
+</li>
+<li>replace (<i>instance</i>) Thing-Π with AES256-CTR-HMAC-SHA256</li>
+<li>replace Y with IND-CCA2</li>
+<li>replace X with IND-CPA</li>
+</ul>
+<p>
+We have
+[AES256-CTR-HMAC-SHA256
+is
+IND-CCA2 secure]
+&rArr;
+[AES256-CTR-HMAC-SHA256
+is
+IND-CPA secure].
+This
+is an actual
+security claim
+that <i>we believe</i>
+is true. But the details like
+AES256-CTR-HMAC-SHA256
+and
+IND-{CPA,CCA2}
+is irrelevant.
+From experience,
+I never heard the words
+AES or SHA256 uttered
+in any provable security
+course
+that I took.
+</p>
+<p>
+Note,
+AES256-CTR-HMAC-SHA256
+is an <i>instance</i>
+of Thing-Π.
+We could have
+used
+something else
+like
+ChaCha20-Poly1305.
+</p>
+<p>
+One could think
+of
+[AES256-CTR-HMAC-SHA256
+is
+IND-CCA2 secure]
+as an <i>advertisement</i>. <!-- add footnote: it is actually a security claim or security guarantee -->
+The "product"
+is the encryption scheme
+AES256-CTR-HMAC-SHA256
+which has all the
+security features
+of IND-CCA2 security.
+Caveat emptor,
+provable security
+isn't a silver bullet
+for security,
+as with all matters in life,
+it helps to maintain
+a healthy level of
+<a href=http://anotherlook.ca/>skepticism.</a>
+Provable security
+claims are helpful
+to cryptography practitioners
+and
+required by <a href=https://www.nist.gov/topics/cryptography>standard committees</a>
+which vet and
+publish security schemes.
+</p>
+
+<p>
+Ostensibly,
+a security reduction
+communicates
+a set of related ideas:
+</p>
+<ul>
+<li> the security of Thing-Π which is Y-secure is X-secure</li>
+<li> the security of Thing-Π with Y-security <i>reduces</i> to X-security</li>
+<li> Thing-Π with Y-security is <i>at least as secure</i> as X-security</li>
+<li> an attack on X is an attack on Y (note to self: while this is usually the case - I don't think you can derive a generic claim in all instances)</li>
+</ul>
+<p>
+For example,
+if someone says their encryption scheme
+is IND-CCA2 secure
+then you can say
+it resists all attacks
+to IND-CPA, a weaker security notion.
+</p>
+<p>
+As a student
+you will need to prove
+security reductions,
+which makes up
+most of your coursework.
+In what follows
+I will show how
+to attack a securiy reduction.
+</p>
+<h3>Showing a security reduction</h3>
+<p>
+In case you aren't aware or didn't realise,
+we prove most security reductions
+using <i>proof by contradiction</i>.
+</p>
+
+<p>
+When you encounter
+[Thing-Π is X-secure]
+&rArr;
+[Thing-Π is Y-secure]
+drop Thing-Π so we have
+[X-security] &hArr; [Y-security].
+Don't worry,
+we will bring back Thing-Π
+in a cool minute.
+</p>
+<p>
+To simplify further
+we reword to say
+[<b>no</b> attack against X] &hArr; [<b>no</b> attack against Y].
+An attack is some violation of X or Y.
+
+Now apply the transforms:
+</p>
+<p>
+<ol>
+<li>Contrapositive rule
+(P &rArr; Q)
+&hArr;
+(&not;P &rArr; &not;Q):</br>
+[<b>an</b> attack against Y]
+&rArr;
+[<b>an</b> attack against X]</li>
+<li>Material implication
+(P &rArr; Q)
+&hArr;
+(P &or; &not;Q):</br>
+[<b>an</b> attack against Y]
+<b>or</b>
+[<b>no</b> attack against X]</li>
+<li>Negate statement using De-Morgan's law
+&not;(P &or; Q)
+&hArr;
+(&not;P &and; &not;Q):<br/>
+[<b>no</b> attack against Y]
+&and;
+[<b>an</b> attack against X]</li>
+</ol>
+<p>
+Here's a handy tip in life:
+when you prove implication
+<b>P</b>&rArr;<b>Q</b>
+using contradiction
+you should have on instant recall:
+<b>P</b> &and; &not;<b>Q</b>.
+That is,
+assume
+<b>P</b> to be true,
+using &not;<b>Q</b>
+show <b>P</b> is false,
+(the contradiction)
+which states
+<b>P</b>&and;&not;<b>Q</b> is false,
+and everything else
+is true.
+The setup
+for contradiction is easy.
+The hard part
+is showing the contradiction.
+</p>
+<p>
+Back to the proof.
+We have
+[<b>no</b> attack against Y]</li>
+&and;
+[<b>an</b> attack against X]</li>.
+Let's put Thing-Π back.
+Now we have
+[<b>no</b> attack against Y for Thing-Π]</li>
+&and;
+[<b>an</b> attack against X for Thing-Π]</li>.
+<b>Now this
+is the detail
+you need to fill in</b>:
+you need to show
+an attack on X for Thing-Π
+can convert into
+an attack on Y.
+Then we contradict
+the assumption
+[<b>no</b> attack against Y for Thing-Π].
+Which means the entire statement is false.
+And this means
+the negation (3)
+is true.
+This truth propagates backwards
+to the original statement
+[Thing-Π is X-secure]
+&rArr;
+[Thing-Π is Y-secure],
+which we conclude is true.
+</p>
+<p>
+Note that attacking
+the proof
+directly
+can be futile.
+That is you first
+show the pair
+[Thing-Π is X-secure]
+and
+[Thing-Π is <b>not</b> Y-secure]
+is false,
+and
+show all remaining cases
+true.
+</p>
+<h3>"Why do I care?"</h3>
+<p>
+This probably sounds
+wonderful or pointless theory.
+At the
+end of the day
+you want to know
+"is the thing secure?"
+The provable security
+framework
+<i>helps</i> to answer
+the question
+by defining security
+and
+then prove it.
+Some consider it
+a gold standard.
+Students who put
+in the effort
+will probably come out
+feeling
+(potentially a false sense of)
+enlightened
+and come to the same conclusion.
+There is a divide among cryptographers
+on the value of provable security.
+It all started
+with a <a href=http://cacr.uwaterloo.ca/~ajmeneze/anotherlook/ams.shtml>critique</a>
+created a major
+upset
+among the foremost experts
+<a href=https://www.ams.org/notices/200711/tx071101454p.pdf>demanding a retraction</a>
+to what they consider
+a threat to their existence.
+Computer scientists sided
+with provable security
+and
+mathematicians went
+their own way.
+Then there are the practitioners
+who develop and provide cryptography
+solutions in the hand of users.
+I like to call these people
+applied cryptographers.
+One applied cryptographer
+I know of
+<a href=https://www.tarsnap.com/crypto.html>
+doesn't bother</a>
+advertising using provable security jargon.
+Another wrote
+<a href=https://www.schneier.com/books/applied_cryptography/>an encyclopedia</a>
+which was used
+throughout the 90s
+but is outdated
+and
+no longer in fashion.
+In my own observations
+I have noticed
+<!-- insert nacl link -->
+in recent years
+some cryptography libraries
+now give a nod to
+provable security,
+e.g.  <a href=https://nacl.cr.yp.to/</a>nacl,</a>
+My advice for now,
+is to know opinions differ
+on the value of provable security,
+but the best way to understand
+the arguments made,
+is to first understand the machinery
+of provable security.
+So don't think
+that people critiquing
+provable security
+is not a reason
+to not do your homework.
+And with all matters in life,
+it is helpful to maintain
+<a href=http://anotherlook.ca/>healthy skepticism</a>.
+<!-- footnote to say the definitions for security and privacy is hard and adversaries are moving targets -->
+</p>
+<p>
+Insofar
+I have given a
+superficial view
+to provable security.
+I omitted a lot of detail.
+I didn't even touch
+on <i>assumptions</i>
+which I consider
+as the dark side
+provable security,
+and will be a
+subject of a later
+post.
+</p>
+<p>
+I hope
+in the course of your studies,
+this inchoate introduction
+helps elucidate the gaps
+as to the <i>why</i> of
+provable security,
+and the general concensus
+on applicability.
+If none of it makes sense now,
+don't think too hard about it,
+and
+prove everything you can.
+</p>
+
+<p>
+[1]:
+This is a quote from chapter 2 in
+<a href=https://web.engr.oregonstate.edu/~rosulekm/crypto/>The Joy of Cryptography</a> by Mike Rosulek.
+As an aside,
+I find the text is a gentler introduction
+compared to the quintessential textbook
+<a href=https://www.amazon.com/Introduction-Modern-Cryptography-Principles-Protocols/dp/1584885513>Introduction to Modern Cryptography</a>
+by Jonathan Katz &amp Yehuda Lindell.
+And it gets better!
+The Joy of Cryptography costs nada (Creative Commons).
+
+I really have to give it to Mike,
+he's doing a commendable job
+breaking down the barriers of complexity
+to newcomers of provable security and cryptography;
+while remaining conscientious to students' pockets.
+</p>
+<p>
+[2]:
+Security reductions are
+not exclusive to
+encryption schemes
+but anything you want to show
+that has some security property.
+</p>
+<p>
+[3]:
+The word <i>reduction</i>
+relates to
+reductions in <a href=https://en.wikipedia.org/wiki/Reduction_(complexity)>computability theory</a>.
+</p>
+<p>
+[4]:
+Oh man.
+try proving 3-round
+Luby-Rackoff
+is not a strong PRP
+(pseudorandom permutation).
+This is the kind of shit
+that will give you nightmares.
+</p>
+<h3>Acknowledgements</h3>
+<p>
+Thanks to
+<a href=https://nhardy.id.au/>nhardy</a>
+for helping with HTML,
+<!-- footnote:
+something I ought to know
+considering I have been
+on the Internet
+for 25 years.
+-->
+<a href=https://blog.cr.yp.to/>DJB</a>
+for inspiring
+my blog layout.
+insert-name-or-moniker-here for
+their {review,comments,help}.
+</p>
+
+</hr>
+</html>
+<hr><font size=1>
+<b>Version:</b>
+This is version TBD of the TBD-provable-security.html web page.
+<a href="https://github.com/nnathan/nnathan.github.io/">[source]</a>
+<a href="mailto:blog@lastninja.net">[contact]</a>
+
+</font></body>
+</hr>
+
+<!--
+<p>
+Caryl-Ann Margulies
+in the math department of UCI
+for teaching me cryptography
+using Neal Koblitz graduate textbook
+for insights, and dropping subtle hints
+about his views.
+What I found fascinating
+is she didn't
+seem to have the faintest
+clue about
+provable security.
+But my theory is
+she was feigning ignorance
+so I would stay
+Quan Nguyen &amp; Sky Faber
+with their amazing intellect
+in helping me
+break down
+security proofs.
+(remember that time
+I developed an attack
+while I was asleep)?
+Lastly,
+Stanislaw Jarecki who taught
+"applied cryptography" at UCI,
+from K&amp;L. I took the
+course twice with him.
+The first time
+was an undergraduate course
+where all the students
+had no idea what was going
+on in the first week
+and
+could no longer follow on.
+For all intents and purposes,
+there were no grades
+or any homework.
+Regardless I was hungry
+for any and all crypto
+and
+tried to keep up.
+This experience
+is 90% of the reason
+why this post exists.
+I want to make sure
+any student taking
+a provable security
+course understands
+what they're getting
+into.
+</p>
+<p>
+I almost forgot to
+mention Alice Silverberg
+for her graduate course
+in mathematical cryptography.
+I really enjoyed
+the collaborative nature
+of exchanging ideas
+with other students
+and presenting on interesting
+topics of cryptography.
+I didn't have the mathematical maturity
+at the time
+but felt lucky
+to receive an advanced
+education in
+Elliptic Curve Cryptography
+and
+Lattice based Cryptography.
+In case
+you stumble across this,
+I formally apologise
+for not showing the proof
+of security for
+Clifford Cocks IBE scheme
+when I presented on.
+I honestly thought
+computer scientists
+were exempt from
+such proofs :).
+I need to get on it.
+</p>
+-->
