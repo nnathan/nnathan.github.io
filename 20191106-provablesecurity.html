@@ -44,26 +44,44 @@ to help uninitiated students
 taking a cryptography course
 and wondering what
 this <a href=https://en.wikipedia.org/wiki/Provable_security>provable security</a>
-stuff is all about.
+fuss is all about.
+You probably chose
+a course
+titled
+"Cryptography" or
+"Modern Cryptography" or
+"Applied Cryptography",
+and thought it
+had to do with
+learning about actual cryptographic algorithms
+and
+implementing cryptography.
 Sorry to say,
-you have probably
-been bamboozled.
-In any case,
-I hope to explain
-the virtues of
+if you are here
+figuring out what is going on
+then you were probably bamboozled.
+<!-- on the marketing of cryptography courses -->
+Fear not,
+I hope what you gte from this
+is the virtues of
 provable security
 and
-give newcomers
-a simple tip
-for their homework
-problems.
+leave you a handy tip
+to attack typical homework exercises.
+If you put in the effort
+I believe you will come out
+of the course enlightened.
 </p>
 <p>
 Provable security is a subfield of security
 but mostly involves cryptography.
 Cryptography lives in the intersection
 of mathematics and computer science.
-This distinction is important.
+This distinction is important
+and you will find cryptography
+courses in math and computer science departments
+is wildly different
+and use a completely different language.
 </p>
 <p>
 <i>Security reductions</i>
@@ -71,12 +89,12 @@ lie at the heart of
 provable security.
 A security reduction
 is a "proof"
-stating an algorithm
-(usually involving cryptographic)
-makes a security claim.
-I like this excerpt
-from The Joy of Cryptography
-to describe the essence
+stating an algorithm (or protocol)
+(virtually always linked to cryptography)
+provides a specific security guarantee.
+I like this excerpt from Joy of Cryptography
+which
+distills the essence
 of security reductions:
 <blockquote>
 “<i>any</i> encryption scheme,
@@ -170,40 +188,6 @@ publish security schemes.
 </p>
 
 <p>
-This probably sounds
-wonderful or pointless theory.
-At the
-end of the day
-you want to know
-"is the thing secure?"
-The provable security
-framework
-<i>helps</i> to answer
-the question
-by attempting to
-define security
-and
-then prove it.
-Some consider it
-a gold standard.
-Students who put
-in the effort
-will probably come out
-feeling enlightened
-and come to the same conclusion.
-Others believe
-that provable security is <a href=http://anotherlook.ca/>mental masturbation</a>.
-Some practitioners
-<a href=https://www.tarsnap.com/crypto.html>
-don't bother</a>
-advertising using provable security jargon.
-Personally I think provable security
-sets a decent benchmark for applied cryptographers
-but is incomplete in defining security,
-and proves a limited guarantee.
-<!-- footnote to say the definitions for security and privacy is surprisingly hard and adversaries are moving targets -->
-</p>
-<p>
 Ok,
 back to security reductions.
 Ostensibly,
@@ -258,6 +242,8 @@ we will bring back Thing-Π
 in a cool minute.)
 
 Now apply the following transforms:
+</p>
+<p>
 <ol>
 <li>Apply contrapositive rule
 (<b>P</b> &rArr; <b>Q</b>)
@@ -284,6 +270,49 @@ Now apply the following transforms:
 [<b>and</b> attack against X]</li>
 </br>
 </ol>
+
+<p>
+This probably sounds
+wonderful or pointless theory.
+At the
+end of the day
+you want to know
+"is the thing secure?"
+The provable security
+framework
+<i>helps</i> to answer
+the question
+by defining security
+and
+then prove it.
+Some consider it
+a gold standard.
+Students who put
+in the effort
+will probably come out
+feeling enlightened
+and come to the same conclusion.
+Others believe
+that provable security is <a href=http://anotherlook.ca/>mental masturbation
+with harmful side-effects</a>.
+And the foremost experts
+<a href=https://www.ams.org/notices/200711/tx071101454p.pdf>refuse</a> to allow critique
+of their dogma.
+Then there are the practitioners,
+also called applied cryptographers.
+Some
+<a href=https://www.tarsnap.com/crypto.html>
+don't bother</a>
+advertise using provable security jargon.
+Personally I view provable security
+as a decent benchmark that cryptographers
+should adhere to,
+but remains insufficient
+as a measure
+of security.
+<!-- footnote to say the definitions for security and privacy is surprisingly hard and adversaries are moving targets -->
+</p>
+
 
 <p>
 So far
